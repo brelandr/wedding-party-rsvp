@@ -13,6 +13,16 @@ A simple and secure Wedding RSVP management system. Manage unlimited guests and 
 
 Wedding Party RSVP is a streamlined solution for managing wedding guest lists and RSVPs directly inside WordPress.
 
+== Screenshots ==
+
+1. This is the main page where a user enters the invite ID or Party ID (Styled using elementor)
+2. This shows how the widget looks on the frontend after entering Party ID or Invite ID.
+3. This is the Main Admin Page
+4. Main Settings Page
+5. Email Invite Page
+6. Shortcode
+7. SMS Invite page
+
 Key Features (Free Version):
 
 Guest Management: Add, edit, and delete unlimited guests.
