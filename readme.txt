@@ -1,9 +1,9 @@
 === Wedding Party RSVP ===
-Contributors: landtechwebdesigns, brelandr
+Contributors: brelandr
 Tags: wedding, rsvp, guests, party, invitation
 Requires at least: 6.0
-Tested up to: 6.9
-Stable tag: 7.2
+Tested up to: 6.9.4
+Stable tag: 7.3.2
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -12,6 +12,12 @@ A simple and secure Wedding RSVP management system. Manage unlimited guests and 
 == Description ==
 
 Wedding Party RSVP is a streamlined solution for managing wedding guest lists and RSVPs directly inside WordPress.
+
+== Try It Live - Preview This Plugin Instantly ==
+
+Experience Wedding Party RSVP without installation! Click the link below to open WordPress Playground with the plugin pre-installed and configured with sample data.
+
+[Preview on WordPress Playground](https://playground.wordpress.net/?blueprint-url=https://raw.githubusercontent.com/brelandr/wedding-party-rsvp/main/blueprint.json)
 
 == Screenshots ==
 
@@ -85,6 +91,14 @@ Frontend Form: How the guests see the RSVP form.
 Mobile View: Managing guests on a mobile device.
 
 == Changelog ==
+
+= 7.3.2 =
+
+Compatibility: Tested up to WordPress 6.9.4.
+
+= 7.3.1 =
+
+New: Review request notice after 7 days (Enjoying Wedding Party RSVP?) with Yes / No (Support) / Dismiss. AJAX dismissal, nonce-secured, shown only on plugin admin pages.
 
 = 7.3 =
 

@@ -2,12 +2,12 @@
 /*
 Plugin Name: Wedding Party RSVP
 Description: Simple and secure RSVP system. Manage guest lists and adult menu choices.
-Version: 7.2
+Version: 7.3.2
 Author: Land Tech Web Designs, Corp
 Author URI: https://landtechwebdesigns.com
 Plugin URI: https://landtechwebdesigns.com/wedding-party-rsvp-wordpress-plugin/
 Requires at least: 6.0
-Tested up to: 6.9
+Tested up to: 6.9.4
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 */
@@ -222,6 +222,11 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 
 		// --- PAGE: Guest List & Dashboard ---
 		public function admin_page_guests() {
+			// Security: Check user capabilities
+			if ( ! current_user_can( 'manage_options' ) ) {
+				wp_die( esc_html__( 'You do not have sufficient permissions to access this page.', 'wedding-party-rsvp' ) );
+			}
+
 			global $wpdb;
 			add_thickbox();
 
@@ -474,6 +479,11 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 
 		// --- PAGE: General Settings ---
 		public function admin_page_settings() {
+			// Security: Check user capabilities
+			if ( ! current_user_can( 'manage_options' ) ) {
+				wp_die( esc_html__( 'You do not have sufficient permissions to access this page.', 'wedding-party-rsvp' ) );
+			}
+
 			// SECURITY FIX: Use filter_input with sanitized flag
 			$reset_nonce = filter_input( INPUT_POST, 'wgrsvp_reset_nonce', FILTER_SANITIZE_SPECIAL_CHARS );
 			if ( $reset_nonce && wp_verify_nonce( $reset_nonce, 'wgrsvp_reset_nonce' ) ) {
@@ -586,6 +596,11 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 
 		// --- PAGE: Menu Options ---
 		public function admin_page_menu() {
+			// Security: Check user capabilities
+			if ( ! current_user_can( 'manage_options' ) ) {
+				wp_die( esc_html__( 'You do not have sufficient permissions to access this page.', 'wedding-party-rsvp' ) );
+			}
+
 			// SECURITY FIX: Use filter_input with sanitized flag & Verify Nonce
 			$menu_nonce = filter_input( INPUT_POST, 'wgrsvp_menu_nonce', FILTER_SANITIZE_SPECIAL_CHARS );
 			if ( $menu_nonce && wp_verify_nonce( $menu_nonce, 'wgrsvp_menu_nonce' ) ) {
@@ -639,6 +654,11 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 
 		// --- ADMIN ACTIONS ---
 		private function handle_admin_actions() {
+			// Security: Check user capabilities for all admin actions
+			if ( ! current_user_can( 'manage_options' ) ) {
+				return;
+			}
+
 			global $wpdb;
 
 			// SECURITY FIX: Use filter_input with sanitized flag
@@ -707,6 +727,11 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 
 		// --- CSV IMPORT/EXPORT ---
 		public function handle_csv_export() {
+			// Security: Check user capabilities
+			if ( ! current_user_can( 'manage_options' ) ) {
+				wp_die( esc_html__( 'You do not have sufficient permissions to access this page.', 'wedding-party-rsvp' ) );
+			}
+
 			// SECURITY FIX: Use filter_input with sanitized flag
 			$export_nonce = filter_input( INPUT_POST, 'wgrsvp_export_nonce', FILTER_SANITIZE_SPECIAL_CHARS );
 			if ( $export_nonce && wp_verify_nonce( $export_nonce, 'wgrsvp_export_nonce' ) ) {
@@ -989,5 +1014,14 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 	}
 
 	new WGRSVP_Wedding_RSVP();
+
+	// Load and run review request (admin only, after 7 days).
+	add_action(
+		'admin_init',
+		function () {
+			require_once plugin_dir_path( __FILE__ ) . 'includes/class-review-request.php';
+			new WGRSVP_Review_Request();
+		}
+	);
 
 endif;
