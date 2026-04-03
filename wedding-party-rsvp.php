@@ -2,12 +2,12 @@
 /*
 Plugin Name: Wedding Party RSVP
 Description: Simple and secure RSVP system. Manage guest lists and adult menu choices.
-Version: 7.3.2
+Version: 7.3.5
 Author: Land Tech Web Designs, Corp
 Author URI: https://landtechwebdesigns.com
 Plugin URI: https://landtechwebdesigns.com/wedding-party-rsvp-wordpress-plugin/
 Requires at least: 6.0
-Tested up to: 6.9.4
+Tested up to: 6.9
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 */
@@ -22,23 +22,23 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 
 		// --- CONFIGURATION ---
 		private $table_name;
-		private $opt_menu_adult   = 'wgrsvp_menu_options';
-		private $opt_settings     = 'wgrsvp_general_settings';
-		private $opt_license      = 'wgrsvp_license_key';
+		private $opt_menu_adult = 'wgrsvp_menu_options';
+		private $opt_settings   = 'wgrsvp_general_settings';
+		private $opt_license    = 'wgrsvp_license_key';
 
 		public function __construct() {
 			global $wpdb;
 			$this->table_name = $wpdb->prefix . 'wedding_rsvps';
 
 			register_activation_hook( __FILE__, array( $this, 'activate_plugin' ) );
-			
+
 			// Init hook for Form Processing (Redirects)
 			add_action( 'init', array( $this, 'process_frontend_submissions' ) );
-			
+
 			add_action( 'admin_menu', array( $this, 'create_admin_menu' ) );
 			add_shortcode( 'wedding_rsvp_form', array( $this, 'render_frontend_form' ) );
 			add_action( 'admin_init', array( $this, 'handle_csv_export' ) );
-			
+
 			// Load CSS
 			add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_admin_styles' ) );
 			add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_frontend_styles' ) );
@@ -95,7 +95,12 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 
 		private function get_sort_link( $col, $current_by, $current_order ) {
 			$new_order = ( $current_by === $col && $current_order === 'ASC' ) ? 'DESC' : 'ASC';
-			return add_query_arg( array( 'orderby' => $col, 'order' => $new_order ) );
+			return add_query_arg(
+				array(
+					'orderby' => $col,
+					'order'   => $new_order,
+				)
+			);
 		}
 
 		// --- CSS HANDLERS ---
@@ -117,7 +122,7 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 			$s     = get_option( $this->opt_settings, array() );
 			$color = isset( $s['primary_color'] ) && ! empty( $s['primary_color'] ) ? $s['primary_color'] : '#333';
 			$font  = isset( $s['font_size'] ) && ! empty( $s['font_size'] ) ? $s['font_size'] : '16';
-			
+
 			return '
 				/* FRONTEND STYLES */
 				.wpr-wrapper { max-width: 600px; margin: 0 auto; font-size: ' . esc_attr( $font ) . 'px; }
@@ -233,16 +238,12 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 			// Actions
 			$this->handle_admin_actions();
 
-			// Handle CSV Import
-			if ( isset( $_POST['wgrsvp_import_nonce'] ) ) {
-				if ( wp_verify_nonce( sanitize_key( $_POST['wgrsvp_import_nonce'] ), 'wgrsvp_import_nonce' ) ) {
-					if ( isset( $_POST['wgrsvp_import_csv'] ) ) {
-						// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
-						$csv_file = isset( $_FILES['csv_file']['tmp_name'] ) ? sanitize_text_field( $_FILES['csv_file']['tmp_name'] ) : '';
-						if ( ! empty( $csv_file ) ) {
-							$this->handle_csv_import( $csv_file );
-						}
-					}
+			if ( isset( $_POST['wgrsvp_import_csv'] ) ) {
+				check_admin_referer( 'wgrsvp_import_nonce', 'wgrsvp_import_nonce' );
+				// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+				$csv_file = isset( $_FILES['csv_file']['tmp_name'] ) ? sanitize_text_field( wp_unslash( $_FILES['csv_file']['tmp_name'] ) ) : '';
+				if ( ! empty( $csv_file ) ) {
+					$this->handle_csv_import( $csv_file );
 				}
 			}
 
@@ -281,10 +282,10 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 			}
 
 			// Filters
-			$search_query   = isset( $_GET['s'] ) ? sanitize_text_field( wp_unslash( $_GET['s'] ) ) : '';
-			$filter_status  = isset( $_GET['filter_status'] ) ? sanitize_text_field( wp_unslash( $_GET['filter_status'] ) ) : '';
-			$filter_menu    = isset( $_GET['filter_menu'] ) ? sanitize_text_field( wp_unslash( $_GET['filter_menu'] ) ) : '';
-			
+			$search_query  = isset( $_GET['s'] ) ? sanitize_text_field( wp_unslash( $_GET['s'] ) ) : '';
+			$filter_status = isset( $_GET['filter_status'] ) ? sanitize_text_field( wp_unslash( $_GET['filter_status'] ) ) : '';
+			$filter_menu   = isset( $_GET['filter_menu'] ) ? sanitize_text_field( wp_unslash( $_GET['filter_menu'] ) ) : '';
+
 			$orderby        = isset( $_GET['orderby'] ) ? sanitize_text_field( wp_unslash( $_GET['orderby'] ) ) : 'party_id';
 			$order          = isset( $_GET['order'] ) ? sanitize_text_field( wp_unslash( $_GET['order'] ) ) : 'ASC';
 			$allowed_orders = array( 'party_id', 'guest_name', 'id', 'table_number', 'is_child', 'rsvp_status', 'menu_choice' );
@@ -293,21 +294,21 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 			}
 			$order = ( 'DESC' === $order ) ? 'DESC' : 'ASC';
 
-			$sql_args = array();
+			$sql_args  = array();
 			$sql_where = array();
 
 			if ( $search_query ) {
 				$sql_where[] = '(guest_name LIKE %s OR party_id LIKE %s)';
-				$sql_args[] = '%' . $search_query . '%';
-				$sql_args[] = '%' . $search_query . '%';
+				$sql_args[]  = '%' . $search_query . '%';
+				$sql_args[]  = '%' . $search_query . '%';
 			}
 			if ( $filter_status ) {
 				$sql_where[] = 'rsvp_status = %s';
-				$sql_args[] = $filter_status;
+				$sql_args[]  = $filter_status;
 			}
 			if ( $filter_menu ) {
-				$sql_where[] = 'menu_choice = %s'; 
-				$sql_args[] = $filter_menu;
+				$sql_where[] = 'menu_choice = %s';
+				$sql_args[]  = $filter_menu;
 			}
 
 			// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
@@ -315,7 +316,7 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 			if ( ! empty( $sql_where ) ) {
 				$query .= ' WHERE ' . implode( ' AND ', $sql_where );
 			}
-			$query .= " ORDER BY " . esc_sql( $orderby ) . " " . esc_sql( $order );
+			$query .= ' ORDER BY ' . esc_sql( $orderby ) . ' ' . esc_sql( $order );
 
 			if ( ! empty( $sql_args ) ) {
 				// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.DirectDatabaseQuery, PluginCheck.Security.DirectDB.UnescapedDBParameter
@@ -354,9 +355,10 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 				<div style="background:#fff; border:1px solid #ccd0d4; padding:10px; margin-bottom:20px;">
 					<strong><?php esc_html_e( 'Menu Breakdown:', 'wedding-party-rsvp' ); ?></strong><br>
 					<div style="margin-top:5px;">
-						<?php foreach ( $menu_stats_adult as $stat ) : 
+						<?php
+						foreach ( $menu_stats_adult as $stat ) :
 							$active = ( $filter_menu === $stat->menu_choice ) ? 'active' : '';
-						?>
+							?>
 							<a href="<?php echo esc_url( '?page=wedding-rsvp-main&filter_menu=' . urlencode( $stat->menu_choice ) ); ?>" class="wpr-meal-tag <?php echo esc_attr( $active ); ?>"><?php echo esc_html( $stat->menu_choice ); ?> (<?php echo intval( $stat->count ); ?>)</a>
 						<?php endforeach; ?>
 					</div>
@@ -376,7 +378,10 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 					</div>
 					<form method="get" class="wpr-flex-row">
 						<input type="hidden" name="page" value="wedding-rsvp-main">
-						<?php if($filter_status): ?><input type="hidden" name="filter_status" value="<?php echo esc_attr($filter_status); ?>"><?php endif; ?>
+						<?php
+						if ( $filter_status ) :
+							?>
+							<input type="hidden" name="filter_status" value="<?php echo esc_attr( $filter_status ); ?>"><?php endif; ?>
 						<input type="search" name="s" value="<?php echo esc_attr( $search_query ); ?>" placeholder="<?php esc_attr_e( 'Search...', 'wedding-party-rsvp' ); ?>">
 						<input type="submit" class="button" value="<?php esc_attr_e( 'Search', 'wedding-party-rsvp' ); ?>">
 						<?php if ( $search_query || $filter_status ) : ?>
@@ -484,48 +489,35 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 				wp_die( esc_html__( 'You do not have sufficient permissions to access this page.', 'wedding-party-rsvp' ) );
 			}
 
-			// SECURITY FIX: Use filter_input with sanitized flag
-			$reset_nonce = filter_input( INPUT_POST, 'wgrsvp_reset_nonce', FILTER_SANITIZE_SPECIAL_CHARS );
-			if ( $reset_nonce && wp_verify_nonce( $reset_nonce, 'wgrsvp_reset_nonce' ) ) {
-				if ( isset( $_POST['wgrsvp_factory_reset'] ) ) {
-					// DELETE ALL DATA
-					global $wpdb;
-					// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery
-					$wpdb->query( "TRUNCATE TABLE {$this->table_name}" );
+			if ( isset( $_POST['wgrsvp_factory_reset'] ) ) {
+				check_admin_referer( 'wgrsvp_reset_nonce', 'wgrsvp_reset_nonce' );
+				global $wpdb;
+				// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery
+				$wpdb->query( "TRUNCATE TABLE {$this->table_name}" );
 
-					delete_option( $this->opt_menu_adult );
-					delete_option( $this->opt_settings );
-					delete_option( $this->opt_license );
+				delete_option( $this->opt_menu_adult );
+				delete_option( $this->opt_settings );
+				delete_option( $this->opt_license );
 
-					$this->clear_stats_cache();
+				$this->clear_stats_cache();
 
-					echo '<div class="notice notice-warning is-dismissible"><p><strong>' . esc_html__( 'System Reset Complete. All data and settings have been cleared.', 'wedding-party-rsvp' ) . '</strong></p></div>';
-				}
+				echo '<div class="notice notice-warning is-dismissible"><p><strong>' . esc_html__( 'System Reset Complete. All data and settings have been cleared.', 'wedding-party-rsvp' ) . '</strong></p></div>';
 			}
 
-			// 2. Save Settings
-			$settings_nonce = filter_input( INPUT_POST, 'wgrsvp_settings_nonce', FILTER_SANITIZE_SPECIAL_CHARS );
-			if ( $settings_nonce && wp_verify_nonce( $settings_nonce, 'wgrsvp_settings_nonce' ) ) {
-				if ( isset( $_POST['wgrsvp_save_settings'] ) ) {
-					$settings = array(
-						// phpcs:ignore WordPress.Security.ValidatedSanitizedInput
-						'rsvp_page_url'  => isset( $_POST['rsvp_page_url'] ) ? esc_url_raw( wp_unslash( $_POST['rsvp_page_url'] ) ) : '',
-						// phpcs:ignore WordPress.Security.ValidatedSanitizedInput
-						'deadline_date'  => isset( $_POST['deadline_date'] ) ? sanitize_text_field( wp_unslash( $_POST['deadline_date'] ) ) : '',
-						// phpcs:ignore WordPress.Security.ValidatedSanitizedInput
-						'redirect_url'   => isset( $_POST['redirect_url'] ) ? esc_url_raw( wp_unslash( $_POST['redirect_url'] ) ) : '',
-						// phpcs:ignore WordPress.Security.ValidatedSanitizedInput
-						'welcome_title'  => isset( $_POST['welcome_title'] ) ? sanitize_text_field( wp_unslash( $_POST['welcome_title'] ) ) : '',
-						// Appearance and Toggles removed from save logic (Pro)
-					);
-					update_option( $this->opt_settings, $settings );
+			if ( isset( $_POST['wgrsvp_save_settings'] ) ) {
+				check_admin_referer( 'wgrsvp_settings_nonce', 'wgrsvp_settings_nonce' );
+				$settings = array(
+					'rsvp_page_url' => isset( $_POST['rsvp_page_url'] ) ? esc_url_raw( wp_unslash( $_POST['rsvp_page_url'] ) ) : '',
+					'deadline_date' => isset( $_POST['deadline_date'] ) ? sanitize_text_field( wp_unslash( $_POST['deadline_date'] ) ) : '',
+					'redirect_url'  => isset( $_POST['redirect_url'] ) ? esc_url_raw( wp_unslash( $_POST['redirect_url'] ) ) : '',
+					'welcome_title' => isset( $_POST['welcome_title'] ) ? sanitize_text_field( wp_unslash( $_POST['welcome_title'] ) ) : '',
+				);
+				update_option( $this->opt_settings, $settings );
 
-					// phpcs:ignore WordPress.Security.ValidatedSanitizedInput
-					$new_key = isset( $_POST['wgrsvp_license_key'] ) ? sanitize_text_field( wp_unslash( $_POST['wgrsvp_license_key'] ) ) : '';
-					update_option( $this->opt_license, $new_key );
+				$new_key = isset( $_POST['wgrsvp_license_key'] ) ? sanitize_text_field( wp_unslash( $_POST['wgrsvp_license_key'] ) ) : '';
+				update_option( $this->opt_license, $new_key );
 
-					echo '<div class="notice notice-success"><p>' . esc_html__( 'Settings Saved.', 'wedding-party-rsvp' ) . '</p></div>';
-				}
+				echo '<div class="notice notice-success"><p>' . esc_html__( 'Settings Saved.', 'wedding-party-rsvp' ) . '</p></div>';
 			}
 
 			$s   = get_option( $this->opt_settings, array() );
@@ -556,9 +548,9 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 
 					<div style="background:#fff; padding:20px; border:1px solid #ddd; margin-bottom:20px;">
 						<h3><?php esc_html_e( 'Logistics', 'wedding-party-rsvp' ); ?></h3>
-						<p><label><strong><?php esc_html_e( 'RSVP Page URL:', 'wedding-party-rsvp' ); ?></strong></label><br><input type="text" name="rsvp_page_url" value="<?php echo esc_attr( $s['rsvp_page_url'] ?? '' ); ?>" style="width:100%" placeholder="e.g. https://mysite.com/rsvp"></p>
+						<p><label><strong><?php esc_html_e( 'RSVP Page URL:', 'wedding-party-rsvp' ); ?></strong></label><br><input type="text" name="rsvp_page_url" value="<?php echo esc_url( $s['rsvp_page_url'] ?? '' ); ?>" style="width:100%" placeholder="e.g. https://mysite.com/rsvp"></p>
 						<p><label><strong><?php esc_html_e( 'RSVP Deadline:', 'wedding-party-rsvp' ); ?></strong></label><br><input type="date" name="deadline_date" value="<?php echo esc_attr( $s['deadline_date'] ?? '' ); ?>"></p>
-						<p><label><strong><?php esc_html_e( 'Redirect Success URL:', 'wedding-party-rsvp' ); ?></strong></label><br><input type="text" name="redirect_url" value="<?php echo esc_attr( $s['redirect_url'] ?? '' ); ?>" style="width:100%"></p>
+						<p><label><strong><?php esc_html_e( 'Redirect Success URL:', 'wedding-party-rsvp' ); ?></strong></label><br><input type="text" name="redirect_url" value="<?php echo esc_url( $s['redirect_url'] ?? '' ); ?>" style="width:100%"></p>
 					</div>
 
 					<div style="background:#fff; padding:20px; border:1px solid #ddd; margin-bottom:20px;">
@@ -601,16 +593,11 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 				wp_die( esc_html__( 'You do not have sufficient permissions to access this page.', 'wedding-party-rsvp' ) );
 			}
 
-			// SECURITY FIX: Use filter_input with sanitized flag & Verify Nonce
-			$menu_nonce = filter_input( INPUT_POST, 'wgrsvp_menu_nonce', FILTER_SANITIZE_SPECIAL_CHARS );
-			if ( $menu_nonce && wp_verify_nonce( $menu_nonce, 'wgrsvp_menu_nonce' ) ) {
-				if ( isset( $_POST['wgrsvp_save_menu'] ) ) {
-					// FIX: Added sanitization to $_POST inputs before logic
-					$menu_options_raw = isset( $_POST['menu_options'] ) ? sanitize_textarea_field( wp_unslash( $_POST['menu_options'] ) ) : '';
-					$this->save_menu_option( $this->opt_menu_adult, $menu_options_raw );
-					// Child, App, Hors removed from save logic (Pro)
-					echo '<div class="notice notice-success"><p>' . esc_html__( 'Adult Menu Options Saved.', 'wedding-party-rsvp' ) . '</p></div>';
-				}
+			if ( isset( $_POST['wgrsvp_save_menu'] ) ) {
+				check_admin_referer( 'wgrsvp_menu_nonce', 'wgrsvp_menu_nonce' );
+				$menu_options_raw = isset( $_POST['menu_options'] ) ? sanitize_textarea_field( wp_unslash( $_POST['menu_options'] ) ) : '';
+				$this->save_menu_option( $this->opt_menu_adult, $menu_options_raw );
+				echo '<div class="notice notice-success"><p>' . esc_html__( 'Adult Menu Options Saved.', 'wedding-party-rsvp' ) . '</p></div>';
 			}
 
 			$curr_adult = get_option( $this->opt_menu_adult, array() );
@@ -661,67 +648,54 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 
 			global $wpdb;
 
-			// SECURITY FIX: Use filter_input with sanitized flag
-			$add_nonce = filter_input( INPUT_POST, 'wgrsvp_add_guest', FILTER_SANITIZE_SPECIAL_CHARS );
-			if ( $add_nonce && wp_verify_nonce( $add_nonce, 'wgrsvp_add_guest' ) ) {
-				if ( isset( $_POST['wgrsvp_add_guest_btn'] ) ) {
-					// Removed Guest Limit Check
-					
-					$wpdb->insert(
-						$this->table_name,
-						array(
-							// phpcs:ignore WordPress.Security.ValidatedSanitizedInput
-							'party_id'   => isset( $_POST['party_id'] ) ? sanitize_text_field( wp_unslash( $_POST['party_id'] ) ) : '',
-							// phpcs:ignore WordPress.Security.ValidatedSanitizedInput
-							'guest_name' => isset( $_POST['guest_name'] ) ? sanitize_text_field( wp_unslash( $_POST['guest_name'] ) ) : '',
-							// is_child removed (Pro)
-						)
-					);
-					
-					$this->clear_stats_cache(); // Clear cache on add
-				}
+			if ( isset( $_POST['wgrsvp_add_guest_btn'] ) ) {
+				check_admin_referer( 'wgrsvp_add_guest', 'wgrsvp_add_guest' );
+
+				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, PluginCheck.Security.DirectDB.UnescapedDBParameter -- RSVP table; name from $wpdb->prefix; values sanitized below.
+				$wpdb->insert(
+					$this->table_name,
+					array(
+						'party_id'   => isset( $_POST['party_id'] ) ? sanitize_text_field( wp_unslash( $_POST['party_id'] ) ) : '',
+						'guest_name' => isset( $_POST['guest_name'] ) ? sanitize_text_field( wp_unslash( $_POST['guest_name'] ) ) : '',
+					)
+				);
+
+				$this->clear_stats_cache();
 			}
 
-			// 2. EDIT/DELETE (Share same nonce)
-			$edit_nonce = filter_input( INPUT_POST, 'wgrsvp_edit_guest', FILTER_SANITIZE_SPECIAL_CHARS );
-			if ( $edit_nonce && wp_verify_nonce( $edit_nonce, 'wgrsvp_edit_guest' ) ) {
-				
-				if ( isset( $_POST['wgrsvp_update_guest'] ) ) {
-					// phpcs:ignore WordPress.Security.ValidatedSanitizedInput
-					$id = isset( $_POST['id'] ) ? intval( $_POST['id'] ) : 0;
+			if ( isset( $_POST['wgrsvp_update_guest'] ) || isset( $_POST['wgrsvp_delete_guest'] ) ) {
+				check_admin_referer( 'wgrsvp_edit_guest', 'wgrsvp_edit_guest' );
+			}
 
-					$wpdb->update(
-						$this->table_name,
-						array(
-							// phpcs:ignore WordPress.Security.ValidatedSanitizedInput
-							'party_id'            => isset( $_POST['party_id'] ) ? sanitize_text_field( wp_unslash( $_POST['party_id'] ) ) : '',
-							// phpcs:ignore WordPress.Security.ValidatedSanitizedInput
-							'guest_name'          => isset( $_POST['guest_name'] ) ? sanitize_text_field( wp_unslash( $_POST['guest_name'] ) ) : '',
-							// phpcs:ignore WordPress.Security.ValidatedSanitizedInput
-							'rsvp_status'         => isset( $_POST['rsvp_status'] ) ? sanitize_text_field( wp_unslash( $_POST['rsvp_status'] ) ) : '',
-							// phpcs:ignore WordPress.Security.ValidatedSanitizedInput
-							'menu_choice'         => isset( $_POST['menu_choice'] ) ? sanitize_text_field( wp_unslash( $_POST['menu_choice'] ) ) : '',
-							
-							// REMOVED ALL PRO FIELDS FROM SAVE LOGIC: 
-							// child_menu_choice, appetizer_choice, hors_doeuvre_choice, table_number, admin_notes, is_child
-							
-							// phpcs:ignore WordPress.Security.ValidatedSanitizedInput
-							'email'               => isset( $_POST['email'] ) ? sanitize_email( wp_unslash( $_POST['email'] ) ) : '',
-							// phpcs:ignore WordPress.Security.ValidatedSanitizedInput
-							'phone'               => isset( $_POST['phone'] ) ? sanitize_text_field( wp_unslash( $_POST['phone'] ) ) : '',
-						),
-						array( 'id' => $id )
-					);
-					
-					$this->clear_stats_cache(); // Clear cache on update
-				}
+			if ( isset( $_POST['wgrsvp_update_guest'] ) ) {
+				$id = isset( $_POST['id'] ) ? absint( wp_unslash( $_POST['id'] ) ) : 0;
 
-				if ( isset( $_POST['wgrsvp_delete_guest'] ) ) {
-					// phpcs:ignore WordPress.Security.ValidatedSanitizedInput
-					$id = isset( $_POST['id'] ) ? intval( $_POST['id'] ) : 0;
-					$wpdb->delete( $this->table_name, array( 'id' => $id ) );
-					$this->clear_stats_cache(); // Clear cache on delete
-				}
+				$allowed_rsvp = array( 'Pending', 'Accepted', 'Declined' );
+				$rsvp_raw     = isset( $_POST['rsvp_status'] ) ? sanitize_text_field( wp_unslash( $_POST['rsvp_status'] ) ) : 'Pending';
+				$rsvp_status  = in_array( $rsvp_raw, $allowed_rsvp, true ) ? $rsvp_raw : 'Pending';
+
+				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, PluginCheck.Security.DirectDB.UnescapedDBParameter -- RSVP table; name from $wpdb->prefix; values sanitized below.
+				$wpdb->update(
+					$this->table_name,
+					array(
+						'party_id'    => isset( $_POST['party_id'] ) ? sanitize_text_field( wp_unslash( $_POST['party_id'] ) ) : '',
+						'guest_name'  => isset( $_POST['guest_name'] ) ? sanitize_text_field( wp_unslash( $_POST['guest_name'] ) ) : '',
+						'rsvp_status' => $rsvp_status,
+						'menu_choice' => isset( $_POST['menu_choice'] ) ? sanitize_text_field( wp_unslash( $_POST['menu_choice'] ) ) : '',
+						'email'       => isset( $_POST['email'] ) ? sanitize_email( wp_unslash( $_POST['email'] ) ) : '',
+						'phone'       => isset( $_POST['phone'] ) ? sanitize_text_field( wp_unslash( $_POST['phone'] ) ) : '',
+					),
+					array( 'id' => $id )
+				);
+
+				$this->clear_stats_cache();
+			}
+
+			if ( isset( $_POST['wgrsvp_delete_guest'] ) ) {
+				$id = isset( $_POST['id'] ) ? absint( wp_unslash( $_POST['id'] ) ) : 0;
+				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, PluginCheck.Security.DirectDB.UnescapedDBParameter -- RSVP table; name from $wpdb->prefix; id absint.
+				$wpdb->delete( $this->table_name, array( 'id' => $id ) );
+				$this->clear_stats_cache();
 			}
 		}
 
@@ -732,45 +706,42 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 				wp_die( esc_html__( 'You do not have sufficient permissions to access this page.', 'wedding-party-rsvp' ) );
 			}
 
-			// SECURITY FIX: Use filter_input with sanitized flag
-			$export_nonce = filter_input( INPUT_POST, 'wgrsvp_export_nonce', FILTER_SANITIZE_SPECIAL_CHARS );
-			if ( $export_nonce && wp_verify_nonce( $export_nonce, 'wgrsvp_export_nonce' ) ) {
-				if ( isset( $_POST['wgrsvp_export_csv'] ) ) {
-					global $wpdb;
-					// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery
-					$guests = $wpdb->get_results( "SELECT * FROM {$this->table_name}", ARRAY_A );
-					header( 'Content-Type: text/csv' );
-					header( 'Content-Disposition: attachment; filename="wedding-rsvp-export.csv"' );
-					// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fopen
-					$f = fopen( 'php://output', 'w' );
-					fputcsv( $f, array( 'Party ID', 'Name', 'Child', 'Table', 'RSVP', 'Menu', 'Child Menu', 'Appetizer', 'Hors', 'Dietary', 'Allergies', 'Song', 'Message', 'Notes', 'Email', 'Phone' ) );
-					foreach ( $guests as $r ) {
-						fputcsv(
-							$f,
-							array(
-								$r['party_id'],
-								$r['guest_name'],
-								$r['is_child'],
-								$r['table_number'],
-								$r['rsvp_status'],
-								$r['menu_choice'],
-								$r['child_menu_choice'],
-								$r['appetizer_choice'],
-								$r['hors_doeuvre_choice'],
-								$r['dietary_restrictions'],
-								$r['allergies'],
-								$r['song_request'],
-								$r['guest_message'],
-								$r['admin_notes'],
-								$r['email'],
-								$r['phone'],
-							)
-						);
-					}
-					// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fclose
-					fclose( $f );
-					exit;
+			if ( isset( $_POST['wgrsvp_export_csv'] ) ) {
+				check_admin_referer( 'wgrsvp_export_nonce', 'wgrsvp_export_nonce' );
+				global $wpdb;
+				// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery
+				$guests = $wpdb->get_results( "SELECT * FROM {$this->table_name}", ARRAY_A );
+				header( 'Content-Type: text/csv' );
+				header( 'Content-Disposition: attachment; filename="wedding-rsvp-export.csv"' );
+				// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fopen
+				$f = fopen( 'php://output', 'w' );
+				fputcsv( $f, array( 'Party ID', 'Name', 'Child', 'Table', 'RSVP', 'Menu', 'Child Menu', 'Appetizer', 'Hors', 'Dietary', 'Allergies', 'Song', 'Message', 'Notes', 'Email', 'Phone' ) );
+				foreach ( $guests as $r ) {
+					fputcsv(
+						$f,
+						array(
+							$r['party_id'],
+							$r['guest_name'],
+							$r['is_child'],
+							$r['table_number'],
+							$r['rsvp_status'],
+							$r['menu_choice'],
+							$r['child_menu_choice'],
+							$r['appetizer_choice'],
+							$r['hors_doeuvre_choice'],
+							$r['dietary_restrictions'],
+							$r['allergies'],
+							$r['song_request'],
+							$r['guest_message'],
+							$r['admin_notes'],
+							$r['email'],
+							$r['phone'],
+						)
+					);
 				}
+				// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fclose
+				fclose( $f );
+				exit;
 			}
 		}
 		// REWRITTEN SIGNATURE to avoid direct $_FILES access
@@ -786,6 +757,7 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 
 							// Removed Guest Limit Check
 
+							// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, PluginCheck.Security.DirectDB.UnescapedDBParameter -- RSVP table; name from $wpdb->prefix; CSV row sanitized below.
 							$wpdb->insert(
 								$this->table_name,
 								array(
@@ -807,67 +779,88 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 
 		// --- INIT: Handle Frontend Form (Redirection Logic) ---
 		public function process_frontend_submissions() {
-			
-			// SECURITY FIX: Use filter_input
-			$frontend_nonce = filter_input( INPUT_POST, '_wpnonce', FILTER_SANITIZE_SPECIAL_CHARS );
 
-			if ( $frontend_nonce && wp_verify_nonce( $frontend_nonce, 'wpr_frontend_save' ) ) {
-				
-				if ( isset( $_POST['wpr_submit_rsvp'] ) ) {
-					global $wpdb;
-					
-					// phpcs:ignore WordPress.Security.ValidatedSanitizedInput
-					$party_id = isset( $_POST['party_id'] ) ? sanitize_text_field( wp_unslash( $_POST['party_id'] ) ) : '';
-
-					// Honeypot
-					if ( ! empty( $_POST['wpr_honey'] ) ) {
-						return;
-					}
-
-					// phpcs:ignore WordPress.Security.ValidatedSanitizedInput
-					if ( isset( $_POST['guest'] ) && is_array( $_POST['guest'] ) ) {
-						// phpcs:ignore WordPress.Security.ValidatedSanitizedInput
-						foreach ( $_POST['guest'] as $id => $data ) {
-							$name      = sanitize_text_field( wp_unslash( $data['name_edit'] ?? $data['name_hidden'] ) );
-							$allergies = isset( $data['allergies'] ) ? implode( ', ', array_map( 'sanitize_text_field', $data['allergies'] ) ) : '';
-
-							$wpdb->update(
-								$this->table_name,
-								array(
-									'guest_name'           => $name,
-									'rsvp_status'          => sanitize_text_field( $data['rsvp'] ),
-									'menu_choice'          => sanitize_text_field( $data['menu'] ?? '' ),
-									'dietary_restrictions' => sanitize_text_field( $data['dietary'] ?? '' ),
-									'allergies'            => $allergies,
-									'song_request'         => sanitize_text_field( $data['song'] ?? '' ),
-									'guest_message'        => sanitize_textarea_field( $data['message'] ?? '' ),
-									'email'                => sanitize_email( $data['email'] ),
-									'phone'                => sanitize_text_field( $data['phone'] ),
-									'address'              => sanitize_textarea_field( $data['address'] ),
-								),
-								array(
-									'id'       => intval( $id ),
-									'party_id' => $party_id,
-								)
-							);
-						}
-						
-						$this->clear_stats_cache();
-					}
-
-					$settings = get_option( $this->opt_settings, array() );
-					if ( ! empty( $settings['redirect_url'] ) ) {
-						wp_safe_redirect( $settings['redirect_url'] );
-						exit;
-					} else {
-						// Set transient to show success message on next page load if no redirect
-						set_transient( 'wgrsvp_success_msg', '1', 60 );
-						// Safe refresh
-						wp_safe_redirect( remove_query_arg( 'wpr_submit_rsvp' ) );
-						exit;
-					}
-				}
+			if ( ! isset( $_POST['wpr_submit_rsvp'] ) ) {
+				return;
 			}
+
+			if ( ! isset( $_POST['_wpnonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['_wpnonce'] ) ), 'wgrsvp_front_rsvp_submit' ) ) {
+				wp_die( esc_html__( 'Security check failed.', 'wedding-party-rsvp' ), esc_html__( 'RSVP', 'wedding-party-rsvp' ), array( 'response' => 403 ) );
+			}
+
+			global $wpdb;
+
+			$party_id = isset( $_POST['party_id'] ) ? sanitize_text_field( wp_unslash( $_POST['party_id'] ) ) : '';
+
+			// Honeypot (must be empty).
+			$honey = isset( $_POST['wpr_honey'] ) ? sanitize_text_field( wp_unslash( $_POST['wpr_honey'] ) ) : '';
+			if ( '' !== $honey ) {
+				return;
+			}
+
+			// phpcs:disable WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Nested guest[] array; each field sanitized inside the loop.
+			if ( isset( $_POST['guest'] ) && is_array( $_POST['guest'] ) ) {
+				$guest_post = wp_unslash( $_POST['guest'] );
+				// phpcs:enable WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+				$allowed_rsvp = array( 'Pending', 'Accepted', 'Declined' );
+				foreach ( $guest_post as $id_raw => $data ) {
+					if ( ! is_array( $data ) ) {
+						continue;
+					}
+					$gid = absint( $id_raw );
+					if ( $gid < 1 ) {
+						continue;
+					}
+					$name      = sanitize_text_field( wp_unslash( (string) ( $data['name_edit'] ?? $data['name_hidden'] ?? '' ) ) );
+					$allergies = '';
+					if ( isset( $data['allergies'] ) && is_array( $data['allergies'] ) ) {
+						$allergy_bits = array_map(
+							static function ( $v ) {
+								return sanitize_text_field( wp_unslash( (string) $v ) );
+							},
+							$data['allergies']
+						);
+						$allergy_bits = array_filter( $allergy_bits );
+						$allergies    = implode( ', ', $allergy_bits );
+					}
+
+					$rsvp_raw = sanitize_text_field( wp_unslash( $data['rsvp'] ?? 'Pending' ) );
+					$rsvp     = in_array( $rsvp_raw, $allowed_rsvp, true ) ? $rsvp_raw : 'Pending';
+
+					// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, PluginCheck.Security.DirectDB.UnescapedDBParameter -- RSVP table; name from $wpdb->prefix; WHERE id + party_id constrained; values sanitized above.
+					$wpdb->update(
+						$this->table_name,
+						array(
+							'guest_name'           => $name,
+							'rsvp_status'          => $rsvp,
+							'menu_choice'          => sanitize_text_field( wp_unslash( $data['menu'] ?? '' ) ),
+							'dietary_restrictions' => sanitize_text_field( wp_unslash( $data['dietary'] ?? '' ) ),
+							'allergies'            => $allergies,
+							'song_request'         => sanitize_text_field( wp_unslash( $data['song'] ?? '' ) ),
+							'guest_message'        => sanitize_textarea_field( wp_unslash( $data['message'] ?? '' ) ),
+							'email'                => sanitize_email( wp_unslash( $data['email'] ?? '' ) ),
+							'phone'                => sanitize_text_field( wp_unslash( $data['phone'] ?? '' ) ),
+							'address'              => sanitize_textarea_field( wp_unslash( $data['address'] ?? '' ) ),
+						),
+						array(
+							'id'       => $gid,
+							'party_id' => $party_id,
+						)
+					);
+				}
+
+				$this->clear_stats_cache();
+			}
+
+			$settings = get_option( $this->opt_settings, array() );
+			if ( ! empty( $settings['redirect_url'] ) ) {
+				wp_safe_redirect( $settings['redirect_url'] );
+				exit;
+			}
+
+			set_transient( 'wgrsvp_success_msg', '1', 60 );
+			wp_safe_redirect( remove_query_arg( 'wpr_submit_rsvp' ) );
+			exit;
 		}
 
 		// --- HELPER: Generate Tags for Email/SMS ---
@@ -902,11 +895,13 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 			$output = '<div class="wpr-wrapper">';
 
 			// --- LOGIN FORM CHECK ---
-			$login_nonce = filter_input( INPUT_POST, 'wpr_login_nonce', FILTER_SANITIZE_SPECIAL_CHARS );
 			$party_id = '';
 
-			// 1. Check POST Login
-			if ( $login_nonce && wp_verify_nonce( $login_nonce, 'wpr_login_action' ) ) {
+			// 1. Check POST Login (submit button must be present; nonce required).
+			if ( isset( $_POST['wgrsvp_front_party_login_submit'] ) ) {
+				if ( ! isset( $_POST['wgrsvp_front_party_login_nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['wgrsvp_front_party_login_nonce'] ) ), 'wgrsvp_front_party_login' ) ) {
+					wp_die( esc_html__( 'Security check failed.', 'wedding-party-rsvp' ), esc_html__( 'RSVP', 'wedding-party-rsvp' ), array( 'response' => 403 ) );
+				}
 				if ( isset( $_POST['wpr_party_id'] ) ) {
 					$party_id = sanitize_text_field( wp_unslash( $_POST['wpr_party_id'] ) );
 				}
@@ -925,57 +920,56 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 
 			if ( empty( $guests ) ) {
 				$output .= '<form method="post">';
-				$output .= wp_nonce_field( 'wpr_login_action', 'wpr_login_nonce', true, false );
-				$output .= '<div class="wpr-field"><label>' . esc_html__( 'Party ID:', 'wedding-party-rsvp' ) . '</label><input type="text" name="wpr_party_id" required></div><button name="wpr_login_action" class="wpr-button">Find Invitation</button></form>';
+				$output .= wp_nonce_field( 'wgrsvp_front_party_login', 'wgrsvp_front_party_login_nonce', true, false );
+				$output .= '<div class="wpr-field"><label>' . esc_html__( 'Party ID:', 'wedding-party-rsvp' ) . '</label><input type="text" name="wpr_party_id" required></div><button name="wgrsvp_front_party_login_submit" class="wpr-button">Find Invitation</button></form>';
 			} else {
-				$menus_adult = get_option( $this->opt_menu_adult, array() );
+				$menus_adult   = get_option( $this->opt_menu_adult, array() );
 				$welcome_title = ! empty( $settings['welcome_title'] ) ? stripslashes( $settings['welcome_title'] ) : 'Party: ' . esc_html( $party_id );
 
-				$output .= '<form method="post">' . wp_nonce_field( 'wpr_frontend_save', '_wpnonce', true, false ) . '<input type="hidden" name="party_id" value="' . esc_attr( $party_id ) . '">';
+				$output .= '<form method="post">' . wp_nonce_field( 'wgrsvp_front_rsvp_submit', '_wpnonce', true, false ) . '<input type="hidden" name="party_id" value="' . esc_attr( $party_id ) . '">';
 				$output .= '<h2>' . esc_html( $welcome_title ) . '</h2>';
 				$output .= '<input type="text" name="wpr_honey" class="wpr-honey">';
 
 				foreach ( $guests as $g ) {
-					$output .= '<div class="wpr-guest-card">';
+					$output        .= '<div class="wpr-guest-card">';
 					$is_placeholder = in_array( strtolower( $g->guest_name ), array( 'guest', 'plus one', '+1' ) );
 					if ( $is_placeholder ) {
-						$output .= '<div class="wpr-field"><label>' . esc_html__( 'Guest Name:', 'wedding-party-rsvp' ) . '</label><input type="text" name="guest[' . $g->id . '][name_edit]" value="' . esc_attr( $g->guest_name ) . '"></div>';
+						$output .= '<div class="wpr-field"><label>' . esc_html__( 'Guest Name:', 'wedding-party-rsvp' ) . '</label><input type="text" name="guest[' . absint( $g->id ) . '][name_edit]" value="' . esc_attr( $g->guest_name ) . '"></div>';
 					} else {
 						$output .= '<h3>' . esc_html( $g->guest_name ) . '</h3>';
-						$output .= '<input type="hidden" name="guest[' . $g->id . '][name_hidden]" value="' . esc_attr( $g->guest_name ) . '">';
+						$output .= '<input type="hidden" name="guest[' . absint( $g->id ) . '][name_hidden]" value="' . esc_attr( $g->guest_name ) . '">';
 					}
 
 					// Table Display Removed (Pro)
 
-					$output .= '<div class="wpr-field"><label>' . esc_html__( 'Attending?', 'wedding-party-rsvp' ) . '</label><select name="guest[' . $g->id . '][rsvp]" required>';
+					$output .= '<div class="wpr-field"><label>' . esc_html__( 'Attending?', 'wedding-party-rsvp' ) . '</label><select name="guest[' . absint( $g->id ) . '][rsvp]" required>';
 					$output .= '<option value="Pending" ' . selected( $g->rsvp_status, 'Pending', false ) . '>' . esc_html__( 'Select...', 'wedding-party-rsvp' ) . '</option>';
 					$output .= '<option value="Accepted" ' . selected( $g->rsvp_status, 'Accepted', false ) . '>' . esc_html__( 'Delighted to attend', 'wedding-party-rsvp' ) . '</option>';
 					$output .= '<option value="Declined" ' . selected( $g->rsvp_status, 'Declined', false ) . '>' . esc_html__( 'Unable to attend', 'wedding-party-rsvp' ) . '</option></select></div>';
 
 					// Only render Adult Menu in Free Version
-					$output .= '<div class="wpr-field"><label>' . esc_html__( 'Entrée', 'wedding-party-rsvp' ) . '</label><select name="guest[' . $g->id . '][menu]"><option value="">' . esc_html__( 'Select...', 'wedding-party-rsvp' ) . '</option>';
+					$output .= '<div class="wpr-field"><label>' . esc_html__( 'Entrée', 'wedding-party-rsvp' ) . '</label><select name="guest[' . absint( $g->id ) . '][menu]"><option value="">' . esc_html__( 'Select...', 'wedding-party-rsvp' ) . '</option>';
 					foreach ( $menus_adult as $m ) {
 						$output .= '<option value="' . esc_attr( $m ) . '" ' . selected( $g->menu_choice, $m, false ) . '>' . esc_html( $m ) . '</option>';
 					}
 					$output .= '</select></div>';
 
-					$output .= '<div class="wpr-field"><label>' . esc_html__( 'Dietary Restrictions', 'wedding-party-rsvp' ) . '</label>';
+					$output         .= '<div class="wpr-field"><label>' . esc_html__( 'Dietary Restrictions', 'wedding-party-rsvp' ) . '</label>';
 					$allergies       = array( 'Gluten Free', 'Dairy Free', 'Vegetarian', 'Vegan', 'Nut Allergy' );
 					$saved_allergies = explode( ', ', $g->allergies );
 					$output         .= '<div class="wpr-checkbox-group">';
 					foreach ( $allergies as $a ) {
-						$checked = in_array( $a, $saved_allergies ) ? 'checked' : '';
-						$output .= '<label><input type="checkbox" name="guest[' . $g->id . '][allergies][]" value="' . esc_attr( $a ) . '" ' . $checked . '> ' . esc_html( $a ) . '</label>';
+						$output .= '<label><input type="checkbox" name="guest[' . absint( $g->id ) . '][allergies][]" value="' . esc_attr( $a ) . '" ' . checked( in_array( $a, $saved_allergies, true ), true, false ) . '> ' . esc_html( $a ) . '</label>';
 					}
-					$output .= '</div><input type="text" name="guest[' . $g->id . '][dietary]" value="' . esc_attr( $g->dietary_restrictions ) . '" placeholder="' . esc_attr__( 'Other...', 'wedding-party-rsvp' ) . '"></div>';
+					$output .= '</div><input type="text" name="guest[' . absint( $g->id ) . '][dietary]" value="' . esc_attr( $g->dietary_restrictions ) . '" placeholder="' . esc_attr__( 'Other...', 'wedding-party-rsvp' ) . '"></div>';
 
-					$output .= '<div class="wpr-field"><label>' . esc_html__( 'I promise to dance if you play:', 'wedding-party-rsvp' ) . '</label><input type="text" name="guest['.$g->id.'][song]" value="'.esc_attr($g->song_request).'"></div>';
+					$output .= '<div class="wpr-field"><label>' . esc_html__( 'I promise to dance if you play:', 'wedding-party-rsvp' ) . '</label><input type="text" name="guest[' . absint( $g->id ) . '][song]" value="' . esc_attr( $g->song_request ) . '"></div>';
 
-					$output .= '<div class="wpr-field"><label>' . esc_html__( 'Message to Couple:', 'wedding-party-rsvp' ) . '</label><textarea name="guest['.$g->id.'][message]" rows="2" placeholder="Note to the bride & groom...">' . esc_textarea( $g->guest_message ) . '</textarea></div>';
+					$output .= '<div class="wpr-field"><label>' . esc_html__( 'Message to Couple:', 'wedding-party-rsvp' ) . '</label><textarea name="guest[' . absint( $g->id ) . '][message]" rows="2" placeholder="Note to the bride & groom...">' . esc_textarea( $g->guest_message ) . '</textarea></div>';
 
-					$output .= '<div class="wpr-field"><label>' . esc_html__( 'Email', 'wedding-party-rsvp' ) . '</label><input type="email" name="guest[' . $g->id . '][email]" value="' . esc_attr( $g->email ) . '"></div>';
-					$output .= '<div class="wpr-field"><label>' . esc_html__( 'Phone', 'wedding-party-rsvp' ) . '</label><input type="text" name="guest[' . $g->id . '][phone]" value="' . esc_attr( $g->phone ) . '"></div>';
-					$output .= '<div class="wpr-field"><label>' . esc_html__( 'Mailing Address', 'wedding-party-rsvp' ) . '</label><textarea name="guest[' . $g->id . '][address]">' . esc_textarea( $g->address ) . '</textarea></div>';
+					$output .= '<div class="wpr-field"><label>' . esc_html__( 'Email', 'wedding-party-rsvp' ) . '</label><input type="email" name="guest[' . absint( $g->id ) . '][email]" value="' . esc_attr( $g->email ) . '"></div>';
+					$output .= '<div class="wpr-field"><label>' . esc_html__( 'Phone', 'wedding-party-rsvp' ) . '</label><input type="text" name="guest[' . absint( $g->id ) . '][phone]" value="' . esc_attr( $g->phone ) . '"></div>';
+					$output .= '<div class="wpr-field"><label>' . esc_html__( 'Mailing Address', 'wedding-party-rsvp' ) . '</label><textarea name="guest[' . absint( $g->id ) . '][address]">' . esc_textarea( $g->address ) . '</textarea></div>';
 
 					$output .= '</div>';
 				}
@@ -983,7 +977,7 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 			}
 			return $output . '</div>';
 		}
-		
+
 		// --- EMAIL PAGE (Upsell Placeholder) ---
 		public function admin_page_email() {
 			?>

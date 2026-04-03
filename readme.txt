@@ -2,8 +2,8 @@
 Contributors: brelandr
 Tags: wedding, rsvp, guests, party, invitation
 Requires at least: 6.0
-Tested up to: 6.9.4
-Stable tag: 7.3.2
+Tested up to: 6.9
+Stable tag: 7.3.5
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -92,9 +92,27 @@ Mobile View: Managing guests on a mobile device.
 
 == Changelog ==
 
+= 7.3.5 =
+
+Maintenance: Release version bump for coordinated directory update (aligns with Pro licensing documentation release).
+
+= 7.3.4 =
+
+Hardening: Addressed WordPress.org checker warnings around nested guest POST handling and custom-table database operations.
+
+Maintenance: Updated tested-up-to metadata formatting for directory compliance.
+
+= 7.3.3 =
+
+Maintenance: Release version bump and metadata normalization for directory checks.
+
+Compatibility: Updated 'Tested up to' formatting to WordPress.org-compliant major.minor (6.9).
+
+Hardening: Improved frontend guest POST handling and clarified custom-table DB operations for Plugin Check compliance.
+
 = 7.3.2 =
 
-Compatibility: Tested up to WordPress 6.9.4.
+Compatibility: Tested up to WordPress 6.9.
 
 = 7.3.1 =
 
