@@ -1,0 +1,247 @@
+/**
+ * Settings screen: inactive Pro preview controls + upgrade modal (free plugin).
+ */
+
+html.wgrsvp-pro-teaser-modal-open,
+html.wgrsvp-pro-teaser-modal-open body {
+	overflow: hidden;
+}
+
+.wgrsvp-pro-teaser-wrap {
+	position: relative;
+	border: 1px solid #c3c4c7;
+	border-radius: 4px;
+	background: #fff;
+	box-shadow: 0 1px 1px rgba(0, 0, 0, 0.04);
+}
+
+.wgrsvp-pro-teaser-wrap .wgrsvp-pro-teaser-intro {
+	margin-top: 0;
+	color: #646970;
+	font-size: 13px;
+	line-height: 1.5;
+}
+
+/* Pill badge */
+.wgrsvp-pro-badge {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	margin-left: 6px;
+	padding: 2px 8px;
+	font-size: 10px;
+	font-weight: 600;
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+	line-height: 1.4;
+	color: #1d2327;
+	background: linear-gradient(180deg, #fff 0%, #f0f0f1 100%);
+	border: 1px solid #c3c4c7;
+	border-radius: 999px;
+	box-shadow: inset 0 1px 0 #fff;
+	vertical-align: middle;
+}
+
+h2 .wgrsvp-pro-badge,
+h3 .wgrsvp-pro-badge {
+	margin-left: 8px;
+}
+
+/* Tabs (WordPress nav-tab look) */
+.wgrsvp-pro-teaser-tabs.nav-tab-wrapper {
+	margin-bottom: 16px;
+	padding-top: 0;
+	border-bottom: 1px solid #c3c4c7;
+}
+
+.wgrsvp-pro-teaser-tabs .wgrsvp-pro-teaser-tab {
+	position: relative;
+	margin-bottom: -1px;
+}
+
+.wgrsvp-pro-teaser-tabs .wgrsvp-pro-teaser-tab:focus {
+	box-shadow: none;
+	outline: 2px solid transparent;
+	outline-offset: 0;
+}
+
+.wgrsvp-pro-teaser-tabs .wgrsvp-pro-teaser-tab:focus-visible {
+	outline: 2px solid #2271b1;
+	outline-offset: 1px;
+}
+
+/* Hit target: full-width faux control */
+.wgrsvp-pro-teaser-hit {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 16px;
+	width: 100%;
+	max-width: 520px;
+	margin: 0;
+	padding: 12px 14px;
+	text-align: left;
+	cursor: pointer;
+	background: #f6f7f7;
+	border: 1px solid #dcdcde;
+	border-radius: 6px;
+	box-sizing: border-box;
+	transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.wgrsvp-pro-teaser-hit:hover {
+	background: #f0f0f1;
+	border-color: #c3c4c7;
+}
+
+.wgrsvp-pro-teaser-hit:focus {
+	outline: none;
+	box-shadow: 0 0 0 1px #2271b1;
+}
+
+.wgrsvp-pro-teaser-hit:focus-visible {
+	box-shadow: 0 0 0 2px #2271b1;
+}
+
+.wgrsvp-pro-teaser-hit__main {
+	flex: 1;
+	min-width: 0;
+}
+
+.wgrsvp-pro-teaser-hit__title {
+	display: block;
+	font-size: 14px;
+	font-weight: 600;
+	color: #1d2327;
+	margin-bottom: 4px;
+}
+
+.wgrsvp-pro-teaser-hit__desc {
+	display: block;
+	font-size: 12px;
+	font-weight: 400;
+	color: #646970;
+	line-height: 1.45;
+}
+
+/* Fake switch (always “off”, disabled) */
+.wgrsvp-pro-teaser-switch {
+	position: relative;
+	flex-shrink: 0;
+	width: 44px;
+	height: 24px;
+	border-radius: 999px;
+	background: #dcdcde;
+	border: 1px solid #c3c4c7;
+	pointer-events: none;
+}
+
+.wgrsvp-pro-teaser-switch::after {
+	content: "";
+	position: absolute;
+	top: 2px;
+	left: 2px;
+	width: 18px;
+	height: 18px;
+	border-radius: 50%;
+	background: #fff;
+	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
+}
+
+/* Modal */
+.wgrsvp-pro-teaser-modal[hidden] {
+	display: none !important;
+}
+
+.wgrsvp-pro-teaser-modal.is-open {
+	display: flex !important;
+}
+
+.wgrsvp-pro-teaser-modal {
+	position: fixed;
+	inset: 0;
+	z-index: 100000;
+	align-items: center;
+	justify-content: center;
+	padding: 24px;
+	box-sizing: border-box;
+}
+
+.wgrsvp-pro-teaser-modal__backdrop {
+	position: absolute;
+	inset: 0;
+	background: rgba(0, 0, 0, 0.45);
+	cursor: pointer;
+}
+
+.wgrsvp-pro-teaser-modal__dialog {
+	position: relative;
+	z-index: 1;
+	width: 100%;
+	max-width: 440px;
+	max-height: calc(100vh - 48px);
+	overflow: auto;
+	margin: 0;
+	padding: 20px 22px 22px;
+	background: #fff;
+	border-radius: 4px;
+	box-shadow: 0 4px 24px rgba(0, 0, 0, 0.18);
+	border: 1px solid #c3c4c7;
+}
+
+.wgrsvp-pro-teaser-modal__dialog h2 {
+	margin: 0 32px 12px 0;
+	padding: 0;
+	font-size: 18px;
+	line-height: 1.35;
+	color: #1d2327;
+}
+
+.wgrsvp-pro-teaser-modal__dialog p {
+	margin: 0 0 16px;
+	font-size: 14px;
+	line-height: 1.55;
+	color: #50575e;
+}
+
+.wgrsvp-pro-teaser-modal__dialog .button.button-primary {
+	margin-right: 8px;
+	margin-bottom: 0;
+}
+
+.wgrsvp-pro-teaser-modal__close {
+	position: absolute;
+	top: 12px;
+	right: 12px;
+	width: 32px;
+	height: 32px;
+	margin: 0;
+	padding: 0;
+	border: none;
+	background: transparent;
+	color: #787c82;
+	font-size: 22px;
+	line-height: 1;
+	cursor: pointer;
+	border-radius: 4px;
+}
+
+.wgrsvp-pro-teaser-modal__close:hover {
+	color: #1d2327;
+	background: #f0f0f1;
+}
+
+.wgrsvp-pro-teaser-modal__close:focus-visible {
+	outline: 2px solid #2271b1;
+	outline-offset: 1px;
+}
+
+@media (max-width: 600px) {
+	.wgrsvp-pro-teaser-hit {
+		flex-wrap: wrap;
+	}
+
+	.wgrsvp-pro-teaser-switch {
+		align-self: flex-end;
+	}
+}
