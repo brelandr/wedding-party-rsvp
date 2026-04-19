@@ -1,0 +1,22 @@
+# Paths excluded from distribution archives (wp dist-archive, deploy scripts).
+# Also useful to omit from local Plugin Check scans when tooling respects this file.
+
+svn-checkout/
+.git/
+.github/
+.cursor/
+.release
+.vscode/
+node_modules/
+vendor/
+src/
+tests/
+*.zip
+*.sh
+*.md
+phpcs.xml
+phpcs.xml.dist
+composer.json
+composer.lock
+package.json
+package-lock.json

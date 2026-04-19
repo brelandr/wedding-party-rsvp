@@ -2,7 +2,7 @@
 /*
 Plugin Name: Wedding Party RSVP – Guest List, Invitation & Event Manager
 Description: Simple and secure RSVP system. Manage guest lists and adult meal choices.
-Version: 7.3.9
+Version: 7.3.10
 Author: Land Tech Web Designs, Corp
 Author URI: https://landtechwebdesigns.com
 Plugin URI: https://landtechwebdesigns.com/wedding-party-rsvp-wordpress-plugin/
@@ -183,7 +183,7 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 				'wgrsvp-rsvp-interactivity',
 				plugins_url( 'assets/js/rsvp-interactivity.js', __FILE__ ),
 				array( '@wordpress/interactivity' ),
-				'7.3.9'
+				'7.3.10'
 			);
 
 			return true;
@@ -667,7 +667,7 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 			';
 
 			if ( wgrsvp_is_pro_plugin_active() ) {
-				wp_register_style( 'wgrsvp-settings-layout-base', false, array(), '7.3.9' );
+				wp_register_style( 'wgrsvp-settings-layout-base', false, array(), '7.3.10' );
 				wp_enqueue_style( 'wgrsvp-settings-layout-base' );
 				wp_add_inline_style( 'wgrsvp-settings-layout-base', wp_strip_all_tags( $layout_css ) );
 
@@ -1306,7 +1306,7 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 			}
 
 			$dash_js = plugins_url( 'assets/js/wgrsvp-admin-dashboard.js', __FILE__ );
-			wp_register_script( 'wgrsvp-admin-dashboard', $dash_js, array(), '7.3.9', true );
+			wp_register_script( 'wgrsvp-admin-dashboard', $dash_js, array(), '7.3.10', true );
 			wp_enqueue_script( 'wgrsvp-admin-dashboard' );
 
 			// Actions (full editors only).
@@ -2161,6 +2161,11 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 		public function process_frontend_submissions() {
 
 			if ( defined( 'DOING_AJAX' ) && DOING_AJAX ) {
+				return;
+			}
+
+			// Licensed Pro registers [wedding_rsvp_form] and verifies `wpr_pro_front_rsvp_submit`. This handler expects `wgrsvp_front_rsvp_submit`; running both would reject valid Pro submissions on init before the shortcode runs.
+			if ( function_exists( 'wgrsvp_is_pro_plugin_active' ) && wgrsvp_is_pro_plugin_active() && 'valid' === get_option( 'wpr_pro_license_status', '' ) ) {
 				return;
 			}
 

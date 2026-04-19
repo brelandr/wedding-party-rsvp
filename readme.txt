@@ -3,7 +3,7 @@ Contributors: brelandr
 Tags: wedding, rsvp, guest list, invitation, event management
 Requires at least: 6.2
 Tested up to: 6.9
-Stable tag: 7.3.9
+Stable tag: 7.3.10
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -111,6 +111,12 @@ Guest records live in your WordPress database (a custom table, usually `wp_weddi
 In wp-admin, use **Tools → Export Personal Data** and **Tools → Erase Personal Data** (WordPress 4.9.6+). This plugin registers an exporter and an eraser that match guest rows by **email address** stored on the guest record. Erasing removes all guest rows that use that email from the RSVP table—use only when appropriate for your jurisdiction and event.
 
 == Changelog ==
+
+= 7.3.10 =
+
+Fix: When Wedding Party RSVP Pro is active with a valid license, the free plugin no longer runs its classic RSVP POST handler on `init` with the wrong nonce, so guests submitting the public RSVP form no longer see “Security check failed.” (Pro owns the shortcode and nonce in that configuration.)
+
+Compatibility: Confirmed “Tested up to” WordPress 6.9.x for this release.
 
 = 7.3.9 =
 

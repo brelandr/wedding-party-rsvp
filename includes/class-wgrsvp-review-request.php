@@ -174,7 +174,7 @@ if ( ! class_exists( 'WGRSVP_Review_Request' ) ) {
 			$plugin_file = dirname( __DIR__ ) . '/wedding-party-rsvp.php';
 			$handle      = 'wgrsvp-review-request';
 			$src         = plugins_url( 'assets/js/wgrsvp-review-request.js', $plugin_file );
-			wp_register_script( $handle, $src, array(), '7.3.9', true );
+			wp_register_script( $handle, $src, array(), '7.3.10', true );
 			wp_enqueue_script( $handle );
 			wp_localize_script(
 				$handle,
