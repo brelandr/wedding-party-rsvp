@@ -2,7 +2,7 @@
 /*
 Plugin Name: Wedding Party RSVP – Guest List, Invitation & Event Manager
 Description: Simple and secure RSVP system. Manage guest lists and adult meal choices.
-Version: 7.3.10
+Version: 7.3.11
 Author: Land Tech Web Designs, Corp
 Author URI: https://landtechwebdesigns.com
 Plugin URI: https://landtechwebdesigns.com/wedding-party-rsvp-wordpress-plugin/
@@ -38,6 +38,64 @@ if ( ! function_exists( 'wgrsvp_is_pro_plugin_active' ) ) {
 		}
 		$cached = is_plugin_active( 'wedding-party-rsvp-pro/wedding-party-rsvp-pro.php' );
 		return (bool) apply_filters( 'wgrsvp_is_pro_plugin_active', $cached );
+	}
+}
+
+if ( ! function_exists( 'wgrsvp_trusted_showcase_license_host' ) ) {
+	/**
+	 * Demo host treated as licensed when Pro helpers are not loaded (mirrors Pro trusted list).
+	 *
+	 * @return bool
+	 */
+	function wgrsvp_trusted_showcase_license_host() {
+		$host = wp_parse_url( home_url(), PHP_URL_HOST );
+		if ( ! is_string( $host ) || '' === $host ) {
+			$host = wp_parse_url( site_url(), PHP_URL_HOST );
+		}
+		$host = strtolower( (string) $host );
+		if ( 0 === strpos( $host, 'www.' ) ) {
+			$host = substr( $host, 4 );
+		}
+
+		return 'wedding-rsvp.landtechsvc.com' === $host;
+	}
+}
+
+if ( ! function_exists( 'wgrsvp_is_pro_license_effectively_valid' ) ) {
+	/**
+	 * Whether Pro is considered licensed for free-plugin UI (includes trusted showcase host).
+	 *
+	 * @return bool
+	 */
+	function wgrsvp_is_pro_license_effectively_valid() {
+		if ( function_exists( 'wpr_pro_effective_license_is_valid' ) ) {
+			return wpr_pro_effective_license_is_valid();
+		}
+		if ( wgrsvp_trusted_showcase_license_host() ) {
+			return true;
+		}
+
+		return 'valid' === get_option( 'wpr_pro_license_status', '' );
+	}
+}
+
+if ( ! function_exists( 'wgrsvp_mask_license_key_for_display' ) ) {
+	/**
+	 * Mask a license key for settings UI (activated / on file).
+	 *
+	 * @param string $key Raw key.
+	 * @return string
+	 */
+	function wgrsvp_mask_license_key_for_display( $key ) {
+		$key = (string) $key;
+		if ( '' === $key ) {
+			return '';
+		}
+		if ( strlen( $key ) < 8 ) {
+			return '••••••••';
+		}
+
+		return substr( $key, 0, 4 ) . '…' . substr( $key, -4 );
 	}
 }
 
@@ -183,7 +241,7 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 				'wgrsvp-rsvp-interactivity',
 				plugins_url( 'assets/js/rsvp-interactivity.js', __FILE__ ),
 				array( '@wordpress/interactivity' ),
-				'7.3.10'
+				'7.3.11'
 			);
 
 			return true;
@@ -620,7 +678,8 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 				function_exists( 'wpr_pro_is_free_plugin_active' )
 				&& wpr_pro_is_free_plugin_active()
 				&& class_exists( 'WPR_Pro_Admin' )
-				&& 'valid' === get_option( 'wpr_pro_license_status', '' )
+				&& function_exists( 'wgrsvp_is_pro_license_effectively_valid' )
+				&& wgrsvp_is_pro_license_effectively_valid()
 			);
 
 			return (bool) apply_filters( 'wgrsvp_redirect_free_email_sms_to_pro_comm', $candidate );
@@ -667,7 +726,7 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 			';
 
 			if ( wgrsvp_is_pro_plugin_active() ) {
-				wp_register_style( 'wgrsvp-settings-layout-base', false, array(), '7.3.10' );
+				wp_register_style( 'wgrsvp-settings-layout-base', false, array(), '7.3.11' );
 				wp_enqueue_style( 'wgrsvp-settings-layout-base' );
 				wp_add_inline_style( 'wgrsvp-settings-layout-base', wp_strip_all_tags( $layout_css ) );
 
@@ -1306,7 +1365,7 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 			}
 
 			$dash_js = plugins_url( 'assets/js/wgrsvp-admin-dashboard.js', __FILE__ );
-			wp_register_script( 'wgrsvp-admin-dashboard', $dash_js, array(), '7.3.10', true );
+			wp_register_script( 'wgrsvp-admin-dashboard', $dash_js, array(), '7.3.11', true );
 			wp_enqueue_script( 'wgrsvp-admin-dashboard' );
 
 			// Actions (full editors only).
@@ -1579,8 +1638,13 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 									</td>
 
 									<td>
-										<?php if ( wgrsvp_is_pro_plugin_active() ) : ?>
-											<span class="description"><?php echo ! empty( $guest->admin_notes ) ? esc_html( wp_trim_words( $guest->admin_notes, 20 ) ) : esc_html__( '—', 'wedding-party-rsvp' ); ?></span>
+										<?php if ( wgrsvp_is_pro_plugin_active() && current_user_can( 'manage_options' ) ) : ?>
+											<?php
+											$pro_notes_url = wp_nonce_url( admin_url( 'admin.php?page=wedding-rsvp-edit&id=' . absint( $guest->id ) ), 'wpr_pro_view_edit_guest', 'wpr_pro_edit' ) . '#wpr-admin-notes';
+											?>
+											<a href="<?php echo esc_url( $pro_notes_url ); ?>" target="_blank" rel="noopener noreferrer"><?php echo esc_html( ! empty( $guest->admin_notes ) ? __( 'Edit admin notes', 'wedding-party-rsvp' ) : __( 'Admin notes', 'wedding-party-rsvp' ) ); ?></a>
+										<?php elseif ( wgrsvp_is_pro_plugin_active() ) : ?>
+											<span class="description"><?php esc_html_e( '—', 'wedding-party-rsvp' ); ?></span>
 										<?php else : ?>
 											<div class="wpr-pro-placeholder" style="height:50px; line-height:50px;">Admin Notes (Available in Pro)</div>
 										<?php endif; ?>
@@ -1622,7 +1686,16 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 											<?php endif; ?>
 										</div>
 									</td>
-									<td><span class="description"><?php echo ! empty( $guest->admin_notes ) ? esc_html( $guest->admin_notes ) : esc_html__( '—', 'wedding-party-rsvp' ); ?></span></td>
+									<td>
+										<?php if ( wgrsvp_is_pro_plugin_active() && current_user_can( 'manage_options' ) ) : ?>
+											<?php
+											$pro_notes_url = wp_nonce_url( admin_url( 'admin.php?page=wedding-rsvp-edit&id=' . absint( $guest->id ) ), 'wpr_pro_view_edit_guest', 'wpr_pro_edit' ) . '#wpr-admin-notes';
+											?>
+											<a href="<?php echo esc_url( $pro_notes_url ); ?>" target="_blank" rel="noopener noreferrer"><?php echo esc_html( ! empty( $guest->admin_notes ) ? __( 'Edit admin notes', 'wedding-party-rsvp' ) : __( 'Admin notes', 'wedding-party-rsvp' ) ); ?></a>
+										<?php else : ?>
+											<span class="description"><?php esc_html_e( '—', 'wedding-party-rsvp' ); ?></span>
+										<?php endif; ?>
+									</td>
 									<td style="white-space:nowrap;">
 										<?php
 										$party_rsvp_url = $this->get_public_party_rsvp_url( $guest->party_id );
@@ -1699,15 +1772,25 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 					);
 					update_option( $this->opt_settings, $settings );
 
-					$new_key = isset( $_POST['wgrsvp_license_key'] ) ? sanitize_text_field( wp_unslash( $_POST['wgrsvp_license_key'] ) ) : '';
-					update_option( $this->opt_license, $new_key );
+					$new_key  = isset( $_POST['wgrsvp_license_key'] ) ? sanitize_text_field( wp_unslash( $_POST['wgrsvp_license_key'] ) ) : '';
+					$prev_lic = get_option( $this->opt_license, '' );
+					$keep_lic = ( '' === $new_key && wgrsvp_is_pro_license_effectively_valid() && is_string( $prev_lic ) && '' !== $prev_lic );
+					if ( ! $keep_lic ) {
+						update_option( $this->opt_license, $new_key );
+					}
 
 					echo '<div class="notice notice-success"><p>' . esc_html__( 'Settings Saved.', 'wedding-party-rsvp' ) . '</p></div>';
 				}
 			}
 
-			$s   = get_option( $this->opt_settings, array() );
-			$lic = get_option( $this->opt_license, '' );
+			$s        = get_option( $this->opt_settings, array() );
+			$lic      = get_option( $this->opt_license, '' );
+			$lic_show = $lic;
+			$lic_ph   = '';
+			if ( wgrsvp_is_pro_license_effectively_valid() && '' !== $lic ) {
+				$lic_show = '';
+				$lic_ph   = wgrsvp_mask_license_key_for_display( $lic );
+			}
 			?>
 			<div class="wrap">
 				<h1><?php esc_html_e( 'General Settings', 'wedding-party-rsvp' ); ?></h1>
@@ -1720,7 +1803,10 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 						<h3><?php esc_html_e( 'License / Support', 'wedding-party-rsvp' ); ?></h3>
 						<?php if ( wgrsvp_is_pro_plugin_active() ) : ?>
 							<p class="description"><?php esc_html_e( 'Premium licensing and support are managed in Wedding Party RSVP Pro (Settings & Licensing). This field is only needed for legacy free-plugin data.', 'wedding-party-rsvp' ); ?></p>
-							<input type="text" name="wgrsvp_license_key" value="<?php echo esc_attr( $lic ); ?>" style="width:100%; max-width:400px;" placeholder="<?php esc_attr_e( 'Optional', 'wedding-party-rsvp' ); ?>">
+							<?php if ( wgrsvp_is_pro_license_effectively_valid() && '' !== $lic ) : ?>
+								<p class="description"><?php esc_html_e( 'License key on file is masked. Leave blank to keep it, or enter a new key to replace.', 'wedding-party-rsvp' ); ?></p>
+							<?php endif; ?>
+							<input type="text" name="wgrsvp_license_key" value="<?php echo esc_attr( $lic_show ); ?>" style="width:100%; max-width:400px;" placeholder="<?php echo esc_attr( '' !== $lic_ph ? $lic_ph : __( 'Optional', 'wedding-party-rsvp' ) ); ?>" autocomplete="off">
 						<?php else : ?>
 							<p><?php esc_html_e( 'Enter your license key below for Priority Support and to unlock Pro features.', 'wedding-party-rsvp' ); ?></p>
 
@@ -1728,7 +1814,10 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 								<a href="<?php echo esc_url( 'https://landtechwebdesigns.com/wedding-party-rsvp-wordpress-plugin/' ); ?>" target="_blank" class="button"><?php esc_html_e( 'Purchase License Key', 'wedding-party-rsvp' ); ?></a>
 							</p>
 
-							<input type="text" name="wgrsvp_license_key" value="<?php echo esc_attr( $lic ); ?>" style="width:100%; max-width:400px;" placeholder="<?php esc_attr_e( 'License Key', 'wedding-party-rsvp' ); ?>">
+							<?php if ( wgrsvp_is_pro_license_effectively_valid() && '' !== $lic ) : ?>
+								<p class="description"><?php esc_html_e( 'License key on file is masked. Leave blank to keep it, or enter a new key to replace.', 'wedding-party-rsvp' ); ?></p>
+							<?php endif; ?>
+							<input type="text" name="wgrsvp_license_key" value="<?php echo esc_attr( $lic_show ); ?>" style="width:100%; max-width:400px;" placeholder="<?php echo esc_attr( '' !== $lic_ph ? $lic_ph : __( 'License Key', 'wedding-party-rsvp' ) ); ?>" autocomplete="off">
 						<?php endif; ?>
 					</div>
 
@@ -2165,7 +2254,7 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 			}
 
 			// Licensed Pro registers [wedding_rsvp_form] and verifies `wpr_pro_front_rsvp_submit`. This handler expects `wgrsvp_front_rsvp_submit`; running both would reject valid Pro submissions on init before the shortcode runs.
-			if ( function_exists( 'wgrsvp_is_pro_plugin_active' ) && wgrsvp_is_pro_plugin_active() && 'valid' === get_option( 'wpr_pro_license_status', '' ) ) {
+			if ( function_exists( 'wgrsvp_is_pro_plugin_active' ) && wgrsvp_is_pro_plugin_active() && wgrsvp_is_pro_license_effectively_valid() ) {
 				return;
 			}
 
@@ -2349,7 +2438,9 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 					$output .= '<div class="wpr-field"><label>' . esc_html__( 'Message to Couple:', 'wedding-party-rsvp' ) . '</label><textarea name="guest[' . absint( $g->id ) . '][message]" rows="2" placeholder="' . esc_attr__( 'Note to the bride & groom…', 'wedding-party-rsvp' ) . '">' . esc_textarea( $g->guest_message ) . '</textarea></div>';
 
 					$output .= '<div class="wpr-field"><label>' . esc_html__( 'Email', 'wedding-party-rsvp' ) . '</label><input type="email" name="guest[' . absint( $g->id ) . '][email]" value="' . esc_attr( $g->email ) . '"></div>';
-					$output .= '<div class="wpr-field"><label>' . esc_html__( 'Phone', 'wedding-party-rsvp' ) . '</label><input type="text" name="guest[' . absint( $g->id ) . '][phone]" value="' . esc_attr( $g->phone ) . '"></div>';
+					if ( empty( $settings['hide_phone'] ) ) {
+						$output .= '<div class="wpr-field"><label>' . esc_html__( 'Phone', 'wedding-party-rsvp' ) . '</label><input type="text" name="guest[' . absint( $g->id ) . '][phone]" value="' . esc_attr( $g->phone ) . '"></div>';
+					}
 					$output .= '<div class="wpr-field"><label>' . esc_html__( 'Mailing Address', 'wedding-party-rsvp' ) . '</label><textarea name="guest[' . absint( $g->id ) . '][address]">' . esc_textarea( $g->address ) . '</textarea></div>';
 
 					$output .= '</div>';
@@ -2387,7 +2478,7 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 					<p><?php esc_html_e( 'Email invitations are configured in Wedding Party RSVP Pro.', 'wedding-party-rsvp' ); ?></p>
 					<p>
 						<a class="button button-primary" href="<?php echo esc_url( admin_url( 'admin.php?page=wedding-rsvp-settings' ) ); ?>"><?php esc_html_e( 'Open Pro settings', 'wedding-party-rsvp' ); ?></a>
-						<?php if ( 'valid' === get_option( 'wpr_pro_license_status', '' ) ) : ?>
+						<?php if ( wgrsvp_is_pro_license_effectively_valid() ) : ?>
 							<a class="button" href="<?php echo esc_url( admin_url( 'admin.php?page=wedding-rsvp-comm' ) ); ?>"><?php esc_html_e( 'Email & SMS', 'wedding-party-rsvp' ); ?></a>
 						<?php endif; ?>
 					</p>
@@ -2427,7 +2518,7 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 					<p><?php esc_html_e( 'SMS invitations are configured in Wedding Party RSVP Pro (Twilio).', 'wedding-party-rsvp' ); ?></p>
 					<p>
 						<a class="button button-primary" href="<?php echo esc_url( admin_url( 'admin.php?page=wedding-rsvp-settings' ) ); ?>"><?php esc_html_e( 'Open Pro settings', 'wedding-party-rsvp' ); ?></a>
-						<?php if ( 'valid' === get_option( 'wpr_pro_license_status', '' ) ) : ?>
+						<?php if ( wgrsvp_is_pro_license_effectively_valid() ) : ?>
 							<a class="button" href="<?php echo esc_url( admin_url( 'admin.php?page=wedding-rsvp-comm' ) ); ?>"><?php esc_html_e( 'Email & SMS', 'wedding-party-rsvp' ); ?></a>
 						<?php endif; ?>
 					</p>

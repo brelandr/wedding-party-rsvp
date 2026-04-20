@@ -1,7 +1,7 @@
 # Wedding Party RSVP (free) — release manifest
 # Bump VERSION with each WordPress.org release; keep in sync with readme Stable tag and plugin header.
 
-VERSION=7.3.10
-STABLE_TAG=7.3.10
+VERSION=7.3.11
+STABLE_TAG=7.3.11
 TESTED_UP_TO=6.9
 REQUIRES_AT_LEAST=6.2

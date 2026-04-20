@@ -3,7 +3,7 @@ Contributors: brelandr
 Tags: wedding, rsvp, guest list, invitation, event management
 Requires at least: 6.2
 Tested up to: 6.9
-Stable tag: 7.3.10
+Stable tag: 7.3.11
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -111,6 +111,12 @@ Guest records live in your WordPress database (a custom table, usually `wp_weddi
 In wp-admin, use **Tools → Export Personal Data** and **Tools → Erase Personal Data** (WordPress 4.9.6+). This plugin registers an exporter and an eraser that match guest rows by **email address** stored on the guest record. Erasing removes all guest rows that use that email from the RSVP table—use only when appropriate for your jurisdiction and event.
 
 == Changelog ==
+
+= 7.3.11 =
+
+IMPROVED: License / Support field on General Settings masks a stored key when the site is effectively licensed (including the same trusted showcase hostname rules as Pro); saving with a blank field keeps the existing key.
+
+IMPROVED: Email/SMS admin placeholders and Pro communication redirects use effective license state (not only the raw option), matching Pro behavior for licensed co-installations.
 
 = 7.3.10 =
 
