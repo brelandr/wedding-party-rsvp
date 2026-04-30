@@ -174,8 +174,11 @@ if ( ! class_exists( 'WGRSVP_Review_Request' ) ) {
 			$plugin_file = dirname( __DIR__ ) . '/wedding-party-rsvp.php';
 			$handle      = 'wgrsvp-review-request';
 			$src         = plugins_url( 'assets/js/wgrsvp-review-request.js', $plugin_file );
-			wp_register_script( $handle, $src, array(), '7.3.11', true );
+			wp_register_script( $handle, $src, array(), '8.0.1', true );
 			wp_enqueue_script( $handle );
+			if ( function_exists( 'wgrsvp_set_script_translations' ) ) {
+				wgrsvp_set_script_translations( $handle );
+			}
 			wp_localize_script(
 				$handle,
 				'wgrsvpReviewRequest',
@@ -194,8 +197,14 @@ if ( ! class_exists( 'WGRSVP_Review_Request' ) ) {
 		 * @return void
 		 */
 		public function ajax_handle_dismiss() {
-			check_ajax_referer( self::NONCE_ACTION, 'nonce' );
-
+			if ( ! check_ajax_referer( self::NONCE_ACTION, 'nonce', false ) ) {
+				wp_send_json_error(
+					array(
+						'message' => __( 'Security check failed.', 'wedding-party-rsvp' ),
+					),
+					403
+				);
+			}
 			if ( ! current_user_can( 'manage_options' ) ) {
 				wp_send_json_error(
 					array(

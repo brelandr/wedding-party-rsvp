@@ -1,0 +1,17 @@
+{
+	"name": "wedding-party-rsvp",
+	"version": "8.0.1",
+	"private": true,
+	"scripts": {
+		"build": "wp-scripts build",
+		"start": "wp-scripts start",
+		"i18n:make-pot": "wp i18n make-pot . languages/wedding-party-rsvp.pot --domain=wedding-party-rsvp --exclude=node_modules,vendor,build,assets/blueprints",
+		"i18n:make-json": "wp i18n make-json languages --pretty-print"
+	},
+	"dependencies": {
+		"@wordpress/dataviews": "^4.21.0"
+	},
+	"devDependencies": {
+		"@wordpress/scripts": "^30.12.0"
+	}
+}
