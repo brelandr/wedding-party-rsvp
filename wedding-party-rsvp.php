@@ -2,7 +2,7 @@
 /*
 Plugin Name: Wedding Party RSVP – Guest List, Invitation & Event Manager
 Description: Simple and secure RSVP system. Manage guest lists and adult meal choices.
-Version: 8.0.1
+Version: 8.0.2
 Author: Land Tech Web Designs, Corp
 Author URI: https://landtechwebdesigns.com
 Plugin URI: https://landtechwebdesigns.com/wedding-party-rsvp-wordpress-plugin/
@@ -30,6 +30,8 @@ if ( ! defined( 'WGRSVP_PLUGIN_FILE' ) ) {
 if ( ! defined( 'WGRSVP_PLUGIN_DIR' ) ) {
 	define( 'WGRSVP_PLUGIN_DIR', plugin_dir_path( WGRSVP_PLUGIN_FILE ) );
 }
+
+require_once WGRSVP_PLUGIN_DIR . 'includes/wgrsvp-admin-modules.php';
 
 if ( ! function_exists( 'wgrsvp_set_script_translations' ) ) {
 	/**
@@ -183,6 +185,11 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 		private const TRANSIENT_AGGREGATED_STATS = 'wedding-party-rsvp_aggregated_stats';
 
 		/**
+		 * Short-lived flash after classic (non-AJAX) RSVP submit on the frontend.
+		 */
+		private const TRANSIENT_RSVP_FORM_SUCCESS_FLASH = 'wgrsvp_rsvp_form_success_flash';
+
+		/**
 		 * Option incremented when guest data changes so object-cache keys for read queries miss.
 		 */
 		private const OPTION_QUERY_CACHE_GEN = 'wgrsvp_query_cache_generation';
@@ -269,6 +276,7 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 
 			// Load CSS.
 			add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_admin_styles' ) );
+			add_action( 'admin_enqueue_scripts', array( $this, 'maybe_enqueue_admin_ui_script' ) );
 			add_action( 'admin_enqueue_scripts', array( $this, 'maybe_enqueue_paste_import_script' ) );
 			add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_settings_pro_teaser_assets' ), 20, 1 );
 			add_action( 'admin_enqueue_scripts', array( $this, 'maybe_enqueue_settings_ai_wording_assets' ), 21, 1 );
@@ -346,7 +354,7 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 				'wgrsvp-rsvp-interactivity',
 				plugins_url( 'assets/js/rsvp-interactivity.js', __FILE__ ),
 				array( '@wordpress/interactivity' ),
-				'8.0.1'
+				'8.0.2'
 			);
 			wgrsvp_set_script_translations( 'wgrsvp-rsvp-interactivity' );
 
@@ -367,7 +375,7 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 				'wgrsvp-party-lookup-interactivity',
 				plugins_url( 'assets/js/party-lookup-interactivity.js', __FILE__ ),
 				array( '@wordpress/interactivity' ),
-				'8.0.1'
+				'8.0.2'
 			);
 			wgrsvp_set_script_translations( 'wgrsvp-party-lookup-interactivity' );
 
@@ -393,8 +401,13 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 		}
 
 		/**
-		 * REST: lightweight party preview (count + first names) with per-IP rate limit.
+		 * Register public party-preview REST route (unauthenticated; IP rate-limited in callback).
 		 *
+		 * Party ID is sanitized via `sanitize_text_field` in route args. No session nonce: endpoint is
+		 * read-only and bounded. For stricter setups, use `wgrsvp_party_preview_rate_limit_max` or
+		 * remove the route via `rest_endpoints` filter.
+		 *
+		 * @since 7.3.12
 		 * @return void
 		 */
 		public function register_party_preview_rest_route() {
@@ -449,8 +462,9 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 		}
 
 		/**
-		 * REST: read-only guest rows for admin DataViews spike (same visibility as guest dashboard).
+		 * Register admin-only guest-rows REST route (coordinator or equivalent capability).
 		 *
+		 * @since 7.3.17
 		 * @return void
 		 */
 		public function register_admin_guest_rows_rest_route() {
@@ -690,8 +704,14 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 		}
 
 		/**
-		 * @param WP_REST_Request $request Request.
-		 * @return WP_REST_Response|WP_Error
+		 * Serve party preview JSON for interactive “lookup invitation” UI.
+		 *
+		 * Applies per-IP transient rate limiting before querying the database. Returns only counts and
+		 * up to three first-name tokens; no email or full PII.
+		 *
+		 * @since 7.3.12
+		 * @param WP_REST_Request $request Request with `party_id`.
+		 * @return WP_REST_Response|WP_Error JSON payload or 429 rate-limit error.
 		 */
 		public function rest_serve_party_preview( $request ) {
 			$ip = isset( $_SERVER['REMOTE_ADDR'] ) ? sanitize_text_field( wp_unslash( (string) $_SERVER['REMOTE_ADDR'] ) ) : '0';
@@ -1285,7 +1305,7 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 			}
 
 			$path = plugin_dir_path( __FILE__ ) . 'assets/js/wgrsvp-admin-ai-wording.js';
-			$ver  = is_readable( $path ) ? (string) filemtime( $path ) : '8.0.1';
+			$ver  = is_readable( $path ) ? (string) filemtime( $path ) : '8.0.2';
 
 			wp_enqueue_script(
 				'wgrsvp-admin-ai-wording',
@@ -1523,6 +1543,9 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 			delete_transient( self::TRANSIENT_AGGREGATED_STATS );
 			if ( class_exists( 'WGRSVP_Guest_Health', false ) ) {
 				WGRSVP_Guest_Health::bust_metrics_cache();
+			}
+			if ( class_exists( 'WGRSVP_Vendor_Packet', false ) ) {
+				WGRSVP_Vendor_Packet::bust_vendor_packet_transients();
 			}
 			wp_cache_delete( 'wgrsvp_wizard_guest_count', 'wedding_rsvp' );
 			// Bump so CSV export object-cache keys (see handle_csv_export) miss after guest/table changes.
@@ -1897,19 +1920,36 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 				&& wpr_pro_should_merge_with_free_admin_menu();
 		}
 
+		/**
+		 * Register top-level Wedding RSVP menu and core submenus.
+		 *
+		 * @return void
+		 */
 		public function create_admin_menu() {
-			add_menu_page( 'Wedding RSVP', 'Wedding RSVP', WGRSVP_Coordinator_Role::CAP_VIEW_GUEST_DASHBOARD, 'wedding-rsvp-main', array( $this, 'admin_page_guests' ), 'dashicons-groups', 6 );
-			add_submenu_page( 'wedding-rsvp-main', 'Menu Options', 'Menu Options', 'manage_options', 'wedding-rsvp-menu', array( $this, 'admin_page_menu' ) );
-			add_submenu_page( 'wedding-rsvp-main', __( 'Paste Guest List', 'wedding-party-rsvp' ), __( 'Paste Guest List', 'wedding-party-rsvp' ), 'manage_options', 'wedding-rsvp-paste-guests', array( $this, 'admin_page_paste_guest_list' ) );
-			if ( ! $this->wgrsvp_pro_owns_merged_settings_screen() ) {
-				add_submenu_page( 'wedding-rsvp-main', 'Settings', 'Settings', 'manage_options', 'wedding-rsvp-settings', array( $this, 'admin_page_settings' ) );
+			add_menu_page( __( 'Wedding RSVP', 'wedding-party-rsvp' ), __( 'Wedding RSVP', 'wedding-party-rsvp' ), WGRSVP_Coordinator_Role::CAP_VIEW_GUEST_DASHBOARD, 'wedding-rsvp-main', array( $this, 'admin_page_guests' ), 'dashicons-groups', 6 );
+			if ( wgrsvp_admin_module_enabled( 'menu_options' ) ) {
+				add_submenu_page( 'wedding-rsvp-main', __( 'Menu Options', 'wedding-party-rsvp' ), __( 'Menu Options', 'wedding-party-rsvp' ), 'manage_options', 'wedding-rsvp-menu', array( $this, 'admin_page_menu' ) );
 			}
-			add_submenu_page( 'wedding-rsvp-main', 'Email Invites', 'Email Invites', 'manage_options', 'wedding-rsvp-email', array( $this, 'admin_page_email' ) );
-			add_submenu_page( 'wedding-rsvp-main', 'SMS Invites', 'SMS Invites', 'manage_options', 'wedding-rsvp-sms', array( $this, 'admin_page_sms' ) );
+			if ( wgrsvp_admin_module_enabled( 'paste_guests' ) ) {
+				add_submenu_page( 'wedding-rsvp-main', __( 'Paste Guest List', 'wedding-party-rsvp' ), __( 'Paste Guest List', 'wedding-party-rsvp' ), 'manage_options', 'wedding-rsvp-paste-guests', array( $this, 'admin_page_paste_guest_list' ) );
+			}
+			if ( ! $this->wgrsvp_pro_owns_merged_settings_screen() ) {
+				add_submenu_page( 'wedding-rsvp-main', __( 'Settings', 'wedding-party-rsvp' ), __( 'Settings', 'wedding-party-rsvp' ), 'manage_options', 'wedding-rsvp-settings', array( $this, 'admin_page_settings' ) );
+			}
+			add_submenu_page( 'wedding-rsvp-main', __( 'Email Invites', 'wedding-party-rsvp' ), __( 'Email Invites', 'wedding-party-rsvp' ), 'manage_options', 'wedding-rsvp-email', array( $this, 'admin_page_email' ) );
+			add_submenu_page( 'wedding-rsvp-main', __( 'SMS Invites', 'wedding-party-rsvp' ), __( 'SMS Invites', 'wedding-party-rsvp' ), 'manage_options', 'wedding-rsvp-sms', array( $this, 'admin_page_sms' ) );
 		}
 
+		/**
+		 * Build a sorted guest-list URL preserving current filters.
+		 *
+		 * @param string $col          Column key for orderby.
+		 * @param string $current_by   Active orderby from the list request.
+		 * @param string $current_order Active sort direction (ASC|DESC).
+		 * @return string Admin URL with sort query args.
+		 */
 		private function get_sort_link( $col, $current_by, $current_order ) {
-			$new_order = ( $current_by === $col && $current_order === 'ASC' ) ? 'DESC' : 'ASC';
+			$new_order = ( $col === $current_by && 'ASC' === $current_order ) ? 'DESC' : 'ASC';
 			$args      = array(
 				'page'    => 'wedding-rsvp-main',
 				'orderby' => $col,
@@ -2011,7 +2051,7 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 			';
 
 			if ( wgrsvp_is_pro_plugin_active() ) {
-				wp_register_style( 'wgrsvp-settings-layout-base', false, array(), '8.0.1' );
+				wp_register_style( 'wgrsvp-settings-layout-base', false, array(), '8.0.2' );
 				wp_enqueue_style( 'wgrsvp-settings-layout-base' );
 				wp_add_inline_style( 'wgrsvp-settings-layout-base', wp_strip_all_tags( $layout_css ) );
 
@@ -2296,20 +2336,18 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 		/**
 		 * Handles GET requests from “Dismiss” links on growth/admin notices (`wgrsvp_dismiss_notice`).
 		 *
-		 * Validates `check_admin_referer( 'wgrsvp_dismiss_growth_notice', '_wpnonce' )` before updating options.
+		 * Validates `check_admin_referer( 'wgrsvp_dismiss_growth_notice', '_wpnonce' )`, then `manage_options`, before updating options.
 		 *
 		 * @return void
 		 */
 		public function maybe_handle_growth_dismiss() {
-			if ( ! current_user_can( 'manage_options' ) ) {
-				return;
-			}
 			if ( ! isset( $_GET['wgrsvp_dismiss_notice'] ) ) {
 				return;
 			}
-			// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Nonce checked before option updates; dismiss key only parsed after success.
-			if ( ! check_admin_referer( 'wgrsvp_dismiss_growth_notice', '_wpnonce', false ) ) {
-				return;
+			// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Nonce verified before reads and capability.
+			check_admin_referer( 'wgrsvp_dismiss_growth_notice', '_wpnonce' );
+			if ( ! current_user_can( 'manage_options' ) ) {
+				wp_die( esc_html__( 'You do not have sufficient permissions to access this page.', 'wedding-party-rsvp' ), esc_html__( 'Error', 'wedding-party-rsvp' ), array( 'response' => 403 ) );
 			}
 			// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Parsed after nonce verification above.
 			$which = sanitize_key( wp_unslash( $_GET['wgrsvp_dismiss_notice'] ) );
@@ -2402,10 +2440,10 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 		 * @return void
 		 */
 		public function handle_save_guest_list_segment() {
+			check_admin_referer( 'wgrsvp_save_guest_list_segment', 'wgrsvp_save_guest_list_segment_nonce' );
 			if ( ! current_user_can( 'manage_options' ) ) {
 				wp_die( esc_html__( 'You do not have sufficient permissions to access this page.', 'wedding-party-rsvp' ) );
 			}
-			check_admin_referer( 'wgrsvp_save_guest_list_segment', 'wgrsvp_save_guest_list_segment_nonce' );
 
 			$label = isset( $_POST['wgrsvp_segment_label'] ) ? sanitize_text_field( wp_unslash( (string) $_POST['wgrsvp_segment_label'] ) ) : '';
 			if ( '' === $label ) {
@@ -2442,9 +2480,6 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 		 * @return void
 		 */
 		public function handle_delete_guest_list_segment() {
-			if ( ! current_user_can( 'manage_options' ) ) {
-				wp_die( esc_html__( 'You do not have sufficient permissions to access this page.', 'wedding-party-rsvp' ) );
-			}
 			if ( ! isset( $_GET['wgrsvp_seg_id'], $_GET['_wpnonce'] ) ) {
 				wp_safe_redirect( admin_url( 'admin.php?page=wedding-rsvp-main' ) );
 				exit;
@@ -2455,6 +2490,9 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 				exit;
 			}
 			check_admin_referer( 'wgrsvp_delete_guest_list_segment_' . $id );
+			if ( ! current_user_can( 'manage_options' ) ) {
+				wp_die( esc_html__( 'You do not have sufficient permissions to access this page.', 'wedding-party-rsvp' ) );
+			}
 
 			$list = get_user_meta( get_current_user_id(), 'wgrsvp_guest_list_segments', true );
 			if ( ! is_array( $list ) ) {
@@ -2478,10 +2516,10 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 		 * @return void
 		 */
 		public function handle_dayof_arrival() {
+			check_admin_referer( 'wgrsvp_dayof_arrival', 'wgrsvp_dayof_arrival_nonce' );
 			if ( ! current_user_can( 'manage_options' ) ) {
 				wp_die( esc_html__( 'You do not have sufficient permissions to access this page.', 'wedding-party-rsvp' ) );
 			}
-			check_admin_referer( 'wgrsvp_dayof_arrival', 'wgrsvp_dayof_arrival_nonce' );
 
 			$guest_id = isset( $_POST['wgrsvp_arrival_guest_id'] ) ? absint( wp_unslash( (string) $_POST['wgrsvp_arrival_guest_id'] ) ) : 0;
 			$do       = isset( $_POST['wgrsvp_arrival_do'] ) ? sanitize_key( wp_unslash( (string) $_POST['wgrsvp_arrival_do'] ) ) : '';
@@ -2782,7 +2820,7 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 
 		// --- CSS HANDLERS ---
 		public function enqueue_admin_styles() {
-			wp_register_style( 'wgrsvp-admin-style', false, array(), '8.0.1' );
+			wp_register_style( 'wgrsvp-admin-style', false, array(), '8.0.2' );
 			wp_enqueue_style( 'wgrsvp-admin-style' );
 			$css = $this->get_custom_css();
 			wp_add_inline_style( 'wgrsvp-admin-style', wp_strip_all_tags( $css ) );
@@ -2791,9 +2829,44 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 					'wgrsvp-admin-rtl',
 					plugins_url( 'assets/css/admin-rtl.css', __FILE__ ),
 					array( 'wgrsvp-admin-style' ),
-					'8.0.1'
+					'8.0.2'
 				);
 			}
+		}
+
+		/**
+		 * Shared admin behaviors: confirm prompts, select-on-click inputs, print control (no inline JS).
+		 *
+		 * @param string $hook_suffix Current admin screen id.
+		 * @return void
+		 */
+		public function maybe_enqueue_admin_ui_script( $hook_suffix ) {
+			if ( false === strpos( (string) $hook_suffix, 'wedding-rsvp' ) ) {
+				return;
+			}
+
+			$path = plugin_dir_path( __FILE__ ) . 'assets/js/wgrsvp-admin-ui.js';
+			$ver  = is_readable( $path ) ? (string) filemtime( $path ) : '8.0.2';
+
+			wp_enqueue_script(
+				'wgrsvp-admin-ui',
+				plugins_url( 'assets/js/wgrsvp-admin-ui.js', __FILE__ ),
+				array(),
+				$ver,
+				true
+			);
+			wgrsvp_set_script_translations( 'wgrsvp-admin-ui' );
+			wp_localize_script(
+				'wgrsvp-admin-ui',
+				'wgrsvpAdminUi',
+				array(
+					'strings' => array(
+						'confirmDeleteGuest'        => __( 'Delete this guest row?', 'wedding-party-rsvp' ),
+						'confirmFactoryReset'       => __( 'This permanently deletes all guests and resets the plugin. Continue?', 'wedding-party-rsvp' ),
+						'confirmRemoveThankyouTask' => __( 'Remove this task?', 'wedding-party-rsvp' ),
+					),
+				)
+			);
 		}
 
 		/**
@@ -2813,7 +2886,7 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 				'wgrsvp-paste-import',
 				plugins_url( 'assets/js/wgrsvp-paste-import.js', __FILE__ ),
 				array(),
-				'8.0.1',
+				'8.0.2',
 				true
 			);
 			wgrsvp_set_script_translations( 'wgrsvp-paste-import' );
@@ -2834,7 +2907,7 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 		}
 
 		public function enqueue_frontend_styles() {
-			wp_register_style( 'wgrsvp-front-style', false, array(), '8.0.1' );
+			wp_register_style( 'wgrsvp-front-style', false, array(), '8.0.2' );
 			wp_enqueue_style( 'wgrsvp-front-style' );
 			$css = $this->get_custom_css();
 			// Late hardening: inline style must not contain tags; values inside get_custom_css() are sanitized scalars only.
@@ -2844,7 +2917,7 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 					'wgrsvp-front-rtl',
 					plugins_url( 'assets/css/frontend-rtl.css', __FILE__ ),
 					array( 'wgrsvp-front-style' ),
-					'8.0.1'
+					'8.0.2'
 				);
 			}
 		}
@@ -3309,9 +3382,15 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 				wp_die( esc_html__( 'You do not have sufficient permissions to access this page.', 'wedding-party-rsvp' ) );
 			}
 
+			wgrsvp_require_admin_module_or_die( 'paste_guests' );
+
 			$wgrsvp_paste_notice = array();
 			if ( isset( $_POST['wgrsvp_import_paste'], $_POST['wgrsvp_import_guests_nonce'] ) ) {
 				check_admin_referer( 'wgrsvp_import_guests', 'wgrsvp_import_guests_nonce' );
+				if ( ! current_user_can( 'manage_options' ) ) {
+					wp_die( esc_html__( 'You do not have sufficient permissions to access this page.', 'wedding-party-rsvp' ) );
+				}
+				wgrsvp_require_admin_module_or_die( 'paste_guests' );
 				$wgrsvp_paste_notice = $this->handle_paste_import();
 			}
 
@@ -3376,7 +3455,7 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 			}
 
 			$dash_js = plugins_url( 'assets/js/wgrsvp-admin-dashboard.js', __FILE__ );
-			wp_register_script( 'wgrsvp-admin-dashboard', $dash_js, array(), '8.0.1', true );
+			wp_register_script( 'wgrsvp-admin-dashboard', $dash_js, array(), '8.0.2', true );
 			wp_enqueue_script( 'wgrsvp-admin-dashboard' );
 			wgrsvp_set_script_translations( 'wgrsvp-admin-dashboard' );
 
@@ -3389,14 +3468,14 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 					if ( ! is_array( $asset ) ) {
 						$asset = array(
 							'dependencies' => array(),
-							'version'      => '8.0.1',
+							'version'      => '8.0.2',
 						);
 					}
 					wp_enqueue_script(
 						'wgrsvp-guest-dataviews',
 						plugins_url( 'build/index.js', __FILE__ ),
 						isset( $asset['dependencies'] ) && is_array( $asset['dependencies'] ) ? $asset['dependencies'] : array(),
-						isset( $asset['version'] ) ? $asset['version'] : '8.0.1',
+						isset( $asset['version'] ) ? $asset['version'] : '8.0.2',
 						true
 					);
 					wgrsvp_set_script_translations( 'wgrsvp-guest-dataviews' );
@@ -3405,7 +3484,7 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 							'wgrsvp-guest-dataviews',
 							plugins_url( 'build/style-index.css', __FILE__ ),
 							array(),
-							isset( $asset['version'] ) ? $asset['version'] : '8.0.1'
+							isset( $asset['version'] ) ? $asset['version'] : '8.0.2'
 						);
 					}
 					$meal_elements = array();
@@ -3449,7 +3528,7 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 						'wgrsvp-dataviews-spike',
 						$spike_js,
 						array( 'wp-api-fetch' ),
-						'8.0.1',
+						'8.0.2',
 						true
 					);
 					wgrsvp_set_script_translations( 'wgrsvp-dataviews-spike' );
@@ -3473,6 +3552,9 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 
 			if ( $can_manage_rsvp && isset( $_POST['wgrsvp_import_guests_nonce'] ) ) {
 				check_admin_referer( 'wgrsvp_import_guests', 'wgrsvp_import_guests_nonce' );
+				if ( ! current_user_can( 'manage_options' ) ) {
+					wp_die( esc_html__( 'You do not have sufficient permissions to access this page.', 'wedding-party-rsvp' ) );
+				}
 				if ( isset( $_POST['wgrsvp_import_csv'] ) ) {
 					// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
 					$csv_file = isset( $_FILES['csv_file']['tmp_name'] ) ? sanitize_text_field( wp_unslash( $_FILES['csv_file']['tmp_name'] ) ) : '';
@@ -3539,7 +3621,7 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 			<div class="wrap">
 				<h1 style="display:flex; align-items:center; flex-wrap:wrap; gap:10px;">
 					<?php esc_html_e( 'Wedding Dashboard', 'wedding-party-rsvp' ); ?>
-					<span style="background:#46b450; color:#fff; font-size:12px; padding:3px 8px; border-radius:10px;">Unlimited Guests</span>
+					<span style="background:#46b450; color:#fff; font-size:12px; padding:3px 8px; border-radius:10px;"><?php esc_html_e( 'Unlimited Guests', 'wedding-party-rsvp' ); ?></span>
 				</h1>
 
 				<?php if ( ! $can_manage_rsvp ) : ?>
@@ -3570,16 +3652,16 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 				<?php endif; ?>
 
 				<div class="wpr-dashboard-grid">
-					<a href="?page=wedding-rsvp-main&filter_status=Accepted" class="wpr-stat-box" style="background:#46b450; color:#fff;">
-						<h2><?php echo esc_html( $total_accepted ); ?></h2>
+					<a href="<?php echo esc_url( admin_url( 'admin.php?page=wedding-rsvp-main&filter_status=Accepted' ) ); ?>" class="wpr-stat-box" style="background:#46b450; color:#fff;">
+						<h2><?php echo esc_html( (string) $total_accepted ); ?></h2>
 						<small><?php esc_html_e( 'Attending', 'wedding-party-rsvp' ); ?></small>
 					</a>
-					<a href="?page=wedding-rsvp-main&filter_status=Declined" class="wpr-stat-box" style="background:#dc3232; color:#fff;">
-						<h2><?php echo esc_html( $total_declined ); ?></h2>
+					<a href="<?php echo esc_url( admin_url( 'admin.php?page=wedding-rsvp-main&filter_status=Declined' ) ); ?>" class="wpr-stat-box" style="background:#dc3232; color:#fff;">
+						<h2><?php echo esc_html( (string) $total_declined ); ?></h2>
 						<small><?php esc_html_e( 'Regrets', 'wedding-party-rsvp' ); ?></small>
 					</a>
-					<a href="?page=wedding-rsvp-main&filter_status=Pending" class="wpr-stat-box" style="background:#ffb900; color:#23282d;">
-						<h2><?php echo esc_html( $total_pending ); ?></h2>
+					<a href="<?php echo esc_url( admin_url( 'admin.php?page=wedding-rsvp-main&filter_status=Pending' ) ); ?>" class="wpr-stat-box" style="background:#ffb900; color:#23282d;">
+						<h2><?php echo esc_html( (string) $total_pending ); ?></h2>
 						<small><?php esc_html_e( 'Pending', 'wedding-party-rsvp' ); ?></small>
 					</a>
 				</div>
@@ -3670,7 +3752,7 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 							'no_address'              => __( 'No mailing address', 'wedding-party-rsvp' ),
 							'pending_no_contact'      => __( 'Pending & no email/phone', 'wedding-party-rsvp' ),
 							'accepted_meal_not_set'   => __( 'Attending, meal not set', 'wedding-party-rsvp' ),
-							'accepted_with_allergies'  => __( 'Attending with allergies noted', 'wedding-party-rsvp' ),
+							'accepted_with_allergies' => __( 'Attending with allergies noted', 'wedding-party-rsvp' ),
 						);
 						foreach ( $gaps as $gk => $glabel ) {
 							if ( 'accepted_meal_not_set' === $gk || 'accepted_with_allergies' === $gk ) {
@@ -3781,7 +3863,7 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 							<input type="text" name="party_id" required placeholder="<?php esc_attr_e( 'Code', 'wedding-party-rsvp' ); ?>" style="width:100px;" title="<?php echo esc_attr__( 'Invitation code (Party ID)', 'wedding-party-rsvp' ); ?>">
 							<input type="text" name="guest_name" required placeholder="<?php esc_attr_e( 'Name', 'wedding-party-rsvp' ); ?>" style="width:120px;">
 							<?php if ( ! wgrsvp_is_pro_plugin_active() ) : ?>
-							<div class="wpr-pro-placeholder" style="width:60px; display:inline-block; margin:0 5px;">Kid (Pro)</div>
+							<div class="wpr-pro-placeholder" style="width:60px; display:inline-block; margin:0 5px;"><?php esc_html_e( 'Kid (Pro)', 'wedding-party-rsvp' ); ?></div>
 							<?php endif; ?>
 							<input type="submit" name="wgrsvp_add_guest_btn" class="button button-primary" value="<?php esc_attr_e( 'Add', 'wedding-party-rsvp' ); ?>">
 						</form>
@@ -3880,11 +3962,11 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 										<?php if ( wgrsvp_is_pro_plugin_active() ) : ?>
 											<span class="description"><?php echo esc_html( ! empty( $guest->is_child ) ? __( 'Yes', 'wedding-party-rsvp' ) : __( 'No', 'wedding-party-rsvp' ) ); ?></span>
 										<?php else : ?>
-											<div class="wpr-pro-placeholder">Pro</div>
+											<div class="wpr-pro-placeholder"><?php esc_html_e( 'Pro', 'wedding-party-rsvp' ); ?></div>
 										<?php endif; ?>
 									</td>
 
-									<td class="wgrsvp-col-rsvp"><select name="rsvp_status" class="wgrsvp-rsvp-select"><option value="Pending" <?php selected( $guest->rsvp_status, 'Pending' ); ?>>?</option><option value="Accepted" <?php selected( $guest->rsvp_status, 'Accepted' ); ?>><?php esc_html_e( 'Yes', 'wedding-party-rsvp' ); ?></option><option value="Declined" <?php selected( $guest->rsvp_status, 'Declined' ); ?>><?php esc_html_e( 'No', 'wedding-party-rsvp' ); ?></option></select></td>
+									<td class="wgrsvp-col-rsvp"><select name="rsvp_status" class="wgrsvp-rsvp-select"><option value="Pending" <?php selected( $guest->rsvp_status, 'Pending' ); ?>><?php esc_html_e( '?', 'wedding-party-rsvp' ); ?></option><option value="Accepted" <?php selected( $guest->rsvp_status, 'Accepted' ); ?>><?php esc_html_e( 'Yes', 'wedding-party-rsvp' ); ?></option><option value="Declined" <?php selected( $guest->rsvp_status, 'Declined' ); ?>><?php esc_html_e( 'No', 'wedding-party-rsvp' ); ?></option></select></td>
 
 									<td>
 										<select name="menu_choice" style="width:100%; margin-bottom:2px; font-size:11px;">
@@ -3897,10 +3979,10 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 										</select>
 
 										<?php if ( ! wgrsvp_is_pro_plugin_active() ) : ?>
-										<div class="wpr-pro-placeholder" style="margin-bottom:2px;">Child Menu (Available in Pro)</div>
+										<div class="wpr-pro-placeholder" style="margin-bottom:2px;"><?php esc_html_e( 'Child menu (available in Pro)', 'wedding-party-rsvp' ); ?></div>
 										<div style="display:flex; gap:2px;">
-											<div class="wpr-pro-placeholder">Appetizer (Pro)</div>
-											<div class="wpr-pro-placeholder">Hors (Pro)</div>
+											<div class="wpr-pro-placeholder"><?php esc_html_e( 'Appetizer (Pro)', 'wedding-party-rsvp' ); ?></div>
+											<div class="wpr-pro-placeholder"><?php esc_html_e( 'Hors d\'oeuvres (Pro)', 'wedding-party-rsvp' ); ?></div>
 										</div>
 										<?php elseif ( ! empty( $guest->child_menu_choice ) || ! empty( $guest->appetizer_choice ) || ! empty( $guest->hors_doeuvre_choice ) ) : ?>
 											<div style="font-size:10px;color:#646970;margin-top:4px;">
@@ -3924,7 +4006,7 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 											echo '' !== $tbl ? '<span class="description">' . esc_html( $tbl ) . '</span>' : '<span class="description">' . esc_html__( '—', 'wedding-party-rsvp' ) . '</span>';
 											?>
 										<?php else : ?>
-											<div class="wpr-pro-placeholder"># (Pro)</div>
+											<div class="wpr-pro-placeholder"><?php esc_html_e( 'Table # (Pro)', 'wedding-party-rsvp' ); ?></div>
 										<?php endif; ?>
 									</td>
 
@@ -3971,8 +4053,8 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 										<?php if ( $this->wgrsvp_may_use_pro_guest_list_comm_links() && ! empty( $guest->phone ) ) : ?>
 											<a class="button button-small" href="<?php echo esc_url( $this->wgrsvp_pro_single_guest_sms_send_url( (int) $guest->id ) ); ?>" title="<?php echo esc_attr__( 'Send SMS invitation to this guest', 'wedding-party-rsvp' ); ?>"><span class="dashicons dashicons-smartphone" aria-hidden="true"></span><span class="screen-reader-text"><?php esc_html_e( 'SMS invite', 'wedding-party-rsvp' ); ?></span></a>
 										<?php endif; ?>
-										<button type="submit" name="wgrsvp_update_guest" class="button button-primary button-small" title="Save"><span class="dashicons dashicons-saved"></span> Save</button>
-										<button type="submit" name="wgrsvp_delete_guest" class="button button-small button-link-delete" title="<?php esc_attr_e( 'Delete', 'wedding-party-rsvp' ); ?>" onclick="return confirm('<?php echo esc_js( __( 'Delete this guest row?', 'wedding-party-rsvp' ) ); ?>')"><span class="dashicons dashicons-trash"></span></button>
+										<button type="submit" name="wgrsvp_update_guest" class="button button-primary button-small" title="<?php esc_attr_e( 'Save', 'wedding-party-rsvp' ); ?>"><span class="dashicons dashicons-saved" aria-hidden="true"></span> <?php esc_html_e( 'Save', 'wedding-party-rsvp' ); ?></button>
+										<button type="submit" name="wgrsvp_delete_guest" class="button button-small button-link-delete wgrsvp-admin-confirm" data-wgrsvp-confirm="confirmDeleteGuest" title="<?php esc_attr_e( 'Delete', 'wedding-party-rsvp' ); ?>"><span class="dashicons dashicons-trash"></span></button>
 									</td>
 								</form></tr>
 							<?php endforeach; ?>
@@ -4053,8 +4135,29 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 				exit;
 			}
 
+			if ( isset( $_POST['wgrsvp_save_admin_modules_nonce'] ) ) {
+				check_admin_referer( 'wgrsvp_save_admin_modules', 'wgrsvp_save_admin_modules_nonce' );
+				if ( ! current_user_can( 'manage_options' ) ) {
+					wp_die( esc_html__( 'You do not have sufficient permissions to access this page.', 'wedding-party-rsvp' ) );
+				}
+				if ( ! function_exists( 'wpr_pro_effective_license_is_valid' ) || ! wpr_pro_effective_license_is_valid() ) {
+					$posted = array();
+					if ( isset( $_POST['wgrsvp_admin_modules'] ) && is_array( $_POST['wgrsvp_admin_modules'] ) ) {
+						$posted = map_deep( wp_unslash( $_POST['wgrsvp_admin_modules'] ), 'sanitize_text_field' );
+					}
+					if ( ! is_array( $posted ) ) {
+						$posted = array();
+					}
+					wgrsvp_store_admin_modules_option( $posted );
+					echo '<div class="notice notice-success is-dismissible"><p>' . esc_html__( 'Admin menu visibility saved.', 'wedding-party-rsvp' ) . '</p></div>';
+				}
+			}
+
 			if ( isset( $_POST['wgrsvp_factory_reset_plugin_nonce'] ) ) {
 				check_admin_referer( 'wgrsvp_factory_reset_plugin', 'wgrsvp_factory_reset_plugin_nonce' );
+				if ( ! current_user_can( 'manage_options' ) ) {
+					wp_die( esc_html__( 'You do not have sufficient permissions to access this page.', 'wedding-party-rsvp' ) );
+				}
 				if ( isset( $_POST['wgrsvp_factory_reset'] ) ) {
 					global $wpdb;
 					$wp_version = isset( $GLOBALS['wp_version'] ) ? $GLOBALS['wp_version'] : '0';
@@ -4076,6 +4179,7 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 					delete_option( $this->opt_license );
 					delete_option( WGRSVP_Growth_Checklist::OPT_PANEL_DISMISSED );
 					delete_option( WGRSVP_Client_Summary_Portal::OPTION_STATE );
+					delete_option( 'wgrsvp_admin_modules' );
 
 					$this->clear_stats_cache();
 
@@ -4092,6 +4196,9 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 
 			if ( isset( $_POST['wgrsvp_save_general_settings_nonce'] ) ) {
 				check_admin_referer( 'wgrsvp_save_general_settings', 'wgrsvp_save_general_settings_nonce' );
+				if ( ! current_user_can( 'manage_options' ) ) {
+					wp_die( esc_html__( 'You do not have sufficient permissions to access this page.', 'wedding-party-rsvp' ) );
+				}
 				if ( isset( $_POST['wgrsvp_save_settings'] ) ) {
 					$prev = get_option( $this->opt_settings, array() );
 					if ( ! is_array( $prev ) ) {
@@ -4154,6 +4261,47 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 				<h1><?php esc_html_e( 'General Settings', 'wedding-party-rsvp' ); ?></h1>
 				<div class="wgrsvp-settings-layout">
 				<div class="wgrsvp-settings-layout__main">
+				<?php if ( ! function_exists( 'wpr_pro_effective_license_is_valid' ) || ! wpr_pro_effective_license_is_valid() ) : ?>
+					<div style="background:#fff; padding:20px; border:1px solid #ddd; margin-bottom:20px; border-left:4px solid #50575e;">
+						<h3><?php esc_html_e( 'Admin menu visibility', 'wedding-party-rsvp' ); ?></h3>
+						<p class="description"><?php esc_html_e( 'Uncheck tools you do not use. This hides admin menus and blocks direct URLs to those screens. Your data is kept in the database. When Wedding Party RSVP Pro is active with a valid license, manage these toggles under Pro Settings instead.', 'wedding-party-rsvp' ); ?></p>
+						<form method="post" action="">
+							<?php wp_nonce_field( 'wgrsvp_save_admin_modules', 'wgrsvp_save_admin_modules_nonce' ); ?>
+							<table class="form-table" role="presentation">
+								<tr>
+									<th scope="row"><?php esc_html_e( 'Features', 'wedding-party-rsvp' ); ?></th>
+									<td>
+										<fieldset>
+											<?php
+											$wgrsvp_am_labels = array(
+												'paste_guests'      => __( 'Paste Guest List', 'wedding-party-rsvp' ),
+												'menu_options'      => __( 'Menu Options', 'wedding-party-rsvp' ),
+												'gifts_report'      => __( 'Gifts & thank-you', 'wedding-party-rsvp' ),
+												'thankyou_tracker'  => __( 'Thank-you checklist', 'wedding-party-rsvp' ),
+												'client_summary'    => __( 'Client summary (admin + public link)', 'wedding-party-rsvp' ),
+												'vendor_packet'     => __( 'Vendor & venue packet', 'wedding-party-rsvp' ),
+												'ops_center'        => __( 'Follow-up & day-of', 'wedding-party-rsvp' ),
+												'caterer_portal'    => __( 'Caterer portal (admin + public link)', 'wedding-party-rsvp' ),
+												'audit_log'         => __( 'Audit log', 'wedding-party-rsvp' ),
+											);
+											foreach ( wgrsvp_admin_module_keys() as $wgrsvp_am_key ) {
+												$wgrsvp_am_label = isset( $wgrsvp_am_labels[ $wgrsvp_am_key ] ) ? $wgrsvp_am_labels[ $wgrsvp_am_key ] : $wgrsvp_am_key;
+												?>
+												<label style="display:block; margin-bottom:6px;">
+													<input type="checkbox" name="wgrsvp_admin_modules[<?php echo esc_attr( $wgrsvp_am_key ); ?>]" value="1" <?php checked( wgrsvp_admin_module_enabled( $wgrsvp_am_key ) ); ?>>
+													<?php echo esc_html( $wgrsvp_am_label ); ?>
+												</label>
+												<?php
+											}
+											?>
+										</fieldset>
+									</td>
+								</tr>
+							</table>
+							<?php submit_button( __( 'Save menu visibility', 'wedding-party-rsvp' ) ); ?>
+						</form>
+					</div>
+				<?php endif; ?>
 				<form method="post">
 					<?php wp_nonce_field( 'wgrsvp_save_general_settings', 'wgrsvp_save_general_settings_nonce' ); ?>
 					
@@ -4174,8 +4322,8 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 
 							<?php if ( wgrsvp_is_pro_license_effectively_valid() && '' !== $lic ) : ?>
 								<p class="description"><?php esc_html_e( 'License key on file is masked. Leave blank to keep it, or enter a new key to replace.', 'wedding-party-rsvp' ); ?></p>
-							<?php endif; ?>
-							<input type="text" name="wgrsvp_license_key" value="<?php echo esc_attr( $lic_show ); ?>" style="width:100%; max-width:400px;" placeholder="<?php echo esc_attr( '' !== $lic_ph ? $lic_ph : __( 'License Key', 'wedding-party-rsvp' ) ); ?>" autocomplete="off">
+						<?php endif; ?>
+						<input type="text" name="wgrsvp_license_key" value="<?php echo esc_attr( $lic_show ); ?>" style="width:100%; max-width:400px;" placeholder="<?php echo esc_attr( '' !== $lic_ph ? $lic_ph : __( 'License Key', 'wedding-party-rsvp' ) ); ?>" autocomplete="off">
 						<?php endif; ?>
 					</div>
 
@@ -4264,7 +4412,7 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 					<div style="background:#fff; padding:20px; border:1px solid #dc3232; border-left:4px solid #dc3232;">
 						<h3 style="color:#dc3232; margin-top:0;"><?php esc_html_e( 'Danger zone: erase all guest data', 'wedding-party-rsvp' ); ?></h3>
 						<p><?php esc_html_e( 'This removes every guest row, resets plugin settings, and clears the license key stored in the free plugin. You cannot undo it. Export your list first if you need a backup.', 'wedding-party-rsvp' ); ?></p>
-						<input type="submit" name="wgrsvp_factory_reset" class="button button-link-delete" style="color:red; text-decoration:none; border:1px solid red; padding:5px 15px;" value="<?php esc_attr_e( 'Erase all data & reset plugin', 'wedding-party-rsvp' ); ?>" onclick="return confirm('<?php echo esc_js( __( 'This permanently deletes all guests and resets the plugin. Continue?', 'wedding-party-rsvp' ) ); ?>');">
+						<input type="submit" name="wgrsvp_factory_reset" class="button button-link-delete wgrsvp-admin-confirm" data-wgrsvp-confirm="confirmFactoryReset" style="color:red; text-decoration:none; border:1px solid red; padding:5px 15px;" value="<?php esc_attr_e( 'Erase all data & reset plugin', 'wedding-party-rsvp' ); ?>">
 					</div>
 				</form>
 				</div>
@@ -4288,8 +4436,14 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 				wp_die( esc_html__( 'You do not have sufficient permissions to access this page.', 'wedding-party-rsvp' ) );
 			}
 
+			wgrsvp_require_admin_module_or_die( 'menu_options' );
+
 			if ( isset( $_POST['wgrsvp_save_entree_menu_options_nonce'] ) ) {
 				check_admin_referer( 'wgrsvp_save_entree_menu_options', 'wgrsvp_save_entree_menu_options_nonce' );
+				if ( ! current_user_can( 'manage_options' ) ) {
+					wp_die( esc_html__( 'You do not have sufficient permissions to access this page.', 'wedding-party-rsvp' ) );
+				}
+				wgrsvp_require_admin_module_or_die( 'menu_options' );
 				if ( isset( $_POST['wgrsvp_save_menu'] ) ) {
 					// Entrée labels are plain text lines (public `<select>` options); HTML is not supported in menu names.
 					$menu_options_raw = isset( $_POST['menu_options'] ) ? sanitize_textarea_field( wp_unslash( $_POST['menu_options'] ) ) : '';
@@ -4350,20 +4504,18 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 		/**
 		 * POST handlers on the guest list screen: add/update/delete guest, demo seed, demo dismiss.
 		 *
-		 * Requires `manage_options`. Nonce verified per action before reading body fields.
+		 * Verifies `check_admin_referer` for each action, then `manage_options`, before reading POST fields.
 		 *
 		 * @return void
 		 */
 		private function handle_admin_actions() {
-			// Security: Check user capabilities for all admin actions.
-			if ( ! current_user_can( 'manage_options' ) ) {
-				return;
-			}
-
 			global $wpdb;
 
 			if ( isset( $_POST['wgrsvp_add_guest'] ) ) {
 				check_admin_referer( 'wgrsvp_add_guest', 'wgrsvp_add_guest' );
+				if ( ! current_user_can( 'manage_options' ) ) {
+					wp_die( esc_html__( 'You do not have sufficient permissions to access this page.', 'wedding-party-rsvp' ) );
+				}
 				wp_cache_delete( 'wgrsvp_query_writes', 'wgrsvp_queries' );
 				if ( isset( $_POST['wgrsvp_add_guest_btn'] ) ) {
 					$ins = array(
@@ -4394,6 +4546,9 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 
 			if ( isset( $_POST['wgrsvp_edit_guest'] ) ) {
 				check_admin_referer( 'wgrsvp_edit_guest', 'wgrsvp_edit_guest' );
+				if ( ! current_user_can( 'manage_options' ) ) {
+					wp_die( esc_html__( 'You do not have sufficient permissions to access this page.', 'wedding-party-rsvp' ) );
+				}
 				wp_cache_delete( 'wgrsvp_query_writes', 'wgrsvp_queries' );
 				if ( isset( $_POST['wgrsvp_update_guest'] ) ) {
 					$id = isset( $_POST['id'] ) ? absint( wp_unslash( $_POST['id'] ) ) : 0;
@@ -4478,6 +4633,9 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 
 			if ( isset( $_POST['wgrsvp_seed_demo'] ) ) {
 				check_admin_referer( 'wgrsvp_seed_demo', 'wgrsvp_seed_demo' );
+				if ( ! current_user_can( 'manage_options' ) ) {
+					wp_die( esc_html__( 'You do not have sufficient permissions to access this page.', 'wedding-party-rsvp' ) );
+				}
 				wp_cache_delete( 'wgrsvp_query_writes', 'wgrsvp_queries' );
 				if ( isset( $_POST['wgrsvp_dismiss_demo_box'] ) ) {
 					update_option( 'wgrsvp_demo_guests_dismissed', 1, false );
@@ -4529,6 +4687,8 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 		 * Bails immediately unless the export form was submitted, so non-export admin requests
 		 * do not run `check_admin_referer()` or capability checks.
 		 *
+		 * Verifies `check_admin_referer`, then `manage_options`, before reading filter fields from `$_POST`.
+		 *
 		 * @return void
 		 */
 		public function handle_csv_export() {
@@ -4536,10 +4696,10 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 			if ( ! isset( $_POST['wgrsvp_export_csv'], $_POST['wgrsvp_export_guest_list_nonce'] ) ) {
 				return;
 			}
+			check_admin_referer( 'wgrsvp_export_guest_list', 'wgrsvp_export_guest_list_nonce' );
 			if ( ! current_user_can( 'manage_options' ) ) {
 				wp_die( esc_html__( 'You do not have sufficient permissions to access this page.', 'wedding-party-rsvp' ) );
 			}
-			check_admin_referer( 'wgrsvp_export_guest_list', 'wgrsvp_export_guest_list_nonce' );
 
 			$guests = $this->wgrsvp_get_guest_rows_for_list_export_from_post();
 
@@ -4605,10 +4765,10 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 			if ( ! isset( $_POST['wgrsvp_export_checkin_pdf'], $_POST['wgrsvp_export_guest_list_nonce'] ) ) {
 				return;
 			}
+			check_admin_referer( 'wgrsvp_export_guest_list', 'wgrsvp_export_guest_list_nonce' );
 			if ( ! current_user_can( 'manage_options' ) ) {
 				wp_die( esc_html__( 'You do not have sufficient permissions to access this page.', 'wedding-party-rsvp' ) );
 			}
-			check_admin_referer( 'wgrsvp_export_guest_list', 'wgrsvp_export_guest_list_nonce' );
 
 			$guests = $this->wgrsvp_get_guest_rows_for_list_export_from_post();
 			require_once plugin_dir_path( __FILE__ ) . 'includes/class-wgrsvp-checkin-pdf.php';
@@ -4624,10 +4784,10 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 			if ( ! isset( $_POST['wgrsvp_export_catering_csv'], $_POST['wgrsvp_export_guest_list_nonce'] ) ) {
 				return;
 			}
+			check_admin_referer( 'wgrsvp_export_guest_list', 'wgrsvp_export_guest_list_nonce' );
 			if ( ! current_user_can( 'manage_options' ) ) {
 				wp_die( esc_html__( 'You do not have sufficient permissions to access this page.', 'wedding-party-rsvp' ) );
 			}
-			check_admin_referer( 'wgrsvp_export_guest_list', 'wgrsvp_export_guest_list_nonce' );
 			$guests = $this->wgrsvp_get_guest_rows_for_list_export_from_post();
 			require_once plugin_dir_path( __FILE__ ) . 'includes/class-wgrsvp-vendor-catering-export.php';
 			$accepted_only = ! isset( $_POST['wgrsvp_catering_include_non_accepted'] );
@@ -4643,10 +4803,10 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 			if ( ! isset( $_POST['wgrsvp_export_catering_pdf'], $_POST['wgrsvp_export_guest_list_nonce'] ) ) {
 				return;
 			}
+			check_admin_referer( 'wgrsvp_export_guest_list', 'wgrsvp_export_guest_list_nonce' );
 			if ( ! current_user_can( 'manage_options' ) ) {
 				wp_die( esc_html__( 'You do not have sufficient permissions to access this page.', 'wedding-party-rsvp' ) );
 			}
-			check_admin_referer( 'wgrsvp_export_guest_list', 'wgrsvp_export_guest_list_nonce' );
 			$guests = $this->wgrsvp_get_guest_rows_for_list_export_from_post();
 			require_once plugin_dir_path( __FILE__ ) . 'includes/class-wgrsvp-vendor-catering-export.php';
 			$accepted_only = ! isset( $_POST['wgrsvp_catering_include_non_accepted'] );
@@ -4724,7 +4884,7 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 
 			check_admin_referer( 'wgrsvp_import_guests', 'wgrsvp_import_guests_nonce' );
 
-			$blob = isset( $_POST['wgrsvp_paste_blob'] ) ? sanitize_textarea_field( wp_unslash( $_POST['wgrsvp_paste_blob'] ) ) : '';
+			$blob          = isset( $_POST['wgrsvp_paste_blob'] ) ? sanitize_textarea_field( wp_unslash( $_POST['wgrsvp_paste_blob'] ) ) : '';
 			$default_party = isset( $_POST['wgrsvp_paste_default_party'] ) ? sanitize_text_field( wp_unslash( $_POST['wgrsvp_paste_default_party'] ) ) : '';
 
 			if ( '' === trim( $blob ) ) {
@@ -4889,7 +5049,7 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 				}
 			}
 
-			set_transient( 'wedding-party-rsvp_success_msg', '1', 60 );
+			set_transient( self::TRANSIENT_RSVP_FORM_SUCCESS_FLASH, '1', 60 );
 			wp_safe_redirect( remove_query_arg( 'wpr_submit_rsvp' ) );
 			exit;
 		}
@@ -4948,8 +5108,8 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 			// phpcs:enable WordPress.Security.NonceVerification.Recommended
 
 			// Check for Success Message from Init Redirect
-			if ( get_transient( 'wedding-party-rsvp_success_msg' ) ) {
-				delete_transient( 'wedding-party-rsvp_success_msg' );
+			if ( get_transient( self::TRANSIENT_RSVP_FORM_SUCCESS_FLASH ) ) {
+				delete_transient( self::TRANSIENT_RSVP_FORM_SUCCESS_FLASH );
 				return '<div class="wpr-wrapper"><div style="color:green;border:1px solid green;padding:15px;margin-bottom:20px;background:#eaffea;">' . esc_html__( 'Thank you! Your RSVP has been updated.', 'wedding-party-rsvp' ) . '</div></div>';
 			}
 
@@ -4978,9 +5138,8 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 				$party_id = sanitize_text_field( wp_unslash( $_GET['party_id'] ) );
 			}
 
-			// 3. Query Guests (SQL Safe)
-			// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.DirectDatabaseQuery, PluginCheck.Security.DirectDB.UnescapedDBParameter, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
-			$guests = $party_id ? $wpdb->get_results( $wpdb->prepare( "SELECT * FROM {$this->table_name} WHERE party_id = %s", $party_id ) ) : array();
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.NotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter -- Table identifier via %i (WP 6.2+); party bound with %s.
+			$guests = $party_id ? $wpdb->get_results( $wpdb->prepare( 'SELECT * FROM %i WHERE party_id = %s', $this->table_name, $party_id ) ) : array();
 
 			if ( empty( $guests ) ) {
 				$use_party_lookup_ia = $this->enqueue_party_lookup_interactivity_module();

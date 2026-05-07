@@ -51,7 +51,7 @@ if ( ! class_exists( 'WGRSVP_Gifts_Report' ) ) {
 				'wgrsvp-gifts-report-admin',
 				$src,
 				array(),
-				'8.0.1',
+				'8.0.2',
 				true
 			);
 			if ( function_exists( 'wgrsvp_set_script_translations' ) ) {
@@ -65,6 +65,9 @@ if ( ! class_exists( 'WGRSVP_Gifts_Report' ) ) {
 		 * @return void
 		 */
 		public static function register_admin_menu() {
+			if ( ! wgrsvp_admin_module_enabled( 'gifts_report' ) ) {
+				return;
+			}
 			add_submenu_page(
 				'wedding-rsvp-main',
 				__( 'Gifts & thank-you', 'wedding-party-rsvp' ),
@@ -196,7 +199,11 @@ if ( ! class_exists( 'WGRSVP_Gifts_Report' ) ) {
 			}
 
 			if ( ! current_user_can( 'manage_options' ) ) {
-				return;
+				wp_die( esc_html__( 'You do not have sufficient permissions to access this page.', 'wedding-party-rsvp' ), esc_html__( 'Error', 'wedding-party-rsvp' ), array( 'response' => 403 ) );
+			}
+
+			if ( ! wgrsvp_admin_module_enabled( 'gifts_report' ) ) {
+				wp_die( esc_html__( 'This feature is disabled.', 'wedding-party-rsvp' ), '', array( 'response' => 403 ) );
 			}
 
 			$gid = isset( $_POST['wgrsvp_gifts_guest_id'] ) ? absint( wp_unslash( (string) $_POST['wgrsvp_gifts_guest_id'] ) ) : 0;
@@ -278,20 +285,25 @@ if ( ! class_exists( 'WGRSVP_Gifts_Report' ) ) {
 			}
 
 			if ( ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['wgrsvp_gifts_bulk_mark_thankyou_sent_nonce'] ) ), 'wgrsvp_gifts_bulk_mark_thankyou_sent' ) ) {
-				wp_die( esc_html__( 'Security check failed.', 'wedding-party-rsvp' ), esc_html__( 'Error', 'wedding-party-rsvp' ), 403 );
+				wp_die( esc_html__( 'Security check failed.', 'wedding-party-rsvp' ), esc_html__( 'Error', 'wedding-party-rsvp' ), array( 'response' => 403 ) );
 			}
 
 			if ( ! current_user_can( 'manage_options' ) ) {
-				return;
+				wp_die( esc_html__( 'You do not have sufficient permissions to access this page.', 'wedding-party-rsvp' ), esc_html__( 'Error', 'wedding-party-rsvp' ), array( 'response' => 403 ) );
 			}
 
-			// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Normalized to positive integers via map_deep( absint ).
-			$raw_ids = isset( $_POST['wgrsvp_gifts_bulk_ids'] ) ? wp_unslash( $_POST['wgrsvp_gifts_bulk_ids'] ) : array();
+			if ( ! wgrsvp_admin_module_enabled( 'gifts_report' ) ) {
+				wp_die( esc_html__( 'This feature is disabled.', 'wedding-party-rsvp' ), '', array( 'response' => 403 ) );
+			}
+
+			$raw_ids = array();
+			if ( isset( $_POST['wgrsvp_gifts_bulk_ids'] ) && is_array( $_POST['wgrsvp_gifts_bulk_ids'] ) ) {
+				$raw_ids = map_deep( wp_unslash( $_POST['wgrsvp_gifts_bulk_ids'] ), 'absint' );
+			}
 			if ( ! is_array( $raw_ids ) ) {
 				$raw_ids = array();
 			}
-			$raw_ids = map_deep( $raw_ids, 'absint' );
-			$ids     = array_values( array_unique( array_filter( array_map( 'absint', $raw_ids ) ) ) );
+			$ids = array_values( array_unique( array_filter( array_map( 'absint', $raw_ids ) ) ) );
 			if ( empty( $ids ) ) {
 				self::redirect_after_bulk();
 			}
@@ -339,6 +351,10 @@ if ( ! class_exists( 'WGRSVP_Gifts_Report' ) ) {
 
 			if ( ! current_user_can( WGRSVP_Coordinator_Role::CAP_VIEW_GUEST_DASHBOARD ) ) {
 				wp_die( esc_html__( 'You do not have sufficient permissions to access this page.', 'wedding-party-rsvp' ) );
+			}
+
+			if ( ! wgrsvp_admin_module_enabled( 'gifts_report' ) ) {
+				wp_die( esc_html__( 'This feature is disabled.', 'wedding-party-rsvp' ), '', array( 'response' => 403 ) );
 			}
 
 			// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only list filter.
@@ -444,11 +460,15 @@ if ( ! class_exists( 'WGRSVP_Gifts_Report' ) ) {
 			}
 
 			if ( ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['wgrsvp_export_gifts_thankyou_report_nonce'] ) ), 'wgrsvp_export_gifts_thankyou_report' ) ) {
-				wp_die( esc_html__( 'Security check failed.', 'wedding-party-rsvp' ), esc_html__( 'Error', 'wedding-party-rsvp' ), 403 );
+				wp_die( esc_html__( 'Security check failed.', 'wedding-party-rsvp' ), esc_html__( 'Error', 'wedding-party-rsvp' ), array( 'response' => 403 ) );
 			}
 
 			if ( ! current_user_can( 'manage_options' ) ) {
-				return;
+				wp_die( esc_html__( 'You do not have sufficient permissions to access this page.', 'wedding-party-rsvp' ), esc_html__( 'Error', 'wedding-party-rsvp' ), array( 'response' => 403 ) );
+			}
+
+			if ( ! wgrsvp_admin_module_enabled( 'gifts_report' ) ) {
+				wp_die( esc_html__( 'This feature is disabled.', 'wedding-party-rsvp' ), '', array( 'response' => 403 ) );
 			}
 
 			$filter = isset( $_POST['wgrsvp_gifts_filter'] ) ? sanitize_key( wp_unslash( (string) $_POST['wgrsvp_gifts_filter'] ) ) : 'pending';
@@ -513,11 +533,15 @@ if ( ! class_exists( 'WGRSVP_Gifts_Report' ) ) {
 			}
 
 			if ( ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['wgrsvp_export_gifts_thankyou_report_nonce'] ) ), 'wgrsvp_export_gifts_thankyou_report' ) ) {
-				wp_die( esc_html__( 'Security check failed.', 'wedding-party-rsvp' ), esc_html__( 'Error', 'wedding-party-rsvp' ), 403 );
+				wp_die( esc_html__( 'Security check failed.', 'wedding-party-rsvp' ), esc_html__( 'Error', 'wedding-party-rsvp' ), array( 'response' => 403 ) );
 			}
 
 			if ( ! current_user_can( 'manage_options' ) ) {
-				return;
+				wp_die( esc_html__( 'You do not have sufficient permissions to access this page.', 'wedding-party-rsvp' ), esc_html__( 'Error', 'wedding-party-rsvp' ), array( 'response' => 403 ) );
+			}
+
+			if ( ! wgrsvp_admin_module_enabled( 'gifts_report' ) ) {
+				wp_die( esc_html__( 'This feature is disabled.', 'wedding-party-rsvp' ), '', array( 'response' => 403 ) );
 			}
 
 			$filter = isset( $_POST['wgrsvp_gifts_filter'] ) ? sanitize_key( wp_unslash( (string) $_POST['wgrsvp_gifts_filter'] ) ) : 'pending';
@@ -548,6 +572,8 @@ if ( ! class_exists( 'WGRSVP_Gifts_Report' ) ) {
 			if ( ! current_user_can( WGRSVP_Coordinator_Role::CAP_VIEW_GUEST_DASHBOARD ) ) {
 				wp_die( esc_html__( 'You do not have sufficient permissions to access this page.', 'wedding-party-rsvp' ) );
 			}
+
+			wgrsvp_require_admin_module_or_die( 'gifts_report' );
 
 			$filter = self::current_filter();
 			$search = self::current_search();

@@ -53,5 +53,7 @@ SVN-CREDENTIALS.md
 # Local WordPress.org SVN checkout (keep out of repo & release zips)
 svn-checkout/
 
-# Accidental nested SVN under assets
+# Accidental nested SVN under assets (breaks wp.org deploy if copied)
 assets/.svn/
+assets/blueprints/trunk/.svn/
+node_modules

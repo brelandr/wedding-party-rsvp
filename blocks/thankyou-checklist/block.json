@@ -1,0 +1,26 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "wedding-party-rsvp/thankyou-checklist",
+	"title": "Thank-you checklist",
+	"category": "widgets",
+	"icon": "yes-alt",
+	"description": "Shows your post-event thank-you checklist for administrators (or set public visibility only on private planner pages). Same as [wgrsvp_thankyou_tracker].",
+	"textdomain": "wedding-party-rsvp",
+	"supports": {
+		"html": false,
+		"align": [ "wide", "full" ],
+		"spacing": {
+			"margin": true,
+			"padding": true
+		},
+		"__experimentalVisibility": true
+	},
+	"attributes": {
+		"public": {
+			"type": "boolean",
+			"default": false
+		}
+	},
+	"render": "file:./render.php"
+}

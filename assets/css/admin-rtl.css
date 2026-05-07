@@ -1,0 +1,12 @@
+/**
+ * RTL tweaks for free-plugin admin pages that share base inline CSS with the front end.
+ */
+.wgrsvp-settings-layout,
+.wrap .wgrsvp-settings-layout {
+	direction: rtl;
+}
+
+.wgrsvp-settings-layout__main,
+.wgrsvp-settings-layout__aside {
+	text-align: start;
+}

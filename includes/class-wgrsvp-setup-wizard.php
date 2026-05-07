@@ -17,7 +17,7 @@ if ( ! class_exists( 'WGRSVP_Setup_Wizard' ) ) {
 	class WGRSVP_Setup_Wizard {
 
 		const OPTION_DONE        = 'wgrsvp_setup_wizard_done';
-		const TRANSIENT_REDIRECT = 'wgrsvp_activation_redirect_wizard';
+		const TRANSIENT_REDIRECT = 'wedding-party-rsvp_activation_redirect_wizard';
 		const OPTION_WIZARD_PAGE = 'wgrsvp_setup_wizard_rsvp_page_id';
 		const PAGE_SLUG          = 'wgrsvp-setup-wizard';
 
@@ -228,14 +228,11 @@ if ( ! class_exists( 'WGRSVP_Setup_Wizard' ) ) {
 		}
 
 		/**
-		 * Handles wizard POST steps and GET skip: nonce is verified first in each branch.
+		 * Handles wizard POST steps and GET skip: each branch verifies a nonce first, then `manage_options`, before mutating data.
 		 *
 		 * @return void
 		 */
 		public function handle_wizard_requests() {
-			if ( ! current_user_can( 'manage_options' ) ) {
-				return;
-			}
 			// phpcs:ignore WordPress.Security.NonceVerification.Missing,WordPress.Security.NonceVerification.Recommended -- Nonces are verified in each mutating branch below; this is a read-only `page` gate.
 			if ( ! isset( $_GET['page'] ) || self::PAGE_SLUG !== sanitize_key( wp_unslash( $_GET['page'] ) ) ) {
 				return;
@@ -246,6 +243,9 @@ if ( ! class_exists( 'WGRSVP_Setup_Wizard' ) ) {
 				if ( ! isset( $_GET['_wpnonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_GET['_wpnonce'] ) ), 'wgrsvp_skip_setup_wizard' ) ) {
 					return;
 				}
+				if ( ! current_user_can( 'manage_options' ) ) {
+					return;
+				}
 				update_option( self::OPTION_DONE, '1', false );
 				delete_transient( self::TRANSIENT_REDIRECT );
 				wp_safe_redirect( admin_url( 'admin.php?page=wedding-rsvp-main' ) );
@@ -254,6 +254,9 @@ if ( ! class_exists( 'WGRSVP_Setup_Wizard' ) ) {
 
 			if ( isset( $_POST['wgrsvp_wizard_step1_nonce'] ) ) {
 				check_admin_referer( 'wgrsvp_wizard_step1', 'wgrsvp_wizard_step1_nonce' );
+				if ( ! current_user_can( 'manage_options' ) ) {
+					return;
+				}
 				if ( ! isset( $_POST['wgrsvp_wizard_step1'] ) ) {
 					return;
 				}
@@ -261,12 +264,9 @@ if ( ! class_exists( 'WGRSVP_Setup_Wizard' ) ) {
 				if ( ! is_array( $prev ) ) {
 					$prev = array();
 				}
-				/**
-				 * MANUAL REVIEW REQUIRED — Keep consistent with General Settings `welcome_title` handling
-				 * (see docblock on that option in `wedding-party-rsvp.php`).
-				 */
-				$welcome = isset( $_POST['welcome_title'] ) ? sanitize_text_field( wp_unslash( $_POST['welcome_title'] ) ) : '';
-				$rsvpurl = isset( $_POST['rsvp_page_url'] ) ? esc_url_raw( wp_unslash( $_POST['rsvp_page_url'] ) ) : '';
+				// Plain text welcome line — same sanitization as Wedding RSVP → Settings (`sanitize_text_field`).
+				$welcome = isset( $_POST['welcome_title'] ) ? sanitize_text_field( wp_unslash( (string) $_POST['welcome_title'] ) ) : '';
+				$rsvpurl = isset( $_POST['rsvp_page_url'] ) ? esc_url_raw( wp_unslash( (string) $_POST['rsvp_page_url'] ) ) : '';
 				$merged  = array_merge(
 					$prev,
 					array(
@@ -284,6 +284,9 @@ if ( ! class_exists( 'WGRSVP_Setup_Wizard' ) ) {
 
 			if ( isset( $_POST['wgrsvp_wizard_step2_nonce'] ) ) {
 				check_admin_referer( 'wgrsvp_wizard_step2', 'wgrsvp_wizard_step2_nonce' );
+				if ( ! current_user_can( 'manage_options' ) ) {
+					return;
+				}
 				if ( ! isset( $_POST['wgrsvp_wizard_create_page'] ) ) {
 					return;
 				}
@@ -309,6 +312,9 @@ if ( ! class_exists( 'WGRSVP_Setup_Wizard' ) ) {
 
 			if ( isset( $_POST['wgrsvp_wizard_finish_nonce'] ) ) {
 				check_admin_referer( 'wgrsvp_wizard_finish', 'wgrsvp_wizard_finish_nonce' );
+				if ( ! current_user_can( 'manage_options' ) ) {
+					return;
+				}
 				if ( ! isset( $_POST['wgrsvp_wizard_finish'] ) ) {
 					return;
 				}
@@ -387,14 +393,26 @@ if ( ! class_exists( 'WGRSVP_Setup_Wizard' ) ) {
 				return;
 			}
 
-			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, PluginCheck.Security.DirectDB.UnescapedDBParameter
-			$wpdb->insert(
-				$table,
-				array(
-					'party_id'   => $pid,
-					'guest_name' => __( 'Sample guest (wizard)', 'wedding-party-rsvp' ),
-				)
+			$wiz_ins = array(
+				'party_id'   => $pid,
+				'guest_name' => __( 'Sample guest (wizard)', 'wedding-party-rsvp' ),
 			);
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, PluginCheck.Security.DirectDB.UnescapedDBParameter
+			$wpdb->insert( $table, $wiz_ins );
+			$wiz_id = (int) $wpdb->insert_id;
+			if ( $wiz_id > 0 && class_exists( 'WGRSVP_Audit_Trail', false ) ) {
+				WGRSVP_Audit_Trail::log(
+					array(
+						'guest_id'      => $wiz_id,
+						'party_id'      => (string) $pid,
+						'action'        => 'insert',
+						'actor_type'    => 'user',
+						'actor_user_id' => get_current_user_id(),
+						'source'        => 'setup_wizard',
+						'changes'       => WGRSVP_Audit_Trail::diff_for_insert( $wiz_ins ),
+					)
+				);
+			}
 			wp_cache_set( $cache_key, 1, $cache_group, 12 * HOUR_IN_SECONDS );
 			wp_cache_delete( 'wgrsvp_wizard_guest_count', $cache_group );
 			$this->plugin->clear_dashboard_stats_cache();

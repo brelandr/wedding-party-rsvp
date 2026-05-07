@@ -170,7 +170,7 @@ if ( ! class_exists( 'WGRSVP_Coordinator_Role' ) ) {
 				// phpcs:disable WordPress.Security.NonceVerification.Recommended -- Read-only routing.
 				$page = isset( $_GET['page'] ) ? sanitize_key( wp_unslash( $_GET['page'] ) ) : '';
 				// phpcs:enable WordPress.Security.NonceVerification.Recommended
-				$allowed_pages = array( 'wedding-rsvp-main', 'wedding-rsvp-seating' );
+				$allowed_pages = array( 'wedding-rsvp-main', 'wedding-rsvp-seating', 'wedding-rsvp-ops' );
 				if ( in_array( $page, $allowed_pages, true ) ) {
 					return;
 				}

@@ -1,0 +1,20 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "wedding-party-rsvp/rsvp-form",
+	"title": "Wedding RSVP Form",
+	"category": "widgets",
+	"icon": "email",
+	"description": "Shows the full Wedding Party RSVP flow (same as the [wedding_rsvp_form] shortcode). Use block visibility in the editor (when your WordPress version supports it) to show or hide this block by viewport.",
+	"textdomain": "wedding-party-rsvp",
+	"supports": {
+		"html": false,
+		"align": [ "wide", "full" ],
+		"spacing": {
+			"margin": true,
+			"padding": true
+		},
+		"__experimentalVisibility": true
+	},
+	"render": "file:./render.php"
+}

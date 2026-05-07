@@ -1,0 +1,27 @@
+/**
+ * RTL companion for inline RSVP / guest hub styles (free plugin).
+ * Prefer logical properties in new rules; this file covers legacy LTR physical margins.
+ */
+.wpr-wrapper,
+.wpr-guest-card,
+.wgrsvp-guest-hub {
+	direction: rtl;
+	text-align: start;
+}
+
+/* Checkbox groups use `margin-inline-end` in base CSS. */
+
+.wpr-dietary-checkboxes label {
+	margin-right: 0;
+	margin-left: 10px;
+}
+
+.wpr-dietary-checkboxes input {
+	margin-right: 0;
+	margin-left: 5px;
+}
+
+.wgrsvp-guest-hub__maps a,
+.wgrsvp-guest-hub__calendar a {
+	float: none;
+}

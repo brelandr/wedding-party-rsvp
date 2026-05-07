@@ -3,7 +3,7 @@ Contributors: brelandr
 Tags: wedding, rsvp, guest list, invitation, event management
 Requires at least: 6.2
 Tested up to: 7.0
-Stable tag: 8.0.1
+Stable tag: 8.0.2
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -59,6 +59,8 @@ Dashboard Statistics: View real-time stats on accepted, declined, and pending RS
 Mobile Friendly: Fully responsive Admin Dashboard.
 
 Security: Built with WordPress best practices for data sanitization and escaping.
+
+**Admin menu visibility:** On **Wedding RSVP → Settings**, administrators can turn individual tools on or off (paste import, menu editor, gifts/thank-you, client summary, vendor packet, follow-up & day-of, caterer portal, audit log, and more) for a cleaner wp-admin. Pro sites use Pro’s module settings when licensed.
 
 **Magic links (caterer portal & client summary):** Shared read-only URLs use a long random token in the link, not a WordPress login or nonce. Protect them like passwords: use HTTPS only, avoid sharing in public channels, revoke or regenerate if a link leaks, and set an expiry when possible.
 
@@ -151,6 +153,14 @@ This plugin does not call third-party APIs for core RSVP storage. Optional behav
 This plugin bundles **FPDF** (version 1.86, © Olivier Plathey) under `includes/lib/fpdf/` for optional **Export check-in PDF** in the guest list. FPDF is free software; see the header comment in `fpdf.php` for license terms.
 
 == Changelog ==
+
+= 8.0.2 =
+
+* **Modular admin** — On **Wedding RSVP → Settings** (General Settings), the **Admin menu visibility** box lets administrators show or hide built-in tools: Paste Guest List, Menu Options, Gifts & thank-you, Thank-you checklist, Client summary, Vendor & venue packet, Follow-up & day-of, Caterer portal, and Audit log. Defaults stay **on**; the `wgrsvp_admin_module_enabled` filter still applies per module. When **Wedding Party RSVP Pro** is active with a valid license, use Pro’s Settings for the same module keys.
+* **Vendor & venue packet** — Seating snapshot queries (`SHOW COLUMNS` + seated guest count) are cached **24 hours** (`wgrsvp_vendor_packet_seating_snapshot`) and clear when guest data changes.
+* **Security / UX** — Clearer admin POST validation order where applicable, shared **wgrsvp-admin-ui.js** for destructive confirmations (e.g. factory reset), and RSVP success flash uses transient key `wgrsvp_rsvp_form_success_flash` after non-AJAX submit.
+* **i18n** — Additional translated admin strings (menus, guest list, actions).
+* **REST** — Expanded documentation for public `wgrsvp/v1/party-preview` and coordinator `wgrsvp/v1/guest-rows` routes (preview remains IP rate-limited).
 
 = 8.0.1 =
 

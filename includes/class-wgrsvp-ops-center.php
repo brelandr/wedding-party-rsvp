@@ -39,6 +39,9 @@ if ( ! class_exists( 'WGRSVP_Ops_Center' ) ) {
 		 * @return void
 		 */
 		public static function register_menu() {
+			if ( ! wgrsvp_admin_module_enabled( 'ops_center' ) ) {
+				return;
+			}
 			add_submenu_page(
 				'wedding-rsvp-main',
 				__( 'Follow-up & day-of', 'wedding-party-rsvp' ),
@@ -81,7 +84,7 @@ if ( ! class_exists( 'WGRSVP_Ops_Center' ) ) {
 					.wgrsvp-ops-dayof-search input[type="search"] { width: 100%; min-width: 0; }
 				}
 			';
-			wp_register_style( 'wgrsvp-ops-center', false, array(), '8.0.1' );
+			wp_register_style( 'wgrsvp-ops-center', false, array(), '8.0.2' );
 			wp_enqueue_style( 'wgrsvp-ops-center' );
 			wp_add_inline_style( 'wgrsvp-ops-center', $css );
 		}
@@ -127,6 +130,8 @@ if ( ! class_exists( 'WGRSVP_Ops_Center' ) ) {
 			if ( ! current_user_can( WGRSVP_Coordinator_Role::CAP_VIEW_GUEST_DASHBOARD ) ) {
 				wp_die( esc_html__( 'You do not have permission to access this page.', 'wedding-party-rsvp' ) );
 			}
+
+			wgrsvp_require_admin_module_or_die( 'ops_center' );
 
 			$tab = isset( $_GET['wgrsvp_ops_tab'] ) ? sanitize_key( wp_unslash( (string) $_GET['wgrsvp_ops_tab'] ) ) : 'followup'; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 			if ( 'dayof' !== $tab ) {

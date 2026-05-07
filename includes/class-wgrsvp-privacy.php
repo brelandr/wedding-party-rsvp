@@ -50,9 +50,12 @@ if ( ! class_exists( 'WGRSVP_Privacy' ) ) {
 			$suggested .= '<li>' . esc_html__( 'Party ID (invite code), guest name, RSVP status, adult meal choice', 'wedding-party-rsvp' ) . '</li>';
 			$suggested .= '<li>' . esc_html__( 'Optional contact fields you collect in the form (e.g. email, phone)', 'wedding-party-rsvp' ) . '</li>';
 			$suggested .= '<li>' . esc_html__( 'Dietary restrictions, allergies, song request, guest message, and address if entered on the public RSVP form', 'wedding-party-rsvp' ) . '</li>';
+			$suggested .= '<li>' . esc_html__( 'Optional planner-entered fields for post-event follow-up: gift description and thank-you card sent date', 'wedding-party-rsvp' ) . '</li>';
 			$suggested .= '</ul>';
 			$suggested .= '<p><strong>' . esc_html__( 'Who has access', 'wedding-party-rsvp' ) . '</strong> ' . esc_html__( 'Users with permission to manage this plugin’s settings in WordPress (usually Administrators) can view and edit guest records in the dashboard.', 'wedding-party-rsvp' ) . '</p>';
 			$suggested .= '<p><strong>' . esc_html__( 'Export and erase', 'wedding-party-rsvp' ) . '</strong> ' . esc_html__( 'This plugin registers a personal data exporter and eraser for Tools → Export Personal Data and Tools → Erase Personal Data. Export and erase match guest rows by the email address stored on the guest record.', 'wedding-party-rsvp' ) . '</p>';
+			$suggested .= '<p class="privacy-policy-tutorial">' . esc_html__( 'An optional administrator-only audit log (database table, typically wp_wgrsvp_guest_audit) may store timestamps, who made a change, and field-level before/after values for guest rows—including data guests submit on the public RSVP form. Erase Personal Data removes matching audit entries when guest rows are deleted for that email.', 'wedding-party-rsvp' ) . '</p>';
+			$suggested .= '<p class="privacy-policy-tutorial">' . esc_html__( 'The optional post-event thank-you checklist stores task titles you enter in a separate database table. It is not linked to guest email addresses; avoid storing guest personal details in task titles if you need to minimize personal data in that table.', 'wedding-party-rsvp' ) . '</p>';
 			$suggested .= '<p class="privacy-policy-tutorial">' . esc_html__( 'Erasing data for an email address removes all guest rows that use that email from the RSVP table. Confirm this matches your event’s obligations before completing erase requests.', 'wedding-party-rsvp' ) . '</p>';
 			$suggested .= '</div>';
 
@@ -187,6 +190,21 @@ if ( ! class_exists( 'WGRSVP_Privacy' ) ) {
 
 			global $wpdb;
 			$table = $wpdb->prefix . 'wedding_rsvps';
+
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.NotPrepared
+			$ids_to_erase = $wpdb->get_col(
+				$wpdb->prepare(
+					'SELECT id FROM %i WHERE email = %s',
+					$table,
+					$email_address
+				)
+			);
+			if ( ! is_array( $ids_to_erase ) ) {
+				$ids_to_erase = array();
+			}
+			if ( ! empty( $ids_to_erase ) && class_exists( 'WGRSVP_Audit_Trail', false ) ) {
+				WGRSVP_Audit_Trail::delete_for_guest_ids( $ids_to_erase );
+			}
 
 			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.NotPrepared -- Table via %i + $wpdb->prefix; email bound in nested prepare().
 			$deleted = (int) $wpdb->query(

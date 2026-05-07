@@ -1,0 +1,19 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "wedding-party-rsvp/guest-hub",
+	"title": "Guest Hub",
+	"category": "widgets",
+	"icon": "id",
+	"description": "Shows a personalized RSVP summary after submit, or on the thank-you link (venue, meal verification, maps). Place near the RSVP form.",
+	"textdomain": "wedding-party-rsvp",
+	"supports": {
+		"html": false,
+		"align": [ "wide", "full" ],
+		"spacing": {
+			"margin": true,
+			"padding": true
+		}
+	},
+	"render": "file:./render.php"
+}

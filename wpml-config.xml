@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<wpml-config>
+	<!--
+		Strings stored in wp_options for site-wide RSVP copy and logistics.
+		Guest names, meal choices, and custom table data are not WordPress posts;
+		WPML String Translation applies to these option values, not to per-guest rows.
+		See languages/README.md for integration notes.
+	-->
+	<admin-texts>
+		<key name="wgrsvp_general_settings">
+			<key name="welcome_title" />
+			<key name="deadline_closed_message" />
+			<key name="event_title" />
+			<key name="event_location" />
+			<key name="event_description" />
+			<key name="deadline_nudge_subject" />
+			<key name="deadline_nudge_body" />
+			<key name="rsvp_page_url" />
+			<key name="redirect_url" />
+		</key>
+		<!-- Serialized menu label lists; translate values in String Translation as needed. -->
+		<key name="wgrsvp_menu_options" />
+	</admin-texts>
+</wpml-config>

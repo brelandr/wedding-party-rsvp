@@ -1,9 +1,15 @@
 # Paths excluded from distribution archives (wp dist-archive, deploy scripts).
 # Also useful to omit from local Plugin Check scans when tooling respects this file.
 
+# Never copy SVN metadata from local trees (e.g. assets/ checkouts) into deploy targets.
+.svn/
 svn-checkout/
+# Local nested SVN/utility tree; never ship (see create-plugin-zip.sh).
+wedding-party-assets/
 .git/
 .github/
+.cursorrules
+.gitignore
 .cursor/
 .release
 .vscode/
@@ -11,6 +17,7 @@ node_modules/
 vendor/
 src/
 tests/
+scripts/
 *.zip
 *.sh
 *.md
