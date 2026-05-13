@@ -3,7 +3,7 @@ Contributors: brelandr
 Tags: wedding, rsvp, guest list, invitation, event management
 Requires at least: 6.2
 Tested up to: 7.0
-Stable tag: 8.0.2
+Stable tag: 8.0.4
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -23,6 +23,8 @@ Stop chasing replies across group chats and reconciling half-finished spreadshee
 Guests sign in with a simple **Party ID**, so households RSVP together while you manage plus ones like a built-in plus one manager tied to each invite code (not stray "+1" notes buried in email threads). The plugin works as a **meal choice collector** for adult entrées with dietary notes, supports **event capacity limits** when you need to cap attendance, and includes **wedding guest list export** when finance, catering, or your venue needs the latest numbers in one place.
 
 Built with modern WordPress patterns so multiple planners can collaborate in the dashboard at once—roles and permissions stay native while you update invitations, meals, and RSVP status together on desktop or mobile.
+
+**Gift registry links:** Under **Wedding RSVP → Settings → Frontend Display**, add one or more registry URLs (Amazon, Zola, etc.). Guests see the links on the public RSVP page after entering their Party ID.
 
 == Try It Live - Preview This Plugin Instantly ==
 
@@ -124,6 +126,9 @@ In wp-admin, use **Tools → Export Personal Data** and **Tools → Erase Person
 = Can guests add the event to their calendar? =
 Yes. In **Settings → Logistics**, set event title, start time, and optional venue; when enabled, guests who complete RSVP can download an **.ics** file (“Add to calendar”).
 
+= How do I add gift registry links to the RSVP page? =
+In **Wedding RSVP → Settings** (free) use **Frontend Display**; with **Pro**, use **Settings → Frontend text**. Enter an optional heading and one or more link labels with full **https** URLs (for example Amazon or Zola). Guests see them after signing in with their Party ID.
+
 = How do I paste a guest list instead of CSV? =
 In **Wedding RSVP → Paste Guest List** (admin menu), paste names, emails, or phone lines, preview rows, then import. Imports are capped per request and require an administrator; see the on-screen notice after import.
 
@@ -138,7 +143,7 @@ This plugin does not call third-party APIs for core RSVP storage. Optional behav
 
 * **InstaWP (optional Pro preview)** — The readme **Try It Live** section and wp-admin may link to **InstaWP** (`app.instawp.io`) so administrators or visitors can open a **temporary** WordPress site preloaded with **Wedding Party RSVP Pro** to evaluate premium features. The user’s browser navigates to InstaWP; provisioning, session length, and data handling are governed by InstaWP, not by this plugin’s server-side code. See [InstaWP Terms of Service](https://instawp.com/terms/) and [InstaWP Privacy Policy](https://instawp.com/privacy-policy/).
 
-* **WordPress AI Client (optional, WordPress 7.0+)** — On **Wedding RSVP → General Settings**, “AI wording…” sends only the assistant instructions you trigger plus optional notes you type in the browser to the AI **provider configured in WordPress**. No guest list data is sent. Add your provider’s Terms and Privacy links to your site policies when you enable AI.
+* **WordPress AI Client (optional)** — **This feature is available on WordPress 7.0 and later** (the WordPress AI Client provides `wp_ai_client_prompt`; configure your provider in WordPress). On older versions, AI wording controls are not shown. On **Wedding RSVP → General Settings**, “AI wording…” sends only the assistant instructions you trigger plus optional notes you type in the browser to the AI **provider configured in WordPress**. No guest list data is sent. Add your provider’s Terms and Privacy links to your site policies when you enable AI.
 
 * **Guest Hub — Google Maps (optional link)** — After a successful RSVP (Interactivity flow) or on the thank-you page, the **Guest Hub** can show **Open in Google Maps** when **Settings → Logistics** includes an event location/venue. The plugin builds a standard `https://www.google.com/maps/search/?api=1&query=…` URL using that text; opening the link is done in the guest’s browser and sends the encoded venue string to **Google**. No server-to-server call is made by the plugin for this link. See [Google Maps Platform Terms of Service](https://developers.google.com/maps/terms) and [Google Privacy Policy](https://policies.google.com/privacy).
 
@@ -153,6 +158,15 @@ This plugin does not call third-party APIs for core RSVP storage. Optional behav
 This plugin bundles **FPDF** (version 1.86, © Olivier Plathey) under `includes/lib/fpdf/` for optional **Export check-in PDF** in the guest list. FPDF is free software; see the header comment in `fpdf.php` for license terms.
 
 == Changelog ==
+
+= 8.0.4 =
+
+* **Redirect URL** — Helpers `wgrsvp_sanitize_redirect_url_setting()` and `wgrsvp_resolve_stored_redirect_url()` for full URLs and root-relative paths; General Settings save, Interactivity/AJAX success payload, and classic form POST all resolve the stored value before `wp_safe_redirect()` so guests reach your thank-you / custom page when Pro is inactive.
+* **Documentation** — External Services clarifies that the **WordPress AI Client** / AI wording assistant requires **WordPress 7.0 or later** (`wp_ai_client_prompt`).
+
+= 8.0.3 =
+
+* **Gift registries** — **Settings → Frontend Display**: optional heading plus multiple registry links (label + https URL). Shown on the public RSVP form after guests enter their **Party ID** (filter `wgrsvp_gift_registry_items`). **Wedding Party RSVP Pro**: same fields on **Settings → Frontend text**; front end uses the shared renderer when the free plugin is active.
 
 = 8.0.2 =
 

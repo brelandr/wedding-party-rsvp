@@ -9,6 +9,7 @@
 	<admin-texts>
 		<key name="wgrsvp_general_settings">
 			<key name="welcome_title" />
+			<key name="gift_registry_heading" />
 			<key name="deadline_closed_message" />
 			<key name="event_title" />
 			<key name="event_location" />
