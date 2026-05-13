@@ -1,6 +1,6 @@
 {
 	"$schema": "https://playground.wordpress.net/blueprint-schema.json",
-	"landingPage": "/wp-admin/admin.php?page=wedding-rsvp-main",
+	"landingPage": "/",
 	"preferredVersions": {
 		"php": "8.2",
 		"wp": "latest"
@@ -13,17 +13,17 @@
 		},
 		{
 			"step": "installPlugin",
-			"pluginZipFile": {
-				"resource": "wordpress.org/plugins",
-				"slug": "wedding-party-rsvp"
-			},
 			"options": {
 				"activate": true
+			},
+			"pluginData": {
+				"resource": "wordpress.org/plugins",
+				"slug": "wedding-party-rsvp"
 			}
 		},
 		{
 			"step": "runPHP",
-			"code": "<?php\nrequire_once '/wordpress/wp-load.php';\n\n// Configure menu options\n$menu_options = array(\n\t'Grilled Salmon',\n\t'Chicken Marsala',\n\t'Beef Tenderloin',\n\t'Vegetarian Pasta',\n\t'Prime Rib'\n);\n\nupdate_option('wgrsvp_menu_options', $menu_options);\n\n// Configure general settings\n$settings = array(\n\t'welcome_title' => 'RSVP to Our Wedding',\n\t'primary_color' => '#333333',\n\t'font_size' => '16'\n);\n\nupdate_option('wgrsvp_general_settings', $settings);"
+			"code": "<?php\nrequire_once '/wordpress/wp-load.php';\n$menu_options = array(\n\t'Grilled Salmon',\n\t'Chicken Marsala',\n\t'Beef Tenderloin',\n\t'Vegetarian Pasta',\n\t'Prime Rib'\n);\nupdate_option( 'wgrsvp_menu_options', $menu_options );\n$prev = get_option( 'wgrsvp_general_settings', array() );\nif ( ! is_array( $prev ) ) {\n\t$prev = array();\n}\n$settings = array_merge(\n\t$prev,\n\tarray(\n\t\t'welcome_title' => 'RSVP to Our Wedding',\n\t\t'primary_color'   => '#333333',\n\t)\n);\nupdate_option( 'wgrsvp_general_settings', $settings );"
 		},
 		{
 			"step": "runPHP",

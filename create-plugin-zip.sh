@@ -39,7 +39,8 @@ mkdir -p "${TEMP_PLUGIN}"
 # missing_composer_json_file / orphaned vendor in releases.
 #
 # assets/js and assets/css are required at runtime (plugins_url(..., __FILE__)).
-# assets/blueprints/ is dev/sample tree (and may contain .svn); omit it.
+# Ship assets/blueprints/blueprint.json for WordPress.org plugin directory / Playground.
+# Exclude nested blueprint dev tree only (may contain .svn).
 rsync -a \
 	--exclude='.[!.]*' \
 	--exclude='.zip-temp-*' \
@@ -50,7 +51,7 @@ rsync -a \
 	--exclude='dist/' \
 	--exclude='src/' \
 	--exclude='svn-checkout/' \
-	--exclude='assets/blueprints/' \
+	--exclude='assets/blueprints/trunk/' \
 	--exclude='wedding-party-assets/' \
 	--exclude='*.log' \
 	--exclude='*.tmp' \
@@ -97,11 +98,15 @@ if ! echo "${ZIP_LISTING}" | grep -qF "${PLUGIN_SLUG}/assets/css/"; then
 fi
 echo "OK: Runtime assets (assets/js, assets/css) present."
 
-if echo "${ZIP_LISTING}" | grep -qF "${PLUGIN_SLUG}/assets/blueprints/"; then
-	echo "✗ ERROR: assets/blueprints/ must not be in the distribution zip." >&2
+if ! echo "${ZIP_LISTING}" | grep -qF "${PLUGIN_SLUG}/assets/blueprints/blueprint.json"; then
+	echo "✗ ERROR: assets/blueprints/blueprint.json must be in the distribution zip (Playground / plugin directory)." >&2
 	exit 1
 fi
-echo "OK: No assets/blueprints/ in zip."
+if echo "${ZIP_LISTING}" | grep -qF "${PLUGIN_SLUG}/assets/blueprints/trunk/"; then
+	echo "✗ ERROR: assets/blueprints/trunk/ must not be in the distribution zip (dev tree)." >&2
+	exit 1
+fi
+echo "OK: assets/blueprints/blueprint.json present; assets/blueprints/trunk excluded."
 
 if echo "${ZIP_LISTING}" | grep -qE '(\.cursorrules|\.DS_Store|\.git/|\.github|create-plugin-zip\.sh|[^ ]+\.sh|deploy\.yml|\.md|phpcs\.xml|\.distignore)'; then
 	echo "WARNING: Some excluded paths may still be present."

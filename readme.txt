@@ -3,7 +3,7 @@ Contributors: brelandr
 Tags: wedding, rsvp, guest list, invitation, event management
 Requires at least: 6.2
 Tested up to: 7.0
-Stable tag: 8.0.4
+Stable tag: 8.0.5
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -28,9 +28,11 @@ Built with modern WordPress patterns so multiple planners can collaborate in the
 
 == Try It Live - Preview This Plugin Instantly ==
 
-Experience Wedding Party RSVP without installation! Click the link below to open WordPress Playground with the plugin pre-installed and configured with sample data.
+Experience Wedding Party RSVP without installation: the blueprint installs the plugin from **WordPress.org**, creates sample guests and menu options, and sets the site homepage to a **Wedding RSVP** page with the `[wedding_rsvp_form]` shortcode. Log in as **admin** / **password** to explore wp-admin (e.g. **Wedding RSVP**).
 
 [Preview on WordPress Playground](https://playground.wordpress.net/?blueprint-url=https://raw.githubusercontent.com/brelandr/wedding-party-rsvp/main/blueprint.json)
+
+The same blueprint ships in the plugin package as `blueprint.json` (repository root) and `assets/blueprints/blueprint.json`. WordPress.org also serves a copy from the plugin SVN for directory integration. **Example Party IDs** in the demo: `SMITH-001`, `JONES-002`, `DAVIS-005`.
 
 **Preview the premium plugin** — try Wedding Party RSVP Pro on a temporary demo site (no purchase required; hosted by InstaWP):
 
@@ -158,6 +160,11 @@ This plugin does not call third-party APIs for core RSVP storage. Optional behav
 This plugin bundles **FPDF** (version 1.86, © Olivier Plathey) under `includes/lib/fpdf/` for optional **Export check-in PDF** in the guest list. FPDF is free software; see the header comment in `fpdf.php` for license terms.
 
 == Changelog ==
+
+= 8.0.5 =
+
+* **Playground blueprint** — `installPlugin` uses **`pluginData`** (current WordPress Playground schema); landing page opens the public **Wedding RSVP** demo (`/`); demo seed **merges** `wgrsvp_general_settings` instead of replacing the option; root `blueprint.json` stays in sync with `assets/blueprints/blueprint.json`.
+* **Distribution** — Release zip includes `assets/blueprints/blueprint.json` (excludes only the nested `assets/blueprints/trunk/` dev tree).
 
 = 8.0.4 =
 
