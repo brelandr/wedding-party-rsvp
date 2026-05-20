@@ -3,7 +3,8 @@ Contributors: brelandr
 Tags: wedding, rsvp, guest list, invitation, event management
 Requires at least: 6.2
 Tested up to: 7.0
-Stable tag: 8.0.5
+Requires PHP: 7.4
+Stable tag: 8.0.6
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -116,6 +117,9 @@ No. Guests use a Party ID (invite code) you assign—no user registration requir
 = Does this work with the block editor? =
 Yes. Add a Shortcode block (or the classic block) and paste `[wedding_rsvp_form]`. A block pattern is also available in the editor when the plugin is active.
 
+= What PHP and WordPress versions do I need? =
+Requires **WordPress 6.2** or later, **PHP 7.4** or later (aligned with WordPress 7 dropping PHP 7.2–7.3), and the plugin readme lists **Tested up to WordPress 7.0**. Use **PHP 8.x** on your host where possible—WordPress recommends current PHP releases for performance and security.
+
 = Can I use Wedding Party RSVP Pro together with the free plugin? =
 Yes. Keep both plugins active: the free plugin provides the core guest list and RSVP form; Pro extends it with premium features when your license is valid.
 
@@ -160,6 +164,10 @@ This plugin does not call third-party APIs for core RSVP storage. Optional behav
 This plugin bundles **FPDF** (version 1.86, © Olivier Plathey) under `includes/lib/fpdf/` for optional **Export check-in PDF** in the guest list. FPDF is free software; see the header comment in `fpdf.php` for license terms.
 
 == Changelog ==
+
+= 8.0.6 =
+
+* **Compatibility headers** — `readme.txt` and plugin headers declare **`Requires PHP: 7.4`** alongside **Tested up to: WordPress 7.0**, matching WordPress 7 minimum PHP guidance and avoiding installs on obsolete PHP releases.
 
 = 8.0.5 =
 
