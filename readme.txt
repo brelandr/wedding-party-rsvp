@@ -4,7 +4,7 @@ Tags: wedding, rsvp, guest list, invitation, event management
 Requires at least: 6.2
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 8.0.8
+Stable tag: 8.1.0
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -167,6 +167,12 @@ This plugin does not call third-party APIs for core RSVP storage. Optional behav
 This plugin bundles **FPDF** (version 1.86, © Olivier Plathey) under `includes/lib/fpdf/` for optional **Export check-in PDF** in the guest list. FPDF is free software; see the header comment in `fpdf.php` for license terms.
 
 == Changelog ==
+
+= 8.1.0 =
+
+* **Abilities API** — Registers `wedding-party-rsvp/ai-wording` when WordPress 7.0+ Abilities API is available (AJAX paths remain primary).
+* **Block registration** — Centralized `WGRSVP_Blocks` registers RSVP form, guest hub, and thank-you checklist dynamic blocks (PHP `render.php` only).
+* **AI model preference** — Optional model slug on General Settings; passed to `using_model_preference()` when supported.
 
 = 8.0.8 =
 

@@ -2,7 +2,7 @@
 /*
 Plugin Name: Wedding Party RSVP – Guest List, Invitation & Event Manager
 Description: Simple and secure RSVP system. Manage guest lists and adult meal choices.
-Version: 8.0.8
+Version: 8.1.0
 Author: Land Tech Web Designs, Corp
 Author URI: https://landtechwebdesigns.com
 Plugin URI: https://landtechwebdesigns.com/wedding-party-rsvp-wordpress-plugin/
@@ -35,6 +35,8 @@ if ( ! defined( 'WGRSVP_PLUGIN_DIR' ) ) {
 require_once WGRSVP_PLUGIN_DIR . 'includes/wgrsvp-admin-modules.php';
 require_once WGRSVP_PLUGIN_DIR . 'includes/class-wgrsvp-gift-registries.php';
 require_once WGRSVP_PLUGIN_DIR . 'includes/class-wgrsvp-wp70-compat.php';
+require_once WGRSVP_PLUGIN_DIR . 'includes/class-wgrsvp-blocks.php';
+require_once WGRSVP_PLUGIN_DIR . 'includes/class-wgrsvp-abilities-registry.php';
 
 if ( ! function_exists( 'wgrsvp_set_script_translations' ) ) {
 	/**
@@ -344,9 +346,12 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 			add_filter( 'plugin_row_meta', array( $this, 'filter_plugin_row_meta' ), 10, 2 );
 			add_action( 'wp_dashboard_setup', array( $this, 'maybe_register_dashboard_widget' ) );
 			add_action( 'init', array( $this, 'register_block_patterns' ), 9 );
-			add_action( 'init', array( $this, 'register_rsvp_form_block' ), 11 );
-			add_action( 'init', array( $this, 'register_guest_hub_block' ), 12 );
-			add_action( 'init', array( 'WGRSVP_ThankYou_Tracker', 'register_block' ), 11 );
+			if ( class_exists( 'WGRSVP_Blocks', false ) ) {
+				WGRSVP_Blocks::init();
+			}
+			if ( class_exists( 'WGRSVP_Abilities_Registry', false ) ) {
+				WGRSVP_Abilities_Registry::init();
+			}
 			add_action( 'rest_api_init', array( $this, 'register_party_preview_rest_route' ) );
 			add_action( 'rest_api_init', array( $this, 'register_admin_guest_rows_rest_route' ) );
 			add_action( 'admin_init', array( $this, 'load_privacy_exporters' ), 5 );
@@ -482,38 +487,6 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 					),
 				)
 			);
-		}
-
-		/**
-		 * Register dynamic block: same output as [wedding_rsvp_form]; supports editor visibility when available.
-		 *
-		 * @return void
-		 */
-		public function register_rsvp_form_block() {
-			if ( ! function_exists( 'register_block_type_from_metadata' ) ) {
-				return;
-			}
-			$block_dir = plugin_dir_path( __FILE__ ) . 'blocks/rsvp';
-			if ( ! is_readable( $block_dir . '/block.json' ) ) {
-				return;
-			}
-			register_block_type_from_metadata( $block_dir );
-		}
-
-		/**
-		 * Register Guest Hub block (thank-you summary; same output as [wgrsvp_guest_hub]).
-		 *
-		 * @return void
-		 */
-		public function register_guest_hub_block() {
-			if ( ! function_exists( 'register_block_type_from_metadata' ) ) {
-				return;
-			}
-			$block_dir = plugin_dir_path( __FILE__ ) . 'blocks/guest-hub';
-			if ( ! is_readable( $block_dir . '/block.json' ) ) {
-				return;
-			}
-			register_block_type_from_metadata( $block_dir );
 		}
 
 		/**
@@ -1509,26 +1482,13 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 			 */
 			$prompt = (string) apply_filters( 'wgrsvp_ai_wording_prompt', $prompt, $context );
 
-			try {
-				$builder = wp_ai_client_prompt( $prompt );
-			} catch ( \Throwable $e ) { // phpcs:ignore Generic.CodeAnalysis.EmptyStatement.DetectedCatch
+			if ( ! function_exists( 'wgrsvp_wp70_generate_text' ) ) {
 				wp_send_json_error( array( 'message' => __( 'AI client could not start.', 'wedding-party-rsvp' ) ), 500 );
 				return;
 			}
-
-			if ( ! is_object( $builder ) ) {
-				wp_send_json_error( array( 'message' => __( 'AI client API is not supported on this site.', 'wedding-party-rsvp' ) ), 500 );
-				return;
-			}
-
-			// WP_AI_Client_Prompt_Builder routes generate_* through __call; method_exists() is always false.
-			$out = $builder->generate_text();
+			$out = wgrsvp_wp70_generate_text( $prompt, 'wording_' . $context );
 			if ( is_wp_error( $out ) ) {
 				wp_send_json_error( array( 'message' => $out->get_error_message() ), 500 );
-				return;
-			}
-			if ( ! is_string( $out ) ) {
-				wp_send_json_error( array( 'message' => __( 'Unexpected AI response.', 'wedding-party-rsvp' ) ), 500 );
 				return;
 			}
 
@@ -4417,6 +4377,9 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 						)
 					);
 					update_option( $this->opt_settings, $settings );
+					if ( isset( $_POST['wgrsvp_ai_model_preference'] ) ) {
+						update_option( 'wgrsvp_ai_model_preference', sanitize_key( wp_unslash( (string) $_POST['wgrsvp_ai_model_preference'] ) ) );
+					}
 
 					$new_key  = isset( $_POST['wgrsvp_license_key'] ) ? sanitize_text_field( wp_unslash( $_POST['wgrsvp_license_key'] ) ) : '';
 					$prev_lic = get_option( $this->opt_license, '' );
@@ -4591,6 +4554,11 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 					<div style="background:#fff; padding:20px; border:1px solid #ddd; margin-bottom:20px;">
 						<h3><?php esc_html_e( 'AI wording snippets (copy to your page or email)', 'wedding-party-rsvp' ); ?></h3>
 						<p class="description"><?php esc_html_e( 'Generate draft text with the WordPress AI Client (7.0+). Nothing is saved until you copy it into a block or template and save settings elsewhere.', 'wedding-party-rsvp' ); ?></p>
+						<p>
+							<label for="wgrsvp_ai_model_preference"><strong><?php esc_html_e( 'AI model preference (optional)', 'wedding-party-rsvp' ); ?></strong></label><br>
+							<input type="text" name="wgrsvp_ai_model_preference" id="wgrsvp_ai_model_preference" value="<?php echo esc_attr( function_exists( 'wgrsvp_wp70_get_ai_model_preference' ) ? wgrsvp_wp70_get_ai_model_preference() : '' ); ?>" class="regular-text code" placeholder="<?php esc_attr_e( 'e.g. openai/gpt-4o', 'wedding-party-rsvp' ); ?>" />
+							<span class="description"><?php esc_html_e( 'Leave blank to use the WordPress default model. Saved when you click Save Settings.', 'wedding-party-rsvp' ); ?></span>
+						</p>
 						<p><label for="wgrsvp_ai_snippet_save_the_date"><strong><?php esc_html_e( 'Save the date (paragraph)', 'wedding-party-rsvp' ); ?></strong></label><br>
 						<textarea id="wgrsvp_ai_snippet_save_the_date" rows="4" style="width:100%;" class="large-text" placeholder="<?php esc_attr_e( 'Click the button to generate a draft…', 'wedding-party-rsvp' ); ?>"></textarea><br>
 						<button type="button" class="button wgrsvp-ai-wording-btn" data-wgrsvp-ai-context="save_the_date" data-wgrsvp-ai-target="#wgrsvp_ai_snippet_save_the_date"><?php esc_html_e( 'AI wording…', 'wedding-party-rsvp' ); ?></button></p>
