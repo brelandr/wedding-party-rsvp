@@ -4,7 +4,7 @@ Tags: wedding, rsvp, guest list, invitation, event management
 Requires at least: 6.2
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 8.1.0
+Stable tag: 8.1.1
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -167,6 +167,11 @@ This plugin does not call third-party APIs for core RSVP storage. Optional behav
 This plugin bundles **FPDF** (version 1.86, © Olivier Plathey) under `includes/lib/fpdf/` for optional **Export check-in PDF** in the guest list. FPDF is free software; see the header comment in `fpdf.php` for license terms.
 
 == Changelog ==
+
+= 8.1.1 =
+
+* **Block inserter fix** — RSVP form, Guest Hub, and Thank-you checklist blocks now register a block editor script and appear under a **Wedding Party RSVP** inserter category (PHP-only blocks were not discoverable in Gutenberg without `editorScript`).
+* **Block patterns** — Patterns tab adds **RSVP form (block)** and **Guest Hub (block)** under **Wedding Party RSVP** for faster page setup.
 
 = 8.1.0 =
 

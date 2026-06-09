@@ -2,7 +2,7 @@
 /*
 Plugin Name: Wedding Party RSVP – Guest List, Invitation & Event Manager
 Description: Simple and secure RSVP system. Manage guest lists and adult meal choices.
-Version: 8.1.0
+Version: 8.1.1
 Author: Land Tech Web Designs, Corp
 Author URI: https://landtechwebdesigns.com
 Plugin URI: https://landtechwebdesigns.com/wedding-party-rsvp-wordpress-plugin/
@@ -2884,6 +2884,24 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 					'categories'  => array( 'wgrsvp' ),
 					'description' => __( 'Inserts the public RSVP form shortcode with a short intro line.', 'wedding-party-rsvp' ),
 					'content'     => '<!-- wp:paragraph --><p>' . esc_html__( 'Your guests can RSVP below using their Party ID.', 'wedding-party-rsvp' ) . '</p><!-- /wp:paragraph --><!-- wp:shortcode -->[wedding_rsvp_form]<!-- /wp:shortcode -->',
+				)
+			);
+			register_block_pattern(
+				'wgrsvp/rsvp-form-block',
+				array(
+					'title'       => __( 'RSVP form (block)', 'wedding-party-rsvp' ),
+					'categories'  => array( 'wgrsvp' ),
+					'description' => __( 'Inserts the Wedding RSVP Form block with a short intro line.', 'wedding-party-rsvp' ),
+					'content'     => '<!-- wp:paragraph --><p>' . esc_html__( 'Your guests can RSVP below using their Party ID.', 'wedding-party-rsvp' ) . '</p><!-- /wp:paragraph --><!-- wp:wedding-party-rsvp/rsvp-form /-->',
+				)
+			);
+			register_block_pattern(
+				'wgrsvp/guest-hub-block',
+				array(
+					'title'       => __( 'Guest Hub (block)', 'wedding-party-rsvp' ),
+					'categories'  => array( 'wgrsvp' ),
+					'description' => __( 'Place near the RSVP form so guests see their summary after submitting.', 'wedding-party-rsvp' ),
+					'content'     => '<!-- wp:wedding-party-rsvp/guest-hub /-->',
 				)
 			);
 		}
