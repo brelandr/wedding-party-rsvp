@@ -13,6 +13,19 @@
 		$t.val( val );
 	}
 
+	function wgrsvpShowAiSetupNotice() {
+		if ( typeof wgrsvpAiWording === 'undefined' ) {
+			return;
+		}
+		var msg = wgrsvpAiWording.i18n.need_wp7 || '';
+		var url = wgrsvpAiWording.connections_url || '';
+		if ( url && window.confirm( msg + '\n\n' + url ) ) {
+			window.location.href = url;
+			return;
+		}
+		window.alert( msg );
+	}
+
 	$( document ).on( 'click', '.wgrsvp-ai-wording-btn', function () {
 		var $btn = $( this );
 		if ( typeof wgrsvpAiWording === 'undefined' ) {
@@ -21,7 +34,7 @@
 		var ctx = $btn.data( 'wgrsvp-ai-context' ) || '';
 		var sel = $btn.data( 'wgrsvp-ai-target' ) || '';
 		if ( ! wgrsvpAiWording.has_ai_client ) {
-			window.alert( wgrsvpAiWording.i18n.need_wp7 );
+			wgrsvpShowAiSetupNotice();
 			return;
 		}
 		var goals = window.prompt( wgrsvpAiWording.i18n.promptGoals, '' );

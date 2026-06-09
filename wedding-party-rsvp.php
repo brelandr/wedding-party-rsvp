@@ -2,7 +2,7 @@
 /*
 Plugin Name: Wedding Party RSVP – Guest List, Invitation & Event Manager
 Description: Simple and secure RSVP system. Manage guest lists and adult meal choices.
-Version: 8.0.6
+Version: 8.0.7
 Author: Land Tech Web Designs, Corp
 Author URI: https://landtechwebdesigns.com
 Plugin URI: https://landtechwebdesigns.com/wedding-party-rsvp-wordpress-plugin/
@@ -34,6 +34,7 @@ if ( ! defined( 'WGRSVP_PLUGIN_DIR' ) ) {
 
 require_once WGRSVP_PLUGIN_DIR . 'includes/wgrsvp-admin-modules.php';
 require_once WGRSVP_PLUGIN_DIR . 'includes/class-wgrsvp-gift-registries.php';
+require_once WGRSVP_PLUGIN_DIR . 'includes/class-wgrsvp-wp70-compat.php';
 
 if ( ! function_exists( 'wgrsvp_set_script_translations' ) ) {
 	/**
@@ -313,6 +314,7 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 			add_action( 'wp_ajax_nopriv_wgrsvp_submit_rsvp', array( $this, 'ajax_submit_rsvp' ) );
 			add_action( 'wp_ajax_wgrsvp_preview_paste_import', array( $this, 'ajax_preview_paste_import' ) );
 			add_action( 'wp_ajax_wgrsvp_ai_wording', array( $this, 'ajax_ai_wording' ) );
+			add_action( 'wp_ajax_wgrsvp_save_guest_list_view_pref', array( $this, 'ajax_save_guest_list_view_pref' ) );
 
 			add_action( 'wp_loaded', array( $this, 'maybe_redirect_legacy_wedding_rsvp_admin_slug' ), 0 );
 			add_action( 'admin_menu', array( $this, 'create_admin_menu' ) );
@@ -407,7 +409,7 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 				'wgrsvp-rsvp-interactivity',
 				plugins_url( 'assets/js/rsvp-interactivity.js', __FILE__ ),
 				array( '@wordpress/interactivity' ),
-				'8.0.6'
+				'8.0.7'
 			);
 			wgrsvp_set_script_translations( 'wgrsvp-rsvp-interactivity' );
 
@@ -428,7 +430,7 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 				'wgrsvp-party-lookup-interactivity',
 				plugins_url( 'assets/js/party-lookup-interactivity.js', __FILE__ ),
 				array( '@wordpress/interactivity' ),
-				'8.0.6'
+				'8.0.7'
 			);
 			wgrsvp_set_script_translations( 'wgrsvp-party-lookup-interactivity' );
 
@@ -1365,7 +1367,7 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 			}
 
 			$path = plugin_dir_path( __FILE__ ) . 'assets/js/wgrsvp-admin-ai-wording.js';
-			$ver  = is_readable( $path ) ? (string) filemtime( $path ) : '8.0.6';
+			$ver  = is_readable( $path ) ? (string) filemtime( $path ) : '8.0.7';
 
 			wp_enqueue_script(
 				'wgrsvp-admin-ai-wording',
@@ -1379,17 +1381,78 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 				'wgrsvp-admin-ai-wording',
 				'wgrsvpAiWording',
 				array(
-					'ajaxUrl'       => admin_url( 'admin-ajax.php' ),
-					'action'        => 'wgrsvp_ai_wording',
-					'nonce'         => wp_create_nonce( 'wgrsvp_ai_wording' ),
-					'has_ai_client' => function_exists( 'wp_ai_client_prompt' ),
-					'i18n'          => array(
+					'ajaxUrl'         => admin_url( 'admin-ajax.php' ),
+					'action'          => 'wgrsvp_ai_wording',
+					'nonce'           => wp_create_nonce( 'wgrsvp_ai_wording' ),
+					'has_ai_client'   => wgrsvp_wp70_ai_available(),
+					'connections_url' => wgrsvp_wp70_connections_admin_url(),
+					'setup_notice'    => wgrsvp_wp70_ai_setup_notice_text(),
+					'i18n'            => array(
 						'busy'        => __( 'Generating…', 'wedding-party-rsvp' ),
 						'done'        => __( 'Suggestion inserted. Review before saving.', 'wedding-party-rsvp' ),
-						'need_wp7'    => __( 'Requires WordPress 7.0+ with the AI Client and a site-configured provider.', 'wedding-party-rsvp' ),
+						'need_wp7'    => wgrsvp_wp70_ai_setup_notice_text(),
 						'ajax_failed' => __( 'Request failed.', 'wedding-party-rsvp' ),
 						'promptGoals' => __( 'Optional: extra guidance for the assistant (tone, formality, date, venue). Leave blank to skip.', 'wedding-party-rsvp' ),
 					),
+				)
+			);
+		}
+
+		/**
+		 * Whether the compiled DataViews admin bundle is present.
+		 *
+		 * @return bool
+		 */
+		private function wgrsvp_dataviews_build_available() {
+			$build_js  = plugin_dir_path( __FILE__ ) . 'build/index.js';
+			$asset_php = plugin_dir_path( __FILE__ ) . 'build/index.asset.php';
+			return is_readable( $build_js ) && is_readable( $asset_php );
+		}
+
+		/**
+		 * Resolve whether the dashboard should show the DataViews table.
+		 *
+		 * @return bool
+		 */
+		private function wgrsvp_should_show_dataviews_guest_list() {
+			if ( ! $this->wgrsvp_dataviews_build_available() ) {
+				return false;
+			}
+			// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only view override.
+			if ( isset( $_GET['wgrsvp_dataview'] ) ) {
+				return '1' === sanitize_text_field( wp_unslash( (string) $_GET['wgrsvp_dataview'] ) );
+			}
+			$pref = get_user_meta( get_current_user_id(), 'wgrsvp_guest_list_view', true );
+			if ( 'classic' === $pref ) {
+				return false;
+			}
+			return true;
+		}
+
+		/**
+		 * AJAX: persist guest list view preference (dataviews|classic).
+		 *
+		 * @return void
+		 */
+		public function ajax_save_guest_list_view_pref() {
+			if ( ! check_ajax_referer( 'wgrsvp_guest_list_view_pref', 'nonce', false ) ) {
+				wp_send_json_error( array( 'message' => __( 'Invalid security token.', 'wedding-party-rsvp' ) ), 403 );
+			}
+			if ( ! current_user_can( WGRSVP_Coordinator_Role::CAP_VIEW_GUEST_DASHBOARD ) ) {
+				wp_send_json_error( array( 'message' => __( 'Permission denied.', 'wedding-party-rsvp' ) ), 403 );
+			}
+			$view = isset( $_POST['view'] ) ? sanitize_key( wp_unslash( (string) $_POST['view'] ) ) : '';
+			if ( ! in_array( $view, array( 'dataviews', 'classic' ), true ) ) {
+				wp_send_json_error( array( 'message' => __( 'Unknown view preference.', 'wedding-party-rsvp' ) ), 400 );
+			}
+			update_user_meta( get_current_user_id(), 'wgrsvp_guest_list_view', $view );
+			$redirect = admin_url( 'admin.php?page=wedding-rsvp-main' );
+			if ( 'dataviews' === $view ) {
+				$redirect = add_query_arg( 'wgrsvp_dataview', '1', $redirect );
+			}
+			wp_send_json_success(
+				array(
+					'redirect_url' => $redirect,
 				)
 			);
 		}
@@ -2104,14 +2167,15 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 				.wgrsvp-landtech-cross-promo.postbox{margin-bottom:0;}
 				.wgrsvp-landtech-cross-promo .postbox-header{border-bottom:1px solid #c3c4c7;}
 				.wgrsvp-landtech-cross-promo .inside{padding:12px;margin:0;}
-				.wgrsvp-landtech-cross-promo .description{font-size:13px;line-height:1.5;color:#646970;margin:0;}
+				.wgrsvp-landtech-cross-promo .description{font-size:13px;line-height:1.5;color:var(--wp-admin-sidebar-submenu-text-color,#646970);margin:0;}
+				.wgrsvp-landtech-cross-promo .postbox-header{border-bottom:1px solid var(--wp-admin-border-color,#c3c4c7);}
 				.wgrsvp-landtech-cross-promo__list{margin:12px 0 0;padding-left:18px;list-style:disc;}
 				.wgrsvp-landtech-cross-promo__list li{margin-bottom:10px;line-height:1.45;}
 				.wgrsvp-landtech-cross-promo__link{display:inline;font-weight:600;}
 			';
 
 			if ( wgrsvp_is_pro_plugin_active() ) {
-				wp_register_style( 'wgrsvp-settings-layout-base', false, array(), '8.0.6' );
+				wp_register_style( 'wgrsvp-settings-layout-base', false, array(), '8.0.7' );
 				wp_enqueue_style( 'wgrsvp-settings-layout-base' );
 				wp_add_inline_style( 'wgrsvp-settings-layout-base', wp_strip_all_tags( $layout_css ) );
 
@@ -2880,7 +2944,7 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 
 		// --- CSS HANDLERS ---
 		public function enqueue_admin_styles() {
-			wp_register_style( 'wgrsvp-admin-style', false, array(), '8.0.6' );
+			wp_register_style( 'wgrsvp-admin-style', false, array(), '8.0.7' );
 			wp_enqueue_style( 'wgrsvp-admin-style' );
 			$css = $this->get_custom_css();
 			wp_add_inline_style( 'wgrsvp-admin-style', wp_strip_all_tags( $css ) );
@@ -2889,7 +2953,7 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 					'wgrsvp-admin-rtl',
 					plugins_url( 'assets/css/admin-rtl.css', __FILE__ ),
 					array( 'wgrsvp-admin-style' ),
-					'8.0.6'
+					'8.0.7'
 				);
 			}
 		}
@@ -2906,7 +2970,7 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 			}
 
 			$path = plugin_dir_path( __FILE__ ) . 'assets/js/wgrsvp-admin-ui.js';
-			$ver  = is_readable( $path ) ? (string) filemtime( $path ) : '8.0.6';
+			$ver  = is_readable( $path ) ? (string) filemtime( $path ) : '8.0.7';
 
 			wp_enqueue_script(
 				'wgrsvp-admin-ui',
@@ -2946,7 +3010,7 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 				'wgrsvp-paste-import',
 				plugins_url( 'assets/js/wgrsvp-paste-import.js', __FILE__ ),
 				array(),
-				'8.0.6',
+				'8.0.7',
 				true
 			);
 			wgrsvp_set_script_translations( 'wgrsvp-paste-import' );
@@ -2967,7 +3031,7 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 		}
 
 		public function enqueue_frontend_styles() {
-			wp_register_style( 'wgrsvp-front-style', false, array(), '8.0.6' );
+			wp_register_style( 'wgrsvp-front-style', false, array(), '8.0.7' );
 			wp_enqueue_style( 'wgrsvp-front-style' );
 			$css = $this->get_custom_css();
 			// Late hardening: inline style must not contain tags; values inside get_custom_css() are sanitized scalars only.
@@ -2977,7 +3041,7 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 					'wgrsvp-front-rtl',
 					plugins_url( 'assets/css/frontend-rtl.css', __FILE__ ),
 					array( 'wgrsvp-front-style' ),
-					'8.0.6'
+					'8.0.7'
 				);
 			}
 		}
@@ -3102,9 +3166,9 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 					opacity: 0.9 !important;
 				}
 				
-				.wpr-meal-tag { display:inline-block; margin:2px; padding:6px 10px; background:#f0f0f1; border:1px solid #ccc; border-radius:12px; font-size:12px; text-decoration:none; color:#333; }
-				.wpr-meal-tag:hover { background:#fff; border-color:#0073aa; color:#0073aa; }
-				.wpr-meal-tag.active { background:#0073aa; color:#fff; border-color:#0073aa; }
+				.wpr-meal-tag { display:inline-block; margin:2px; padding:6px 10px; background:var(--wp-admin-theme-color-darker-10,#f0f0f1); border:1px solid var(--wp-admin-border-color,#c3c4c7); border-radius:12px; font-size:12px; text-decoration:none; color:var(--wp-admin-theme-color-darker-20,#1d2327); }
+				.wpr-meal-tag:hover { background:#fff; border-color:var(--wp-admin-theme-color,#2271b1); color:var(--wp-admin-theme-color,#2271b1); }
+				.wpr-meal-tag.active { background:var(--wp-admin-theme-color,#2271b1); color:#fff; border-color:var(--wp-admin-theme-color,#2271b1); }
 
 				/* Flex Helpers */
 				.wpr-flex-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
@@ -3510,7 +3574,8 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 				wp_die( esc_html__( 'You do not have sufficient permissions to access this page.', 'wedding-party-rsvp' ) );
 			}
 
-			$dataview_spike = isset( $_GET['wgrsvp_dataview'] ) && '1' === sanitize_text_field( wp_unslash( (string) $_GET['wgrsvp_dataview'] ) ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only UI toggle.
+			$dataview_spike  = $this->wgrsvp_should_show_dataviews_guest_list();
+			$dataviews_build = $this->wgrsvp_dataviews_build_available();
 
 			$can_manage_rsvp = current_user_can( 'manage_options' );
 
@@ -3519,9 +3584,25 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 			}
 
 			$dash_js = plugins_url( 'assets/js/wgrsvp-admin-dashboard.js', __FILE__ );
-			wp_register_script( 'wgrsvp-admin-dashboard', $dash_js, array(), '8.0.6', true );
+			wp_register_script( 'wgrsvp-admin-dashboard', $dash_js, array( 'jquery' ), '8.0.7', true );
 			wp_enqueue_script( 'wgrsvp-admin-dashboard' );
 			wgrsvp_set_script_translations( 'wgrsvp-admin-dashboard' );
+			wp_localize_script(
+				'wgrsvp-admin-dashboard',
+				'wgrsvpGuestListView',
+				array(
+					'ajaxUrl'      => admin_url( 'admin-ajax.php' ),
+					'action'       => 'wgrsvp_save_guest_list_view_pref',
+					'nonce'        => wp_create_nonce( 'wgrsvp_guest_list_view_pref' ),
+					'currentView'  => $dataview_spike ? 'dataviews' : 'classic',
+					'buildPresent' => $dataviews_build,
+					'i18n'         => array(
+						'switchClassic' => __( 'Classic table', 'wedding-party-rsvp' ),
+						'switchDataviews' => __( 'DataViews table', 'wedding-party-rsvp' ),
+						'fail'          => __( 'Could not save view preference.', 'wedding-party-rsvp' ),
+					),
+				)
+			);
 
 			if ( $dataview_spike ) {
 				$build_js  = plugin_dir_path( __FILE__ ) . 'build/index.js';
@@ -3532,14 +3613,14 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 					if ( ! is_array( $asset ) ) {
 						$asset = array(
 							'dependencies' => array(),
-							'version'      => '8.0.6',
+							'version'      => '8.0.7',
 						);
 					}
 					wp_enqueue_script(
 						'wgrsvp-guest-dataviews',
 						plugins_url( 'build/index.js', __FILE__ ),
 						isset( $asset['dependencies'] ) && is_array( $asset['dependencies'] ) ? $asset['dependencies'] : array(),
-						isset( $asset['version'] ) ? $asset['version'] : '8.0.6',
+						isset( $asset['version'] ) ? $asset['version'] : '8.0.7',
 						true
 					);
 					wgrsvp_set_script_translations( 'wgrsvp-guest-dataviews' );
@@ -3548,7 +3629,7 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 							'wgrsvp-guest-dataviews',
 							plugins_url( 'build/style-index.css', __FILE__ ),
 							array(),
-							isset( $asset['version'] ) ? $asset['version'] : '8.0.6'
+							isset( $asset['version'] ) ? $asset['version'] : '8.0.7'
 						);
 					}
 					$meal_elements = array();
@@ -3592,7 +3673,7 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 						'wgrsvp-dataviews-spike',
 						$spike_js,
 						array( 'wp-api-fetch' ),
-						'8.0.6',
+						'8.0.7',
 						true
 					);
 					wgrsvp_set_script_translations( 'wgrsvp-dataviews-spike' );
@@ -3703,16 +3784,19 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 					<?php endif; ?>
 				</p>
 
+				<?php if ( $dataviews_build ) : ?>
+					<p class="description wgrsvp-guest-list-view-toggle" style="margin:-8px 0 16px;">
+						<?php esc_html_e( 'Guest list view:', 'wedding-party-rsvp' ); ?>
+						<button type="button" class="button button-small wgrsvp-guest-list-view-btn" data-wgrsvp-view="dataviews" <?php disabled( $dataview_spike ); ?>><?php esc_html_e( 'DataViews table', 'wedding-party-rsvp' ); ?></button>
+						<button type="button" class="button button-small wgrsvp-guest-list-view-btn" data-wgrsvp-view="classic" <?php disabled( ! $dataview_spike ); ?>><?php esc_html_e( 'Classic table', 'wedding-party-rsvp' ); ?></button>
+					</p>
+				<?php endif; ?>
+
 				<?php if ( $dataview_spike ) : ?>
 					<div class="notice notice-info"><p>
-						<?php esc_html_e( 'DataViews: read-only guest table (REST-driven). Use row actions to open a guest in the standard list below.', 'wedding-party-rsvp' ); ?>
-						<a href="<?php echo esc_url( admin_url( 'admin.php?page=wedding-rsvp-main' ) ); ?>"><?php esc_html_e( 'Return to standard guest list', 'wedding-party-rsvp' ); ?></a>
+						<?php esc_html_e( 'Read-only guest table (REST-driven). Sort, filter, and paginate here; use row actions to open a guest in the classic list below for editing.', 'wedding-party-rsvp' ); ?>
 					</p></div>
 					<div id="wgrsvp-dataviews-spike-root" class="wgrsvp-dataviews-spike-root" style="margin-bottom:24px;"></div>
-				<?php else : ?>
-					<p class="description" style="margin:-8px 0 16px;">
-						<a href="<?php echo esc_url( add_query_arg( 'wgrsvp_dataview', '1', admin_url( 'admin.php?page=wedding-rsvp-main' ) ) ); ?>"><?php esc_html_e( 'Open read-only DataViews table (sort, filter, paginate via REST)', 'wedding-party-rsvp' ); ?></a>
-					</p>
 				<?php endif; ?>
 
 				<div class="wpr-dashboard-grid">
@@ -3744,7 +3828,7 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 					admin_url( 'admin.php' )
 				);
 				?>
-				<div style="background:#fff; border:1px solid #ccd0d4; padding:12px 14px; margin-bottom:20px;">
+				<div class="wgrsvp-household-progress-card" style="background:var(--wp-admin-theme-color-darker-10,#fff); border:1px solid var(--wp-admin-border-color,#c3c4c7); padding:12px 14px; margin-bottom:20px;">
 					<strong><?php esc_html_e( 'Household RSVP progress', 'wedding-party-rsvp' ); ?></strong>
 					<p class="description" style="margin:4px 0 10px;">
 						<?php

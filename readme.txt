@@ -4,7 +4,7 @@ Tags: wedding, rsvp, guest list, invitation, event management
 Requires at least: 6.2
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 8.0.6
+Stable tag: 8.0.7
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -141,6 +141,9 @@ In **Wedding RSVP → Paste Guest List** (admin menu), paste names, emails, or p
 = What is the Party ID preview on the RSVP page? =
 When your site supports the Interactivity API, guests may see a short hint after typing a Party ID. The browser calls the read-only REST route `wgrsvp/v1/party-preview`, which returns only whether the party exists, a guest count, and up to three first-name tokens (not full PII). Requests are rate-limited per IP to reduce brute-force guessing; adjust with the `wgrsvp_party_preview_rate_limit_max` filter if needed.
 
+= How do I use the DataViews guest table on the Wedding Dashboard? =
+When the admin bundle is built (`npm run build` in the plugin directory), **Wedding RSVP → Wedding Dashboard** opens the **DataViews** read-only table by default. Use **Classic table** / **DataViews table** on the dashboard toolbar to switch views; your choice is saved per user. The classic list remains below for bulk actions and editing. Override once with `?wgrsvp_dataview=1` or `?wgrsvp_dataview=0`.
+
 == External Services ==
 
 This plugin does not call third-party APIs for core RSVP storage. Optional behaviors:
@@ -149,7 +152,7 @@ This plugin does not call third-party APIs for core RSVP storage. Optional behav
 
 * **InstaWP (optional Pro preview)** — The readme **Try It Live** section and wp-admin may link to **InstaWP** (`app.instawp.io`) so administrators or visitors can open a **temporary** WordPress site preloaded with **Wedding Party RSVP Pro** to evaluate premium features. The user’s browser navigates to InstaWP; provisioning, session length, and data handling are governed by InstaWP, not by this plugin’s server-side code. See [InstaWP Terms of Service](https://instawp.com/terms/) and [InstaWP Privacy Policy](https://instawp.com/privacy-policy/).
 
-* **WordPress AI Client (optional)** — **This feature is available on WordPress 7.0 and later** (the WordPress AI Client provides `wp_ai_client_prompt`; configure your provider in WordPress). On older versions, AI wording controls are not shown. On **Wedding RSVP → General Settings**, “AI wording…” sends only the assistant instructions you trigger plus optional notes you type in the browser to the AI **provider configured in WordPress**. No guest list data is sent. Add your provider’s Terms and Privacy links to your site policies when you enable AI.
+* **WordPress AI Client (optional)** — **This feature is available on WordPress 7.0 and later** (the WordPress AI Client provides `wp_ai_client_prompt`; configure your provider under **Settings → Connectors** in WordPress). On older versions, AI wording controls are not shown. On **Wedding RSVP → General Settings**, “AI wording…” sends only the assistant instructions you trigger plus optional notes you type in the browser to the AI **provider configured in WordPress**. No guest list data is sent. Add your provider’s Terms and Privacy links to your site policies when you enable AI.
 
 * **Guest Hub — Google Maps (optional link)** — After a successful RSVP (Interactivity flow) or on the thank-you page, the **Guest Hub** can show **Open in Google Maps** when **Settings → Logistics** includes an event location/venue. The plugin builds a standard `https://www.google.com/maps/search/?api=1&query=…` URL using that text; opening the link is done in the guest’s browser and sends the encoded venue string to **Google**. No server-to-server call is made by the plugin for this link. See [Google Maps Platform Terms of Service](https://developers.google.com/maps/terms) and [Google Privacy Policy](https://policies.google.com/privacy).
 
@@ -164,6 +167,12 @@ This plugin does not call third-party APIs for core RSVP storage. Optional behav
 This plugin bundles **FPDF** (version 1.86, © Olivier Plathey) under `includes/lib/fpdf/` for optional **Export check-in PDF** in the guest list. FPDF is free software; see the header comment in `fpdf.php` for license terms.
 
 == Changelog ==
+
+= 8.0.7 =
+
+* **DataViews default** — When the admin bundle is built, the Wedding Dashboard opens the REST-driven **DataViews** guest table by default; per-user toggle switches to the classic table (user meta `wgrsvp_guest_list_view`).
+* **AI setup UX** — General Settings AI wording links administrators to **Settings → Connectors** when the WordPress AI Client is not configured (WP 7.0+).
+* **WordPress 7.0 admin** — Dashboard and settings layout CSS uses admin theme variables for better contrast on the Modern admin theme.
 
 = 8.0.6 =
 
