@@ -34,7 +34,8 @@ wgrsvp_resolve_zip_version() {
 }
 
 PLUGIN_VERSION="$(wgrsvp_resolve_zip_version)"
-ZIP_NAME="${PLUGIN_SLUG}-${PLUGIN_VERSION}.zip"
+ZIP_SUFFIX="${WGRSVP_ZIP_SUFFIX:-}"
+ZIP_NAME="${PLUGIN_SLUG}-${PLUGIN_VERSION}${ZIP_SUFFIX}.zip"
 ZIP_PATH="${DIST_DIR}/${ZIP_NAME}"
 
 if ! command -v rsync >/dev/null 2>&1; then

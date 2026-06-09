@@ -11,6 +11,8 @@
 # Usage (from free plugin root):
 #   ./create-both-plugin-zips.sh
 #
+# Development / test zips only (no SVN): ./create-dev-build-zips.sh
+#
 # Output (both zips in the free repo Dist/ folder; version in filename only):
 #   <this-repo>/Dist/wedding-party-rsvp-{version}.zip
 #   <this-repo>/Dist/wedding-party-rsvp-pro-{version}.zip
