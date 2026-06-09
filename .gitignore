@@ -53,6 +53,10 @@ SVN-CREDENTIALS.md
 # Local WordPress.org SVN checkout (keep out of repo & release zips)
 svn-checkout/
 
+# Distribution zips (create-plugin-zip.sh / create-both-plugin-zips.sh)
+Dist/
+*.zip
+
 # Accidental nested SVN under assets (breaks wp.org deploy if copied)
 assets/.svn/
 assets/blueprints/trunk/.svn/

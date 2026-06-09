@@ -4,7 +4,7 @@ Tags: wedding, rsvp, guest list, invitation, event management
 Requires at least: 6.2
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 8.0.7
+Stable tag: 8.0.8
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -167,6 +167,12 @@ This plugin does not call third-party APIs for core RSVP storage. Optional behav
 This plugin bundles **FPDF** (version 1.86, © Olivier Plathey) under `includes/lib/fpdf/` for optional **Export check-in PDF** in the guest list. FPDF is free software; see the header comment in `fpdf.php` for license terms.
 
 == Changelog ==
+
+= 8.0.8 =
+
+* **AI wording fix** — WordPress 7.0 `WP_AI_Client_Prompt_Builder` routes `generate_text()` through `__call`; removed incorrect `method_exists()` check that blocked AI with configured Connectors.
+* **Household RSVP progress** — Dashboard card uses neutral admin surface colors and explicit text variables for readable contrast on the Modern admin theme.
+* **Distribution** — `create-plugin-zip.sh` writes versioned zips to `Dist/` (internal folder name unchanged).
 
 = 8.0.7 =
 

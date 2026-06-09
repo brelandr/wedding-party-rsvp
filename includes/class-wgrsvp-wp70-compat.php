@@ -16,7 +16,24 @@ if ( ! function_exists( 'wgrsvp_wp70_ai_available' ) ) {
 	 * @return bool
 	 */
 	function wgrsvp_wp70_ai_available() {
-		return function_exists( 'wp_ai_client_prompt' );
+		if ( ! function_exists( 'wp_ai_client_prompt' ) ) {
+			return false;
+		}
+		static $text_supported = null;
+		if ( null !== $text_supported ) {
+			return $text_supported;
+		}
+		$text_supported = false;
+		try {
+			$builder = wp_ai_client_prompt();
+			if ( is_object( $builder ) ) {
+				// Routed through __call; do not use method_exists().
+				$text_supported = (bool) $builder->is_supported_for_text_generation();
+			}
+		} catch ( \Throwable $e ) { // phpcs:ignore Generic.CodeAnalysis.EmptyStatement.DetectedCatch -- Probe only.
+			$text_supported = true;
+		}
+		return $text_supported;
 	}
 }
 

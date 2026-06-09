@@ -11,11 +11,31 @@
 set -euo pipefail
 
 PLUGIN_SLUG="wedding-party-rsvp"
-ZIP_NAME="${PLUGIN_SLUG}.zip"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+DIST_DIR="${SCRIPT_DIR}/Dist"
 TEMP_DIR="${SCRIPT_DIR}/.zip-temp-$$"
 TEMP_PLUGIN="${TEMP_DIR}/${PLUGIN_SLUG}"
 trap 'rm -rf "${TEMP_DIR}"' EXIT
+
+# Version for the zip filename only (archive folder stays wedding-party-rsvp/).
+wgrsvp_resolve_zip_version() {
+	local ver=""
+	if [[ -f "${SCRIPT_DIR}/.release" ]]; then
+		ver="$(grep -E '^VERSION=' "${SCRIPT_DIR}/.release" 2>/dev/null | head -1 | cut -d= -f2- | tr -d "\"'" | xargs)"
+	fi
+	if [[ -z "${ver}" && -f "${SCRIPT_DIR}/wedding-party-rsvp.php" ]]; then
+		ver="$(grep -m1 -E '^\s*Version:' "${SCRIPT_DIR}/wedding-party-rsvp.php" | sed -E 's/.*Version:[[:space:]]*//' | tr -d '\r' | xargs)"
+	fi
+	if [[ -z "${ver}" ]]; then
+		echo "✗ Error: could not determine plugin version (.release or plugin header)." >&2
+		exit 1
+	fi
+	echo "${ver}"
+}
+
+PLUGIN_VERSION="$(wgrsvp_resolve_zip_version)"
+ZIP_NAME="${PLUGIN_SLUG}-${PLUGIN_VERSION}.zip"
+ZIP_PATH="${DIST_DIR}/${ZIP_NAME}"
 
 if ! command -v rsync >/dev/null 2>&1; then
 	echo "✗ Error: rsync is required (install Xcode CLT or rsync)." >&2
@@ -26,9 +46,10 @@ if ! command -v zip >/dev/null 2>&1; then
 	exit 1
 fi
 
-echo "Creating distribution zip: ${ZIP_NAME}"
+echo "Creating distribution zip: Dist/${ZIP_NAME} (folder inside: ${PLUGIN_SLUG}/)"
 
-rm -f "${SCRIPT_DIR}/${ZIP_NAME}"
+mkdir -p "${DIST_DIR}"
+rm -f "${ZIP_PATH}"
 mkdir -p "${TEMP_PLUGIN}"
 
 # All dot-prefixed files/dirs (Plugin Check: hidden_files — not permitted in the zip).
@@ -42,6 +63,7 @@ mkdir -p "${TEMP_PLUGIN}"
 # Ship assets/blueprints/blueprint.json for WordPress.org plugin directory / Playground.
 # Exclude nested blueprint dev tree only (may contain .svn).
 rsync -a \
+	--exclude='Dist/' \
 	--exclude='.[!.]*' \
 	--exclude='.zip-temp-*' \
 	--exclude='*.DS_Store' \
@@ -75,12 +97,12 @@ rsync -a \
 
 (
 	cd "${TEMP_DIR}" || exit 1
-	zip -qr "${SCRIPT_DIR}/${ZIP_NAME}" "${PLUGIN_SLUG}"
+	zip -qr "${ZIP_PATH}" "${PLUGIN_SLUG}"
 )
 
-echo "Created: ${ZIP_NAME} ($(ls -lh "${SCRIPT_DIR}/${ZIP_NAME}" | awk '{print $5}'))"
+echo "Created: ${ZIP_PATH} ($(ls -lh "${ZIP_PATH}" | awk '{print $5}'))"
 echo "Verifying exclusions..."
-ZIP_LISTING=$( unzip -l "${SCRIPT_DIR}/${ZIP_NAME}" 2>/dev/null || true )
+ZIP_LISTING=$( unzip -l "${ZIP_PATH}" 2>/dev/null || true )
 
 if echo "${ZIP_LISTING}" | grep -qF "${PLUGIN_SLUG}/vendor/"; then
 	echo "✗ ERROR: vendor/ must not be in the distribution zip (dev-only; see composer.json require-dev)." >&2
@@ -123,9 +145,14 @@ else
 fi
 
 if command -v zipinfo >/dev/null 2>&1; then
-	if zipinfo -1 "${SCRIPT_DIR}/${ZIP_NAME}" 2>/dev/null | grep -qE '(^|/)\.[^/]+'; then
+	if zipinfo -1 "${ZIP_PATH}" 2>/dev/null | grep -qF "${PLUGIN_SLUG}/Dist/"; then
+		echo "✗ ERROR: Dist/ must not be in the distribution zip." >&2
+		exit 1
+	fi
+	echo "OK: No Dist/ in zip."
+	if zipinfo -1 "${ZIP_PATH}" 2>/dev/null | grep -qE '(^|/)\.[^/]+'; then
 		echo "WARNING: Hidden (dot-prefixed) paths in zip — Plugin Check: hidden_files."
-		zipinfo -1 "${SCRIPT_DIR}/${ZIP_NAME}" 2>/dev/null | grep -E '(^|/)\.[^/]+' || true
+		zipinfo -1 "${ZIP_PATH}" 2>/dev/null | grep -E '(^|/)\.[^/]+' || true
 	else
 		echo "OK: No hidden dotfile paths in zip."
 	fi
