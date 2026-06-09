@@ -8,6 +8,7 @@ svn-checkout/
 wedding-party-assets/
 .git/
 .github/
+deploy.yml
 .cursorrules
 .gitignore
 .cursor/
