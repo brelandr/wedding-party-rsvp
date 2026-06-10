@@ -64,6 +64,8 @@ if ( ! class_exists( 'WGRSVP_Vendor_Catering_Export' ) ) {
 		}
 
 		/**
+		 * Resolve the meal label for a guest row (child menu aware).
+		 *
 		 * @param array<string,mixed> $r Row.
 		 * @return string
 		 */
@@ -164,6 +166,8 @@ if ( ! class_exists( 'WGRSVP_Vendor_Catering_Export' ) ) {
 		}
 
 		/**
+		 * Sort aggregate table keys naturally (numeric tables first).
+		 *
 		 * @param array<string,array> $agg Aggregates (by reference sort keys).
 		 * @return void
 		 */
@@ -251,6 +255,8 @@ if ( ! class_exists( 'WGRSVP_Vendor_Catering_Export' ) ) {
 		}
 
 		/**
+		 * Convert a UTF-8 string to Latin-1 text safe for FPDF output.
+		 *
 		 * @param string $s UTF-8 string.
 		 * @return string
 		 */

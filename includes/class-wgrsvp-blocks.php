@@ -20,6 +20,8 @@ if ( ! class_exists( 'WGRSVP_Blocks' ) ) {
 		const BLOCK_CATEGORY = 'wgrsvp';
 
 		/**
+		 * Register block category, editor script, and block hooks.
+		 *
 		 * @return void
 		 */
 		public static function init() {
@@ -105,6 +107,8 @@ if ( ! class_exists( 'WGRSVP_Blocks' ) ) {
 		}
 
 		/**
+		 * Register a single block from its block.json metadata.
+		 *
 		 * @param string $slug Block directory slug under blocks/.
 		 * @return void
 		 */

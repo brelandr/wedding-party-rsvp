@@ -89,7 +89,7 @@ if ( ! class_exists( 'WGRSVP_Paste_Import' ) ) {
 			}
 			if ( 3 === $n ) {
 				if ( self::str_contains_at( $parts[1] ) ) {
-					// name, email, phone
+					// Columns: name, email, phone.
 					return array(
 						'party_id'   => $fallback_party,
 						'guest_name' => $parts[0],
@@ -160,6 +160,8 @@ if ( ! class_exists( 'WGRSVP_Paste_Import' ) ) {
 		}
 
 		/**
+		 * Whether the string contains an @ (looks like an email).
+		 *
 		 * @param string $s String.
 		 * @return bool
 		 */
@@ -168,6 +170,8 @@ if ( ! class_exists( 'WGRSVP_Paste_Import' ) ) {
 		}
 
 		/**
+		 * Heuristic: whether a token looks like a party ID.
+		 *
 		 * @param string $token Token.
 		 * @return bool
 		 */

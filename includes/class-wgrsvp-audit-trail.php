@@ -22,6 +22,8 @@ if ( ! class_exists( 'WGRSVP_Audit_Trail' ) ) {
 		public const PAGE_SLUG = 'wedding-rsvp-audit-log';
 
 		/**
+		 * Fully prefixed audit-trail table name.
+		 *
 		 * @return string
 		 */
 		public static function table_name() {
@@ -73,6 +75,8 @@ if ( ! class_exists( 'WGRSVP_Audit_Trail' ) ) {
 		}
 
 		/**
+		 * Register install and admin menu hooks.
+		 *
 		 * @return void
 		 */
 		public static function register_hooks() {
@@ -91,6 +95,8 @@ if ( ! class_exists( 'WGRSVP_Audit_Trail' ) ) {
 		}
 
 		/**
+		 * Create or upgrade the audit table when the schema version changes.
+		 *
 		 * @return void
 		 */
 		public static function maybe_install() {
@@ -103,6 +109,8 @@ if ( ! class_exists( 'WGRSVP_Audit_Trail' ) ) {
 		}
 
 		/**
+		 * Run dbDelta for the audit-trail table.
+		 *
 		 * @return void
 		 */
 		private static function install_db() {
@@ -133,6 +141,8 @@ if ( ! class_exists( 'WGRSVP_Audit_Trail' ) ) {
 		}
 
 		/**
+		 * Add the audit-log submenu page.
+		 *
 		 * @return void
 		 */
 		public static function register_admin_menu() {
@@ -212,6 +222,8 @@ if ( ! class_exists( 'WGRSVP_Audit_Trail' ) ) {
 		}
 
 		/**
+		 * Normalize an event source to a known key.
+		 *
 		 * @param string $source Raw.
 		 * @return string
 		 */
@@ -240,6 +252,8 @@ if ( ! class_exists( 'WGRSVP_Audit_Trail' ) ) {
 		}
 
 		/**
+		 * Normalize an event action to a known key.
+		 *
 		 * @param string $action Raw.
 		 * @return string
 		 */
@@ -249,6 +263,8 @@ if ( ! class_exists( 'WGRSVP_Audit_Trail' ) ) {
 		}
 
 		/**
+		 * Normalize an actor type to a known key.
+		 *
 		 * @param string $actor Raw.
 		 * @return string
 		 */

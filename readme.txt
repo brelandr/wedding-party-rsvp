@@ -4,7 +4,7 @@ Tags: wedding, rsvp, guest list, invitation, event management
 Requires at least: 6.2
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 8.1.1
+Stable tag: 8.2.1
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -167,6 +167,18 @@ This plugin does not call third-party APIs for core RSVP storage. Optional behav
 This plugin bundles **FPDF** (version 1.86, © Olivier Plathey) under `includes/lib/fpdf/` for optional **Export check-in PDF** in the guest list. FPDF is free software; see the header comment in `fpdf.php` for license terms.
 
 == Changelog ==
+
+= 8.2.1 =
+
+* **Security & standards hardening** — Global audit of inbound/outbound data handling: stricter input sanitization on settings saves, late escaping verified across all admin output, and the Ops Center confirm dialog moved from an inline handler to an enqueued script (`wgrsvp-confirm.js`).
+* **Code quality** — WordPress Coding Standards pass: completed missing DocBlocks, prefixed all globals, and resolved all PHPCS errors repo-wide.
+
+= 8.2.0 =
+
+* **Magic-link RSVP URLs** — Reminder emails, invite `{rsvp_link}` tags, and admin **Copy link** now append a signed `wgrsvp_t` token (stateless HMAC, `wp_salt`-based). Guests landing with a valid token see a personalized "We found your invitation" state; plain `?party_id=` links keep working. Filter: `wgrsvp_magic_link_url`.
+* **Send reminder now** — Follow-up & day-of → Follow-up queue gains a one-click reminder blast to all non-responders with email (recipient count preview, confirm dialog, `manage_options` + nonce, 6-hour throttle, per-guest dedupe separate from the scheduled nudges).
+* **SMS reminder opt-in** — New `sms_opt_in` guest column (schema v4 via dbDelta), "Text me reminders" checkbox next to the RSVP form phone field, inline opt-in toggle on the admin guest list, and an **SMS opt-in** column in the CSV export. The free plugin stores consent only; sending requires Wedding Party RSVP Pro.
+* **Guest table page** — The read-only DataViews guest table (and its quick filters) moved from the Wedding Dashboard to its own **Guest table** submenu page; the dashboard keeps the classic editable list and links to the new page. The per-user DataViews/classic toggle was removed.
 
 = 8.1.1 =
 

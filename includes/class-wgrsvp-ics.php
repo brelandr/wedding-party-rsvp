@@ -164,9 +164,11 @@ if ( ! class_exists( 'WGRSVP_ICS' ) ) {
 				return $line;
 			}
 			$out = '';
-			while ( strlen( $line ) > $max ) {
+			$len = strlen( $line );
+			while ( $len > $max ) {
 				$out .= substr( $line, 0, $max ) . "\r\n ";
 				$line = substr( $line, $max );
+				$len  = strlen( $line );
 			}
 			return $out . $line;
 		}
@@ -209,6 +211,7 @@ if ( ! class_exists( 'WGRSVP_ICS' ) ) {
 					}
 				} catch ( \Exception $e ) {
 					// Fall through to default duration.
+					unset( $e );
 				}
 			}
 

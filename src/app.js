@@ -100,6 +100,9 @@ function buildRestPath( view, extra, proDv ) {
 	if ( ex.hasTable ) {
 		args.has_table = '1';
 	}
+	if ( ex.table && String( ex.table ).trim() !== '' ) {
+		args.table_equals = String( ex.table ).trim();
+	}
 	if ( proDv && attended !== '' ) {
 		args.wpr_attended = attended;
 	}
@@ -244,6 +247,7 @@ export default function App() {
 		dietary: '',
 		allergy: '',
 		hasTable: false,
+		table: '',
 		plannerTag: '',
 	} );
 	const [ debouncedExtra, setDebouncedExtra ] = useState( extraFilters );
@@ -389,6 +393,19 @@ export default function App() {
 						setExtraFilters( ( prev ) => ( {
 							...prev,
 							allergy: v,
+						} ) )
+					}
+				/>
+				<TextControl
+					label={
+						ix.filterTable ||
+						__( 'Table number (exact)', 'wedding-party-rsvp' )
+					}
+					value={ extraFilters.table }
+					onChange={ ( v ) =>
+						setExtraFilters( ( prev ) => ( {
+							...prev,
+							table: v,
 						} ) )
 					}
 				/>

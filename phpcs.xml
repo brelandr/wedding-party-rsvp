@@ -28,4 +28,15 @@
 	<rule ref="WordPress.WP.I18n.TextDomainMismatch">
 		<severity>0</severity>
 	</rule>
+
+	<!-- The main plugin file must keep the plugin-slug filename required by WordPress. -->
+	<rule ref="WordPress.Files.FileName.InvalidClassFileName">
+		<exclude-pattern>/wedding-party-rsvp\.php$</exclude-pattern>
+	</rule>
+
+	<!-- Main loader and ICS module intentionally expose global helper functions alongside their class. -->
+	<rule ref="Universal.Files.SeparateFunctionsFromOO.Mixed">
+		<exclude-pattern>/wedding-party-rsvp\.php$</exclude-pattern>
+		<exclude-pattern>/includes/class-wgrsvp-ics\.php$</exclude-pattern>
+	</rule>
 </ruleset>

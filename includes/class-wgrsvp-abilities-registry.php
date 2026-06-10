@@ -18,6 +18,8 @@ if ( ! class_exists( 'WGRSVP_Abilities_Registry' ) ) {
 		const CATEGORY = 'wedding-party-rsvp';
 
 		/**
+		 * Hook ability registration when the Abilities API is available.
+		 *
 		 * @return void
 		 */
 		public static function init() {
@@ -28,6 +30,8 @@ if ( ! class_exists( 'WGRSVP_Abilities_Registry' ) ) {
 		}
 
 		/**
+		 * Register the plugin's ability category and abilities.
+		 *
 		 * @return void
 		 */
 		public static function register() {
@@ -64,7 +68,7 @@ if ( ! class_exists( 'WGRSVP_Abilities_Registry' ) ) {
 					'execute_callback'    => array( __CLASS__, 'execute_ai_wording' ),
 					'permission_callback' => array( __CLASS__, 'permission_admin' ),
 					'meta'                => array(
-						'annotations' => array(
+						'annotations'  => array(
 							'readonly'    => true,
 							'destructive' => false,
 							'idempotent'  => true,
@@ -76,6 +80,8 @@ if ( ! class_exists( 'WGRSVP_Abilities_Registry' ) ) {
 		}
 
 		/**
+		 * Permission callback: site administrators only.
+		 *
 		 * @return bool
 		 */
 		public static function permission_admin() {
@@ -83,6 +89,8 @@ if ( ! class_exists( 'WGRSVP_Abilities_Registry' ) ) {
 		}
 
 		/**
+		 * Execute the AI wording ability via the WordPress AI Client.
+		 *
 		 * @param array<string,mixed>|mixed $input Ability input.
 		 * @return array<string,string>|\WP_Error
 		 */

@@ -19,6 +19,8 @@ if ( ! class_exists( 'WGRSVP_Ops_Center' ) ) {
 		const PAGE_SLUG = 'wedding-rsvp-ops';
 
 		/**
+		 * Register admin menu and asset hooks.
+		 *
 		 * @return void
 		 */
 		public static function register_hooks() {
@@ -27,6 +29,8 @@ if ( ! class_exists( 'WGRSVP_Ops_Center' ) ) {
 		}
 
 		/**
+		 * Fully prefixed RSVP table name.
+		 *
 		 * @return string
 		 */
 		private static function table_name() {
@@ -36,6 +40,8 @@ if ( ! class_exists( 'WGRSVP_Ops_Center' ) ) {
 		}
 
 		/**
+		 * Add the Ops Center submenu page.
+		 *
 		 * @return void
 		 */
 		public static function register_menu() {
@@ -53,6 +59,8 @@ if ( ! class_exists( 'WGRSVP_Ops_Center' ) ) {
 		}
 
 		/**
+		 * Enqueue Ops Center styles and the confirm helper script.
+		 *
 		 * @param string $hook_suffix Hook suffix.
 		 * @return void
 		 */
@@ -87,9 +95,12 @@ if ( ! class_exists( 'WGRSVP_Ops_Center' ) ) {
 			wp_register_style( 'wgrsvp-ops-center', false, array(), '8.0.2' );
 			wp_enqueue_style( 'wgrsvp-ops-center' );
 			wp_add_inline_style( 'wgrsvp-ops-center', $css );
+			wp_enqueue_script( 'wgrsvp-confirm', plugins_url( 'assets/js/wgrsvp-confirm.js', WGRSVP_PLUGIN_FILE ), array(), '8.2.0', true );
 		}
 
 		/**
+		 * Determine a guest's check-in source and arrival timestamp.
+		 *
 		 * @param object $row Guest row.
 		 * @return array{0:string,1:string} Source pro|free or empty, ISO-ish mysql datetime.
 		 */
@@ -108,6 +119,8 @@ if ( ! class_exists( 'WGRSVP_Ops_Center' ) ) {
 		}
 
 		/**
+		 * Format a UTC MySQL datetime in the site's timezone for display.
+		 *
 		 * @param string $mysql_utc MySQL datetime UTC.
 		 * @return string
 		 */
@@ -124,6 +137,8 @@ if ( ! class_exists( 'WGRSVP_Ops_Center' ) ) {
 		}
 
 		/**
+		 * Render the Ops Center admin page (follow-up and day-of tabs).
+		 *
 		 * @return void
 		 */
 		public static function render_page() {
@@ -169,6 +184,8 @@ if ( ! class_exists( 'WGRSVP_Ops_Center' ) ) {
 		}
 
 		/**
+		 * Render the follow-up tab (pending queue and mixed households).
+		 *
 		 * @param string $main_url Guest list URL.
 		 * @return void
 		 */
@@ -176,6 +193,8 @@ if ( ! class_exists( 'WGRSVP_Ops_Center' ) ) {
 			global $wpdb;
 
 			$table = self::table_name();
+
+			self::render_nudge_now_notice();
 
 			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.NotPrepared
 			$n_pending = (int) $wpdb->get_var( $wpdb->prepare( 'SELECT COUNT(*) FROM %i WHERE rsvp_status = %s', $table, 'Pending' ) );
@@ -222,6 +241,8 @@ if ( ! class_exists( 'WGRSVP_Ops_Center' ) ) {
 					<span><?php esc_html_e( 'Rows missing phone', 'wedding-party-rsvp' ); ?></span>
 				</div>
 			</div>
+
+			<?php self::render_nudge_now_box(); ?>
 
 			<h2><?php esc_html_e( 'Parties with mixed replies', 'wedding-party-rsvp' ); ?></h2>
 			<p class="description"><?php esc_html_e( 'Someone in the party accepted and someone is still pending—open the grouped list filtered to that Party ID.', 'wedding-party-rsvp' ); ?></p>
@@ -311,6 +332,83 @@ if ( ! class_exists( 'WGRSVP_Ops_Center' ) ) {
 		}
 
 		/**
+		 * Result notice after a manual "send reminder now" redirect.
+		 *
+		 * @return void
+		 */
+		private static function render_nudge_now_notice() {
+			// phpcs:disable WordPress.Security.NonceVerification.Recommended -- Read-only display of redirect result args.
+			$err = isset( $_GET['wgrsvp_nudge_err'] ) ? sanitize_text_field( wp_unslash( (string) $_GET['wgrsvp_nudge_err'] ) ) : '';
+			if ( '' !== $err ) {
+				echo '<div class="notice notice-error"><p>' . esc_html( $err ) . '</p></div>';
+				return;
+			}
+			if ( isset( $_GET['wgrsvp_nudge_sent'] ) ) {
+				$sent = absint( wp_unslash( (string) $_GET['wgrsvp_nudge_sent'] ) );
+				echo '<div class="notice notice-success"><p>';
+				printf(
+					/* translators: %d: number of reminder emails sent */
+					esc_html( _n( 'Reminder sent to %d guest.', 'Reminders sent to %d guests.', $sent, 'wedding-party-rsvp' ) ),
+					(int) $sent
+				);
+				echo '</p></div>';
+			}
+			// phpcs:enable WordPress.Security.NonceVerification.Recommended
+		}
+
+		/**
+		 * "Send reminder now" action box (manual nudge blast to non-responders).
+		 *
+		 * @return void
+		 */
+		private static function render_nudge_now_box() {
+			if ( ! current_user_can( 'manage_options' ) || ! class_exists( 'WGRSVP_Deadline_Nudges' ) ) {
+				return;
+			}
+
+			$n_recipients = WGRSVP_Deadline_Nudges::count_recipients();
+			$lock_left    = WGRSVP_Deadline_Nudges::manual_lock_remaining();
+
+			?>
+			<div style="background:#fff; border:1px solid #c3c4c7; border-radius:4px; padding:14px 16px; margin-bottom:20px;">
+				<h2 style="margin-top:0;"><?php esc_html_e( 'Send reminder now', 'wedding-party-rsvp' ); ?></h2>
+				<p class="description">
+					<?php esc_html_e( 'Immediately email your reminder template (Settings → Logistics) to everyone who has not responded yet. Separate from the automatic schedule.', 'wedding-party-rsvp' ); ?>
+				</p>
+				<?php if ( $lock_left > 0 ) : ?>
+					<p>
+						<?php
+						printf(
+							/* translators: %s: human-readable time remaining */
+							esc_html__( 'A manual blast was sent recently. You can send again in %s.', 'wedding-party-rsvp' ),
+							esc_html( human_time_diff( time(), time() + $lock_left ) )
+						);
+						?>
+					</p>
+				<?php elseif ( $n_recipients < 1 ) : ?>
+					<p><?php esc_html_e( 'No non-responders with an email address right now.', 'wedding-party-rsvp' ); ?></p>
+				<?php else : ?>
+					<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" data-wgrsvp-confirm="<?php echo esc_attr( sprintf( /* translators: %d: recipient count */ __( 'Send a reminder email to %d guests now?', 'wedding-party-rsvp' ), $n_recipients ) ); ?>">
+						<?php wp_nonce_field( 'wgrsvp_send_nudges_now', 'wgrsvp_send_nudges_now_nonce' ); ?>
+						<input type="hidden" name="action" value="wgrsvp_send_nudges_now">
+						<button type="submit" class="button button-primary">
+							<?php
+							printf(
+								/* translators: %d: recipient count */
+								esc_html( _n( 'Send reminder now to %d pending guest', 'Send reminder now to %d pending guests', $n_recipients, 'wedding-party-rsvp' ) ),
+								(int) $n_recipients
+							);
+							?>
+						</button>
+					</form>
+				<?php endif; ?>
+			</div>
+			<?php
+		}
+
+		/**
+		 * Render the day-of tab (large-touch door search and check-in).
+		 *
 		 * @param string $ops_url This screen URL (no query).
 		 * @return void
 		 */
