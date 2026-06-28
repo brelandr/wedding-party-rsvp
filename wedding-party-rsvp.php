@@ -6,7 +6,7 @@
  *
  * Plugin Name: Wedding Party RSVP – Guest List, Invitation & Event Manager
  * Description: Simple and secure RSVP system. Manage guest lists and adult meal choices.
- * Version: 8.2.1
+ * Version: 8.2.2
  * Author: Land Tech Web Designs, Corp
  * Author URI: https://landtechwebdesigns.com
  * Plugin URI: https://landtechwebdesigns.com/wedding-party-rsvp-wordpress-plugin/
@@ -280,6 +280,7 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 			require_once plugin_dir_path( __FILE__ ) . 'includes/class-wgrsvp-growth-checklist.php';
 			require_once plugin_dir_path( __FILE__ ) . 'includes/class-wgrsvp-guest-health.php';
 			require_once plugin_dir_path( __FILE__ ) . 'includes/class-wgrsvp-vendor-packet.php';
+			require_once plugin_dir_path( __FILE__ ) . 'includes/class-wgrsvp-frontend-cache.php';
 			WGRSVP_ICS::init_hooks();
 			WGRSVP_ThankYou_Tracker::register_hooks();
 			WGRSVP_Gifts_Report::register_hooks();
@@ -297,6 +298,9 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 			}
 			if ( class_exists( 'WGRSVP_Audit_Trail', false ) ) {
 				WGRSVP_Audit_Trail::register_hooks();
+			}
+			if ( class_exists( 'WGRSVP_Frontend_Cache', false ) ) {
+				WGRSVP_Frontend_Cache::register_hooks();
 			}
 
 			$this->table_name = $wpdb->prefix . 'wedding_rsvps';
@@ -3700,7 +3704,7 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 			}
 
 			$dash_js = plugins_url( 'assets/js/wgrsvp-admin-dashboard.js', __FILE__ );
-			wp_register_script( 'wgrsvp-admin-dashboard', $dash_js, array(), '8.2.1', true );
+			wp_register_script( 'wgrsvp-admin-dashboard', $dash_js, array(), '8.2.2', true );
 			wp_enqueue_script( 'wgrsvp-admin-dashboard' );
 			wgrsvp_set_script_translations( 'wgrsvp-admin-dashboard' );
 
@@ -5288,6 +5292,10 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 		 * @return string HTML.
 		 */
 		public function render_frontend_form() {
+			if ( class_exists( 'WGRSVP_Frontend_Cache', false ) ) {
+				WGRSVP_Frontend_Cache::send_nocache_headers();
+			}
+
 			global $wpdb;
 			$settings = get_option( $this->opt_settings, array() );
 
