@@ -4,7 +4,7 @@ Tags: wedding, rsvp, guest list, invitation, event management
 Requires at least: 6.2
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 8.2.2
+Stable tag: 8.2.3
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -167,6 +167,10 @@ This plugin does not call third-party APIs for core RSVP storage. Optional behav
 This plugin bundles **FPDF** (version 1.86, © Olivier Plathey) under `includes/lib/fpdf/` for optional **Export check-in PDF** in the guest list. FPDF is free software; see the header comment in `fpdf.php` for license terms.
 
 == Changelog ==
+
+= 8.2.3 =
+
+* **RSVP cache hardening** — Stronger no-cache for Cloudflare, GoDaddy gateway, and Elementor-built RSVP pages: flags `DONOTCACHEPAGE` on `init`, sends `CDN-Cache-Control` / `Cloudflare-CDN-Cache-Control: no-store` on `send_headers`, detects Elementor `_elementor_data` shortcode widgets, and matches common `/rsvp/` page paths when RSVP Page URL is unset. Filter: `wgrsvp_rsvp_page_path_slugs`.
 
 = 8.2.2 =
 
