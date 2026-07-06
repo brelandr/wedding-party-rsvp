@@ -4,7 +4,7 @@ Tags: wedding, rsvp, guest list, invitation, event management
 Requires at least: 6.2
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 8.2.3
+Stable tag: 8.2.4
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -167,6 +167,10 @@ This plugin does not call third-party APIs for core RSVP storage. Optional behav
 This plugin bundles **FPDF** (version 1.86, © Olivier Plathey) under `includes/lib/fpdf/` for optional **Export check-in PDF** in the guest list. FPDF is free software; see the header comment in `fpdf.php` for license terms.
 
 == Changelog ==
+
+= 8.2.4 =
+
+* **RSVP nonce refresh** — Fixes intermittent "Security check failed. Please open this page again and try once more" when guests enter their Party ID on hosts with full-page cache (GoDaddy Managed WordPress, Cloudflare, etc.). Public RSVP pages now fetch fresh form nonces via AJAX on load, when the tab becomes visible again, and when restored from back-forward cache; classic form submit waits for a fresh token if the page load was slow. Also refreshes nonces before Interactivity API RSVP submit. Works with free and Pro frontend forms. Filters: `wgrsvp_enable_rsvp_nonce_refresh`, `wgrsvp_rsvp_refresh_nonces`.
 
 = 8.2.3 =
 

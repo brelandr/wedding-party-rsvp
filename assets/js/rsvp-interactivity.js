@@ -216,6 +216,12 @@ const { state } = wpInteractivity.store( STORE_NS, {
 			state.feedback =
 				ctx.i18n?.submitting || '';
 
+			if (
+				typeof window.wgrsvpRefreshRsvpNonces === 'function'
+			) {
+				await window.wgrsvpRefreshRsvpNonces();
+			}
+
 			const body = new FormData( form );
 			body.set( 'action', 'wgrsvp_submit_rsvp' );
 			body.set( 'wpr_submit_rsvp', '1' );
