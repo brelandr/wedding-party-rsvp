@@ -127,6 +127,15 @@ function mountGuestHubFromPayload( root, hub, i18n ) {
 			span.textContent = ( i18n.hubHors || '' ) + ' ' + hors;
 			li.appendChild( span );
 		}
+		const dessert =
+			g.dessert != null ? String( g.dessert ).trim() : '';
+		if ( dessert !== '' ) {
+			li.appendChild( document.createElement( 'br' ) );
+			const span = document.createElement( 'span' );
+			span.className = 'wgrsvp-guest-hub__course';
+			span.textContent = ( i18n.hubDessert || '' ) + ' ' + dessert;
+			li.appendChild( span );
+		}
 		const diet = g.dietary != null ? String( g.dietary ).trim() : '';
 		const all = g.allergies != null ? String( g.allergies ).trim() : '';
 		const note = [ diet, all ].filter( Boolean ).join( '; ' );

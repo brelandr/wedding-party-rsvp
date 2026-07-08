@@ -4,7 +4,7 @@ Tags: wedding, rsvp, guest list, invitation, event management
 Requires at least: 6.2
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 8.2.4
+Stable tag: 8.2.5
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -167,6 +167,10 @@ This plugin does not call third-party APIs for core RSVP storage. Optional behav
 This plugin bundles **FPDF** (version 1.86, © Olivier Plathey) under `includes/lib/fpdf/` for optional **Export check-in PDF** in the guest list. FPDF is free software; see the header comment in `fpdf.php` for license terms.
 
 == Changelog ==
+
+= 8.2.5 =
+
+* **Guest table schema** — Adds optional `dessert_choice` column (used by Wedding Party RSVP Pro 2.2.4+ for dessert selections on the public RSVP form). Guest hub, dashboard inline meal display, CSV export, audit trail, and guest-rows REST allowlist updated accordingly.
 
 = 8.2.4 =
 

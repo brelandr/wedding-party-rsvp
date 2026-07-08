@@ -6,7 +6,7 @@
  *
  * Plugin Name: Wedding Party RSVP – Guest List, Invitation & Event Manager
  * Description: Simple and secure RSVP system. Manage guest lists and adult meal choices.
- * Version: 8.2.4
+ * Version: 8.2.5
  * Author: Land Tech Web Designs, Corp
  * Author URI: https://landtechwebdesigns.com
  * Plugin URI: https://landtechwebdesigns.com/wedding-party-rsvp-wordpress-plugin/
@@ -256,7 +256,7 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 		/**
 		 * Current `wedding_rsvps` table schema version (bump when adding columns).
 		 */
-		private const WEDDING_RSVPS_SCHEMA_VERSION = 4;
+		private const WEDDING_RSVPS_SCHEMA_VERSION = 5;
 
 		/**
 		 * Registers hooks, loads dependency classes, and boots the setup wizard and coordinator role.
@@ -891,6 +891,7 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 					'hubChildMeal'    => __( 'Child meal:', 'wedding-party-rsvp' ),
 					'hubAppetizer'    => __( 'Appetizer:', 'wedding-party-rsvp' ),
 					'hubHors'         => __( 'Hors d\'oeuvres:', 'wedding-party-rsvp' ),
+					'hubDessert'      => __( 'Dessert:', 'wedding-party-rsvp' ),
 					'hubMaps'         => __( 'Open venue in Google Maps', 'wedding-party-rsvp' ),
 				),
 			);
@@ -1144,7 +1145,7 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, PluginCheck.Security.DirectDB.UnescapedDBParameter -- Party-scoped hub; table from plugin property.
 			$rows = $wpdb->get_results(
 				$wpdb->prepare(
-					'SELECT guest_name, rsvp_status, menu_choice, child_menu_choice, appetizer_choice, hors_doeuvre_choice, dietary_restrictions, allergies FROM %i WHERE party_id = %s ORDER BY id ASC',
+					'SELECT guest_name, rsvp_status, menu_choice, child_menu_choice, appetizer_choice, hors_doeuvre_choice, dessert_choice, dietary_restrictions, allergies FROM %i WHERE party_id = %s ORDER BY id ASC',
 					$this->table_name,
 					$party_id
 				)
@@ -1165,6 +1166,7 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 					'child_meal'   => isset( $r->child_menu_choice ) ? (string) $r->child_menu_choice : '',
 					'appetizer'    => isset( $r->appetizer_choice ) ? (string) $r->appetizer_choice : '',
 					'hors_doeuvre' => isset( $r->hors_doeuvre_choice ) ? (string) $r->hors_doeuvre_choice : '',
+					'dessert'      => isset( $r->dessert_choice ) ? (string) $r->dessert_choice : '',
 					'dietary'      => isset( $r->dietary_restrictions ) ? (string) $r->dietary_restrictions : '',
 					'allergies'    => isset( $r->allergies ) ? (string) $r->allergies : '',
 				);
@@ -1251,6 +1253,7 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 				$child_meal = isset( $g['child_meal'] ) ? trim( (string) $g['child_meal'] ) : '';
 				$app        = isset( $g['appetizer'] ) ? trim( (string) $g['appetizer'] ) : '';
 				$hors       = isset( $g['hors_doeuvre'] ) ? trim( (string) $g['hors_doeuvre'] ) : '';
+				$des        = isset( $g['dessert'] ) ? trim( (string) $g['dessert'] ) : '';
 				$diet       = isset( $g['dietary'] ) ? trim( (string) $g['dietary'] ) : '';
 				$all        = isset( $g['allergies'] ) ? trim( (string) $g['allergies'] ) : '';
 				echo '<li><strong>' . esc_html( isset( $g['name'] ) ? (string) $g['name'] : '' ) . '</strong>';
@@ -1266,6 +1269,9 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 				}
 				if ( '' !== $hors ) {
 					echo '<br><span class="wgrsvp-guest-hub__course">' . esc_html__( 'Hors d\'oeuvres:', 'wedding-party-rsvp' ) . ' ' . esc_html( $hors ) . '</span>';
+				}
+				if ( '' !== $des ) {
+					echo '<br><span class="wgrsvp-guest-hub__course">' . esc_html__( 'Dessert:', 'wedding-party-rsvp' ) . ' ' . esc_html( $des ) . '</span>';
 				}
 				if ( '' !== $diet || '' !== $all ) {
 					$note = trim( $diet . ( '' !== $diet && '' !== $all ? '; ' : '' ) . $all );
@@ -1495,6 +1501,7 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 				child_menu_choice varchar(100) DEFAULT '',
 				appetizer_choice varchar(100) DEFAULT '',
 				hors_doeuvre_choice varchar(100) DEFAULT '',
+				dessert_choice varchar(100) DEFAULT '',
 				phone varchar(20) DEFAULT '',
 				sms_opt_in tinyint(1) DEFAULT 0,
 				email varchar(100) DEFAULT '',
@@ -1571,6 +1578,7 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 				child_menu_choice varchar(100) DEFAULT '',
 				appetizer_choice varchar(100) DEFAULT '',
 				hors_doeuvre_choice varchar(100) DEFAULT '',
+				dessert_choice varchar(100) DEFAULT '',
 				phone varchar(20) DEFAULT '',
 				sms_opt_in tinyint(1) DEFAULT 0,
 				email varchar(100) DEFAULT '',
@@ -3340,6 +3348,7 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 				'child_menu_choice',
 				'appetizer_choice',
 				'hors_doeuvre_choice',
+				'dessert_choice',
 				'phone',
 				'sms_opt_in',
 				'email',
@@ -4141,7 +4150,7 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 											<div class="wpr-pro-placeholder"><?php esc_html_e( 'Appetizer (Pro)', 'wedding-party-rsvp' ); ?></div>
 											<div class="wpr-pro-placeholder"><?php esc_html_e( 'Hors d\'oeuvres (Pro)', 'wedding-party-rsvp' ); ?></div>
 										</div>
-										<?php elseif ( ! empty( $guest->child_menu_choice ) || ! empty( $guest->appetizer_choice ) || ! empty( $guest->hors_doeuvre_choice ) ) : ?>
+										<?php elseif ( ! empty( $guest->child_menu_choice ) || ! empty( $guest->appetizer_choice ) || ! empty( $guest->hors_doeuvre_choice ) || ! empty( $guest->dessert_choice ) ) : ?>
 											<div style="font-size:10px;color:#646970;margin-top:4px;">
 												<?php if ( ! empty( $guest->child_menu_choice ) ) : ?>
 													<div><?php echo esc_html( $guest->child_menu_choice ); ?></div>
@@ -4151,6 +4160,9 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 												<?php endif; ?>
 												<?php if ( ! empty( $guest->hors_doeuvre_choice ) ) : ?>
 													<div><?php echo esc_html( $guest->hors_doeuvre_choice ); ?></div>
+												<?php endif; ?>
+												<?php if ( ! empty( $guest->dessert_choice ) ) : ?>
+													<div><?php echo esc_html( $guest->dessert_choice ); ?></div>
 												<?php endif; ?>
 											</div>
 										<?php endif; ?>
@@ -4924,6 +4936,7 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 					__( 'Child Menu', 'wedding-party-rsvp' ),
 					__( 'Appetizer', 'wedding-party-rsvp' ),
 					__( 'Hors', 'wedding-party-rsvp' ),
+					__( 'Dessert', 'wedding-party-rsvp' ),
 					__( 'Dietary', 'wedding-party-rsvp' ),
 					__( 'Allergies', 'wedding-party-rsvp' ),
 					__( 'Song', 'wedding-party-rsvp' ),
@@ -4947,6 +4960,7 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 						$r['child_menu_choice'],
 						$r['appetizer_choice'],
 						$r['hors_doeuvre_choice'],
+						$r['dessert_choice'],
 						$r['dietary_restrictions'],
 						$r['allergies'],
 						$r['song_request'],

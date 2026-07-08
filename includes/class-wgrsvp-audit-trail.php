@@ -48,6 +48,7 @@ if ( ! class_exists( 'WGRSVP_Audit_Trail' ) ) {
 				'child_menu_choice',
 				'appetizer_choice',
 				'hors_doeuvre_choice',
+				'dessert_choice',
 				'phone',
 				'email',
 				'address',
