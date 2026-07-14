@@ -6,7 +6,7 @@
  *
  * Plugin Name: Wedding Party RSVP – Guest List, Invitation & Event Manager
  * Description: Simple and secure RSVP system. Manage guest lists and adult meal choices.
- * Version: 8.2.6
+ * Version: 8.2.7
  * Author: Land Tech Web Designs, Corp
  * Author URI: https://landtechwebdesigns.com
  * Plugin URI: https://landtechwebdesigns.com/wedding-party-rsvp-wordpress-plugin/
@@ -3157,9 +3157,58 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 					opacity: 0.9 !important;
 				}
 				
-				.wpr-meal-tag { display:inline-block; margin:2px; padding:6px 10px; background:var(--wp-admin-theme-color-darker-10,#f0f0f1); border:1px solid var(--wp-admin-border-color,#c3c4c7); border-radius:12px; font-size:12px; text-decoration:none; color:var(--wp-admin-theme-color-darker-20,#1d2327); }
-				.wpr-meal-tag:hover { background:#fff; border-color:var(--wp-admin-theme-color,#2271b1); color:var(--wp-admin-theme-color,#2271b1); }
-				.wpr-meal-tag.active { background:var(--wp-admin-theme-color,#2271b1); color:#fff; border-color:var(--wp-admin-theme-color,#2271b1); }
+				/*
+				 * Menu Breakdown chips — force high-contrast defaults.
+				 * Modern admin color scheme sets theme darker-10/20 as blue tints; using those
+				 * for both background and text made labels unreadable until :hover.
+				 * !important beats admin-color-modern link color rules on <a.wpr-meal-tag>.
+				 */
+				body.toplevel_page_wedding-rsvp-main a.wpr-meal-tag,
+				body.wedding-rsvp_page_wedding-rsvp-main a.wpr-meal-tag,
+				.wrap a.wpr-meal-tag {
+					display: inline-block !important;
+					margin: 2px !important;
+					padding: 6px 10px !important;
+					background: #f0f0f1 !important;
+					border: 1px solid #c3c4c7 !important;
+					border-radius: 12px !important;
+					font-size: 12px !important;
+					font-weight: 600 !important;
+					line-height: 1.3 !important;
+					text-decoration: none !important;
+					color: #1d2327 !important;
+					box-shadow: none !important;
+				}
+				body.toplevel_page_wedding-rsvp-main a.wpr-meal-tag:hover,
+				body.toplevel_page_wedding-rsvp-main a.wpr-meal-tag:focus,
+				body.wedding-rsvp_page_wedding-rsvp-main a.wpr-meal-tag:hover,
+				body.wedding-rsvp_page_wedding-rsvp-main a.wpr-meal-tag:focus,
+				.wrap a.wpr-meal-tag:hover,
+				.wrap a.wpr-meal-tag:focus {
+					background: #fff !important;
+					border-color: #2271b1 !important;
+					color: #2271b1 !important;
+				}
+				body.toplevel_page_wedding-rsvp-main a.wpr-meal-tag:focus,
+				.wrap a.wpr-meal-tag:focus {
+					outline: 2px solid #2271b1;
+					outline-offset: 1px;
+				}
+				body.toplevel_page_wedding-rsvp-main a.wpr-meal-tag.active,
+				body.wedding-rsvp_page_wedding-rsvp-main a.wpr-meal-tag.active,
+				.wrap a.wpr-meal-tag.active {
+					background: #2271b1 !important;
+					color: #fff !important;
+					border-color: #2271b1 !important;
+				}
+				body.toplevel_page_wedding-rsvp-main a.wpr-meal-tag.active:hover,
+				body.toplevel_page_wedding-rsvp-main a.wpr-meal-tag.active:focus,
+				.wrap a.wpr-meal-tag.active:hover,
+				.wrap a.wpr-meal-tag.active:focus {
+					background: #135e96 !important;
+					color: #fff !important;
+					border-color: #135e96 !important;
+				}
 
 				/* Household RSVP progress — neutral surface + explicit text (Modern admin theme tint broke contrast). */
 				.wgrsvp-household-progress-card {
