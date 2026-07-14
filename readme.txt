@@ -4,7 +4,7 @@ Tags: wedding, rsvp, guest list, invitation, event management
 Requires at least: 6.2
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 8.2.5
+Stable tag: 8.2.6
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -21,7 +21,7 @@ Stop chasing replies across group chats and reconciling half-finished spreadshee
 * **Confidence at the venue** – One accurate count for who is attending, what they are eating, and how many plus ones are included—aligned with how your invites are organized.
 * **Faster setup, fewer “who never replied?” gaps** – **Getting started** checklist on the Wedding Dashboard, **Next steps** when RSVPs are still pending, quick **straggler filters** (missing email, phone, or address), and links on the Plugins screen: **Live demo** (WordPress Playground, free plugin) and **Try Premium** (full Pro on a temporary InstaWP site).
 
-**8.2.5** adds shared guest-table support for **dessert choices** (used by Pro 2.2.4+) and shows desserts in the **guest hub**, dashboard, CSV export, and audit trail when recorded. **8.2.4** fixes cached-page **RSVP security tokens** on hosts like GoDaddy and Cloudflare via AJAX nonce refresh.
+**8.2.6** registers the WordPress Abilities API category on `wp_abilities_api_categories_init` (WordPress 6.9+), fixing incorrect `_doing_it_wrong` notices for `wedding-party-rsvp/ai-wording`. **8.2.5** adds shared guest-table support for **dessert choices** (used by Pro 2.2.4+) and shows desserts in the **guest hub**, dashboard, CSV export, and audit trail when recorded.
 
 Guests sign in with a simple **Party ID**, so households RSVP together while you manage plus ones like a built-in plus one manager tied to each invite code (not stray "+1" notes buried in email threads). The plugin works as a **meal choice collector** for adult entrées with dietary notes, supports **event capacity limits** when you need to cap attendance, and includes **wedding guest list export** when finance, catering, or your venue needs the latest numbers in one place.
 
@@ -169,6 +169,10 @@ This plugin does not call third-party APIs for core RSVP storage. Optional behav
 This plugin bundles **FPDF** (version 1.86, © Olivier Plathey) under `includes/lib/fpdf/` for optional **Export check-in PDF** in the guest list. FPDF is free software; see the header comment in `fpdf.php` for license terms.
 
 == Changelog ==
+
+= 8.2.6 =
+
+* **Abilities API** — Register the `wedding-party-rsvp` ability category on `wp_abilities_api_categories_init` (required since WordPress 6.9) before registering `wedding-party-rsvp/ai-wording` on `wp_abilities_api_init`. Stops `_doing_it_wrong` notices when `WP_DEBUG` is on.
 
 = 8.2.5 =
 

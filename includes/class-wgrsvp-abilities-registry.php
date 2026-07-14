@@ -18,7 +18,10 @@ if ( ! class_exists( 'WGRSVP_Abilities_Registry' ) ) {
 		const CATEGORY = 'wedding-party-rsvp';
 
 		/**
-		 * Hook ability registration when the Abilities API is available.
+		 * Hook category + ability registration when the Abilities API is available.
+		 *
+		 * Categories must use `wp_abilities_api_categories_init` (WP 6.9+).
+		 * Abilities must use `wp_abilities_api_init`.
 		 *
 		 * @return void
 		 */
@@ -26,25 +29,37 @@ if ( ! class_exists( 'WGRSVP_Abilities_Registry' ) ) {
 			if ( ! function_exists( 'wp_register_ability' ) ) {
 				return;
 			}
+			if ( function_exists( 'wp_register_ability_category' ) ) {
+				add_action( 'wp_abilities_api_categories_init', array( __CLASS__, 'register_category' ) );
+			}
 			add_action( 'wp_abilities_api_init', array( __CLASS__, 'register' ) );
 		}
 
 		/**
-		 * Register the plugin's ability category and abilities.
+		 * Register the plugin's ability category.
+		 *
+		 * @since 8.2.6
+		 * @return void
+		 */
+		public static function register_category() {
+			if ( ! function_exists( 'wp_register_ability_category' ) ) {
+				return;
+			}
+			wp_register_ability_category(
+				self::CATEGORY,
+				array(
+					'label'       => __( 'Wedding Party RSVP', 'wedding-party-rsvp' ),
+					'description' => __( 'Free RSVP admin helpers.', 'wedding-party-rsvp' ),
+				)
+			);
+		}
+
+		/**
+		 * Register the plugin's abilities (category must already be registered).
 		 *
 		 * @return void
 		 */
 		public static function register() {
-			if ( function_exists( 'wp_register_ability_category' ) ) {
-				wp_register_ability_category(
-					self::CATEGORY,
-					array(
-						'label'       => __( 'Wedding Party RSVP', 'wedding-party-rsvp' ),
-						'description' => __( 'Free RSVP admin helpers.', 'wedding-party-rsvp' ),
-					)
-				);
-			}
-
 			wp_register_ability(
 				self::CATEGORY . '/ai-wording',
 				array(

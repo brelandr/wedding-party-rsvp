@@ -6,7 +6,7 @@
  *
  * Plugin Name: Wedding Party RSVP – Guest List, Invitation & Event Manager
  * Description: Simple and secure RSVP system. Manage guest lists and adult meal choices.
- * Version: 8.2.5
+ * Version: 8.2.6
  * Author: Land Tech Web Designs, Corp
  * Author URI: https://landtechwebdesigns.com
  * Plugin URI: https://landtechwebdesigns.com/wedding-party-rsvp-wordpress-plugin/
