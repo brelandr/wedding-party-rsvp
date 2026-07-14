@@ -21,7 +21,7 @@ Stop chasing replies across group chats and reconciling half-finished spreadshee
 * **Confidence at the venue** – One accurate count for who is attending, what they are eating, and how many plus ones are included—aligned with how your invites are organized.
 * **Faster setup, fewer “who never replied?” gaps** – **Getting started** checklist on the Wedding Dashboard, **Next steps** when RSVPs are still pending, quick **straggler filters** (missing email, phone, or address), and links on the Plugins screen: **Live demo** (WordPress Playground, free plugin) and **Try Premium** (full Pro on a temporary InstaWP site).
 
-**8.2.8** packages the Menu Breakdown chip contrast fix for GitHub/manual install (dark text on light chips under Modern admin). **8.2.6** registers the WordPress Abilities API category on `wp_abilities_api_categories_init` (WordPress 6.9+).
+**8.2.8** fixes Menu Breakdown meal chips on the Wedding Dashboard so labels stay readable with the Modern admin color scheme (dark text on light chips; no blue-on-blue). **8.2.6** registers the WordPress Abilities API category on `wp_abilities_api_categories_init` (WordPress 6.9+).
 
 Guests sign in with a simple **Party ID**, so households RSVP together while you manage plus ones like a built-in plus one manager tied to each invite code (not stray "+1" notes buried in email threads). The plugin works as a **meal choice collector** for adult entrées with dietary notes, supports **event capacity limits** when you need to cap attendance, and includes **wedding guest list export** when finance, catering, or your venue needs the latest numbers in one place.
 
@@ -172,7 +172,7 @@ This plugin bundles **FPDF** (version 1.86, © Olivier Plathey) under `includes/
 
 = 8.2.8 =
 
-* **Dashboard contrast** — Menu Breakdown meal filter chips use high-contrast dark text on light gray backgrounds (`#1d2327` on `#f0f0f1`). Fixes unreadable blue-on-blue labels under the Modern admin color scheme (`admin-color-modern`) until hover. GitHub release for manual install; WordPress.org SVN deploy deferred.
+* **Dashboard contrast** — Menu Breakdown meal filter chips use high-contrast dark text on light gray backgrounds (`#1d2327` on `#f0f0f1`). Fixes unreadable blue-on-blue labels under the Modern admin color scheme (`admin-color-modern`) until hover.
 
 = 8.2.7 =
 
