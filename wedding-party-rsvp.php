@@ -6,7 +6,7 @@
  *
  * Plugin Name: Wedding Party RSVP – Guest List, Invitation & Event Manager
  * Description: Simple and secure RSVP system. Manage guest lists and adult meal choices.
- * Version: 8.2.8
+ * Version: 8.2.9
  * Author: Land Tech Web Designs, Corp
  * Author URI: https://landtechwebdesigns.com
  * Plugin URI: https://landtechwebdesigns.com/wedding-party-rsvp-wordpress-plugin/
@@ -2442,6 +2442,8 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 				update_option( WGRSVP_Growth_Checklist::OPT_PANEL_DISMISSED, 1, false );
 			} elseif ( 'next_steps' === $which ) {
 				update_user_meta( get_current_user_id(), 'wgrsvp_next_steps_notice_dismissed', 1 );
+			} elseif ( 'companion_beta' === $which ) {
+				update_option( 'wgrsvp_companion_beta_notice_dismissed', 1, false );
 			}
 			wp_safe_redirect( remove_query_arg( array( 'wgrsvp_dismiss_notice', '_wpnonce' ) ) );
 			exit;
@@ -2488,6 +2490,22 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 				}
 				echo '</p>';
 				echo '<p><a href="' . esc_url( $dismiss ) . '">' . esc_html__( 'Dismiss this message', 'wedding-party-rsvp' ) . '</a></p></div>';
+			}
+
+			if ( $show_activation_ctx && ! get_option( 'wgrsvp_companion_beta_notice_dismissed' ) ) {
+				$dismiss_companion = wp_nonce_url(
+					add_query_arg( 'wgrsvp_dismiss_notice', 'companion_beta' ),
+					'wgrsvp_dismiss_growth_notice'
+				);
+				echo '<div class="notice notice-info"><p><strong>' . esc_html__( 'Wedding RSVP companion apps (beta)', 'wedding-party-rsvp' ) . '</strong></p>';
+				echo '<p>' . esc_html__( 'We are developing free companion apps for iPhone (App Store) and Android (Google Play) that work with your wedding website. Site admins (coordinators) and wedding guests can use the apps at no extra cost with Wedding Party RSVP Pro (Premium).', 'wedding-party-rsvp' ) . '</p>';
+				echo '<p>' . esc_html__( 'The apps are in beta testing now and are expected to be generally available in a couple of weeks.', 'wedding-party-rsvp' ) . '</p><p>';
+				if ( ! wgrsvp_is_pro_plugin_active() ) {
+					echo '<a class="button button-primary" href="' . esc_url( $this->get_pro_marketing_url() ) . '" target="_blank" rel="noopener noreferrer">' . esc_html__( 'Learn about Pro', 'wedding-party-rsvp' ) . '</a> ';
+					echo '<a class="button" href="' . esc_url( wgrsvp_get_pro_live_demo_url() ) . '" target="_blank" rel="noopener noreferrer">' . esc_html__( 'Try Premium', 'wedding-party-rsvp' ) . '</a> ';
+				}
+				echo '<a href="' . esc_url( $dismiss_companion ) . '">' . esc_html__( 'Dismiss this message', 'wedding-party-rsvp' ) . '</a>';
+				echo '</p></div>';
 			}
 
 			if ( get_option( 'wgrsvp_milestone_notice_dismissed' ) || ! $on_wedding_admin ) {
