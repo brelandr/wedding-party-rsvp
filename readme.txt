@@ -4,7 +4,7 @@ Tags: wedding, rsvp, guest list, invitation, event management
 Requires at least: 6.2
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 8.2.9
+Stable tag: 8.2.10
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -21,7 +21,7 @@ Stop chasing replies across group chats and reconciling half-finished spreadshee
 * **Confidence at the venue** – One accurate count for who is attending, what they are eating, and how many plus ones are included—aligned with how your invites are organized.
 * **Faster setup, fewer “who never replied?” gaps** – **Getting started** checklist on the Wedding Dashboard, **Next steps** when RSVPs are still pending, quick **straggler filters** (missing email, phone, or address), and links on the Plugins screen: **Live demo** (WordPress Playground, free plugin) and **Try Premium** (full Pro on a temporary InstaWP site).
 
-**8.2.9** confirms compatibility with WordPress 7.0.x and adds a dismissible admin notice about the free Wedding RSVP companion apps (iOS & Android) in beta. **8.2.8** fixes Menu Breakdown meal chips on the Wedding Dashboard so labels stay readable with the Modern admin color scheme.
+**8.2.10** shares that the free **Wedding RSVP** companion app is available on the [Google Play Store](https://play.google.com/store/apps/details?id=pro.weddingrsvp.companion), with iOS on TestFlight and coming to the App Store soon. With **Wedding Party RSVP Pro**, guests can capture photos in the app and upload them to an event photo gallery on your WordPress site (for example a wedding, bridal shower, or rehearsal dinner). **8.2.9** confirmed WordPress 7.0.x compatibility and introduced the companion-app admin notice.
 
 Guests sign in with a simple **Party ID**, so households RSVP together while you manage plus ones like a built-in plus one manager tied to each invite code (not stray "+1" notes buried in email threads). The plugin works as a **meal choice collector** for adult entrées with dietary notes, supports **event capacity limits** when you need to cap attendance, and includes **wedding guest list export** when finance, catering, or your venue needs the latest numbers in one place.
 
@@ -78,6 +78,10 @@ Child Management: Track children and assign specific child meals.
 
 Full Menu Course: Add Appetizers, Hors d'oeuvres, and Desserts (Pro 2.2.4+) with customizable menu section labels on the public form.
 
+Guest Photo Gallery: Guests signed in with a Party ID in the free Wedding RSVP companion app can take or choose photos and upload them to your wedding (or other event) albums on your WordPress site. Moderators approve photos under **Wedding RSVP → Photo Gallery**; approved images can appear on the frontend with `[wpr_pro_guest_gallery]`.
+
+Companion Mobile Apps: Free iOS and Android apps connect coordinators and guests to your licensed Pro site via a short join code—no extra app subscription.
+
 Admin Notes & Table Numbers: Organize your seating chart and keep private notes.
 
 Email & SMS Invites: Send invitations directly from the dashboard.
@@ -111,7 +115,7 @@ Yes! While tailored for weddings, it works for any event requiring basic RSVP tr
 Go to Settings and scroll to the bottom danger zone. Click **Erase all data & reset plugin** (exports first if you need a backup).
 
 = Is there a Pro version? =
-Yes. [Wedding Party RSVP Pro](https://landtechwebdesigns.com/wedding-party-rsvp-wordpress-plugin/) adds child guests, full menu courses (appetizers, hors d'oeuvres, desserts), customizable menu labels, seating notes, batch email and SMS, and deeper styling. The free plugin covers unlimited guests, adult entrées, dietary options, CSV import/export, guest hub summaries, and the public RSVP form.
+Yes. [Wedding Party RSVP Pro](https://landtechwebdesigns.com/wedding-party-rsvp-wordpress-plugin/) adds child guests, full menu courses (appetizers, hors d'oeuvres, desserts), customizable menu labels, seating notes, batch email and SMS, deeper styling, and guest photo galleries via the free Wedding RSVP companion apps. The free plugin covers unlimited guests, adult entrées, dietary options, CSV import/export, guest hub summaries, and the public RSVP form.
 
 = Do guests need a WordPress account to RSVP? =
 No. Guests use a Party ID (invite code) you assign—no user registration required.
@@ -169,6 +173,11 @@ This plugin does not call third-party APIs for core RSVP storage. Optional behav
 This plugin bundles **FPDF** (version 1.86, © Olivier Plathey) under `includes/lib/fpdf/` for optional **Export check-in PDF** in the guest list. FPDF is free software; see the header comment in `fpdf.php` for license terms.
 
 == Changelog ==
+
+= 8.2.10 =
+
+* **Companion apps** — Updated dismissible admin notice: the free Wedding RSVP app is live on [Google Play](https://play.google.com/store/apps/details?id=pro.weddingrsvp.companion); iOS is available via TestFlight and should reach the Apple App Store soon. Coordinators and guests use the apps with Wedding Party RSVP Pro.
+* **Docs** — Highlight Pro guest photo galleries: guests can capture photos in the companion app and upload them to event albums on the WordPress site for moderator review and optional frontend display.
 
 = 8.2.9 =
 

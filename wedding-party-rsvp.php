@@ -6,7 +6,7 @@
  *
  * Plugin Name: Wedding Party RSVP – Guest List, Invitation & Event Manager
  * Description: Simple and secure RSVP system. Manage guest lists and adult meal choices.
- * Version: 8.2.9
+ * Version: 8.2.10
  * Author: Land Tech Web Designs, Corp
  * Author URI: https://landtechwebdesigns.com
  * Plugin URI: https://landtechwebdesigns.com/wedding-party-rsvp-wordpress-plugin/
@@ -2444,6 +2444,8 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 				update_user_meta( get_current_user_id(), 'wgrsvp_next_steps_notice_dismissed', 1 );
 			} elseif ( 'companion_beta' === $which ) {
 				update_option( 'wgrsvp_companion_beta_notice_dismissed', 1, false );
+			} elseif ( 'companion_store' === $which ) {
+				update_option( 'wgrsvp_companion_store_notice_dismissed', 1, false );
 			}
 			wp_safe_redirect( remove_query_arg( array( 'wgrsvp_dismiss_notice', '_wpnonce' ) ) );
 			exit;
@@ -2492,16 +2494,19 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 				echo '<p><a href="' . esc_url( $dismiss ) . '">' . esc_html__( 'Dismiss this message', 'wedding-party-rsvp' ) . '</a></p></div>';
 			}
 
-			if ( $show_activation_ctx && ! get_option( 'wgrsvp_companion_beta_notice_dismissed' ) ) {
+			if ( $show_activation_ctx && ! get_option( 'wgrsvp_companion_store_notice_dismissed' ) ) {
 				$dismiss_companion = wp_nonce_url(
-					add_query_arg( 'wgrsvp_dismiss_notice', 'companion_beta' ),
+					add_query_arg( 'wgrsvp_dismiss_notice', 'companion_store' ),
 					'wgrsvp_dismiss_growth_notice'
 				);
-				echo '<div class="notice notice-info"><p><strong>' . esc_html__( 'Wedding RSVP companion apps (beta)', 'wedding-party-rsvp' ) . '</strong></p>';
-				echo '<p>' . esc_html__( 'We are developing free companion apps for iPhone (App Store) and Android (Google Play) that work with your wedding website. Site admins (coordinators) and wedding guests can use the apps at no extra cost with Wedding Party RSVP Pro (Premium).', 'wedding-party-rsvp' ) . '</p>';
-				echo '<p>' . esc_html__( 'The apps are in beta testing now and are expected to be generally available in a couple of weeks.', 'wedding-party-rsvp' ) . '</p><p>';
+				$play_url = 'https://play.google.com/store/apps/details?id=pro.weddingrsvp.companion';
+				echo '<div class="notice notice-info"><p><strong>' . esc_html__( 'Wedding RSVP companion apps', 'wedding-party-rsvp' ) . '</strong></p>';
+				echo '<p>' . esc_html__( 'The free Wedding RSVP companion apps connect coordinators and guests to your wedding website when you use Wedding Party RSVP Pro (Premium)—at no extra app cost.', 'wedding-party-rsvp' ) . '</p>';
+				echo '<p>' . esc_html__( 'Android is available now on the Google Play Store. iOS is available on TestFlight and should be available on the Apple App Store soon.', 'wedding-party-rsvp' ) . '</p>';
+				echo '<p>' . esc_html__( 'With Pro, guests can also capture photos in the app and upload them to an event photo gallery on your WordPress site (for example a wedding, bridal shower, or rehearsal dinner).', 'wedding-party-rsvp' ) . '</p><p>';
+				echo '<a class="button button-primary" href="' . esc_url( $play_url ) . '" target="_blank" rel="noopener noreferrer">' . esc_html__( 'Get it on Google Play', 'wedding-party-rsvp' ) . '</a> ';
 				if ( ! wgrsvp_is_pro_plugin_active() ) {
-					echo '<a class="button button-primary" href="' . esc_url( $this->get_pro_marketing_url() ) . '" target="_blank" rel="noopener noreferrer">' . esc_html__( 'Learn about Pro', 'wedding-party-rsvp' ) . '</a> ';
+					echo '<a class="button" href="' . esc_url( $this->get_pro_marketing_url() ) . '" target="_blank" rel="noopener noreferrer">' . esc_html__( 'Learn about Pro', 'wedding-party-rsvp' ) . '</a> ';
 					echo '<a class="button" href="' . esc_url( wgrsvp_get_pro_live_demo_url() ) . '" target="_blank" rel="noopener noreferrer">' . esc_html__( 'Try Premium', 'wedding-party-rsvp' ) . '</a> ';
 				}
 				echo '<a href="' . esc_url( $dismiss_companion ) . '">' . esc_html__( 'Dismiss this message', 'wedding-party-rsvp' ) . '</a>';
