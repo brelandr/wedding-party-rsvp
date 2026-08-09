@@ -6,7 +6,7 @@
  *
  * Plugin Name: Wedding Party RSVP – Guest List, Invitation & Event Manager
  * Description: Simple and secure RSVP system. Manage guest lists and adult meal choices.
- * Version: 8.2.11
+ * Version: 8.2.12
  * Author: Land Tech Web Designs, Corp
  * Author URI: https://landtechwebdesigns.com
  * Plugin URI: https://landtechwebdesigns.com/wedding-party-rsvp-wordpress-plugin/
@@ -267,6 +267,8 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 			global $wpdb;
 			require_once plugin_dir_path( __FILE__ ) . 'includes/class-wgrsvp-coordinator-role.php';
 			require_once plugin_dir_path( __FILE__ ) . 'includes/class-wgrsvp-setup-wizard.php';
+			require_once plugin_dir_path( __FILE__ ) . 'includes/class-wgrsvp-setup-guide.php';
+			require_once plugin_dir_path( __FILE__ ) . 'includes/class-wgrsvp-print-partners.php';
 			require_once plugin_dir_path( __FILE__ ) . 'includes/class-wgrsvp-ics.php';
 			require_once plugin_dir_path( __FILE__ ) . 'includes/class-wgrsvp-paste-import.php';
 			require_once plugin_dir_path( __FILE__ ) . 'includes/class-wgrsvp-thankyou-tracker.php';
@@ -382,6 +384,13 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 
 			$wizard = new WGRSVP_Setup_Wizard( $this );
 			$wizard->init();
+
+			$setup_guide = new WGRSVP_Setup_Guide( $this );
+			$setup_guide->init();
+
+			if ( class_exists( 'WGRSVP_Print_Partners', false ) ) {
+				WGRSVP_Print_Partners::init();
+			}
 
 			WGRSVP_Growth_Checklist::init();
 			WGRSVP_Guest_Health::register_hooks();
@@ -975,6 +984,172 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 		 * @param string $party_id Party ID.
 		 * @return void
 		 */
+
+		/**
+		 * Default dietary checkbox options for the public RSVP form.
+		 *
+		 * @return string[]
+		 */
+		private function wgrsvp_default_dietary_options() {
+			return array( 'Gluten Free', 'Dairy Free', 'Vegetarian', 'Vegan' );
+		}
+
+		/**
+		 * Default allergy checkbox options for the public RSVP form.
+		 *
+		 * @return string[]
+		 */
+		private function wgrsvp_default_allergy_options() {
+			return array( 'Nut Allergy' );
+		}
+
+		/**
+		 * Parse a newline-separated option list (or fall back to defaults).
+		 *
+		 * @param string   $raw      Raw textarea value.
+		 * @param string[] $fallback Defaults when empty.
+		 * @return string[]
+		 */
+		private function wgrsvp_parse_option_list( $raw, $fallback ) {
+			$lines = preg_split( '/\r\n|\r|\n/', (string) $raw );
+			$out   = array();
+			if ( is_array( $lines ) ) {
+				foreach ( $lines as $line ) {
+					$line = sanitize_text_field( trim( (string) $line ) );
+					if ( '' === $line ) {
+						continue;
+					}
+					$out[ $line ] = $line;
+				}
+			}
+			if ( empty( $out ) && is_array( $fallback ) ) {
+				foreach ( $fallback as $item ) {
+					$item = sanitize_text_field( (string) $item );
+					if ( '' === $item ) {
+						continue;
+					}
+					$out[ $item ] = $item;
+				}
+			}
+			return array_values( $out );
+		}
+
+		/**
+		 * Labels + option lists for dietary / allergies on the RSVP form.
+		 *
+		 * @param array|null $settings General settings.
+		 * @return array{
+		 *   dietary_label:string,
+		 *   allergies_label:string,
+		 *   dietary_other_label:string,
+		 *   allergies_other_label:string,
+		 *   dietary_other_placeholder:string,
+		 *   allergies_other_placeholder:string,
+		 *   dietary_options:string[],
+		 *   allergy_options:string[]
+		 * }
+		 */
+		private function wgrsvp_get_diet_allergy_form_config( $settings = null ) {
+			if ( ! is_array( $settings ) ) {
+				$settings = get_option( $this->opt_settings, array() );
+				if ( ! is_array( $settings ) ) {
+					$settings = array();
+				}
+			}
+
+			$dietary_label = isset( $settings['text_dietary_label'] ) ? trim( (string) $settings['text_dietary_label'] ) : '';
+			if ( '' === $dietary_label ) {
+				$dietary_label = __( 'Dietary Restrictions', 'wedding-party-rsvp' );
+			}
+			$allergies_label = isset( $settings['text_allergies_label'] ) ? trim( (string) $settings['text_allergies_label'] ) : '';
+			if ( '' === $allergies_label ) {
+				$allergies_label = __( 'Allergies', 'wedding-party-rsvp' );
+			}
+			$dietary_other = isset( $settings['text_dietary_other'] ) ? trim( (string) $settings['text_dietary_other'] ) : '';
+			if ( '' === $dietary_other ) {
+				$dietary_other = __( 'Other', 'wedding-party-rsvp' );
+			}
+			$allergies_other = isset( $settings['text_allergies_other'] ) ? trim( (string) $settings['text_allergies_other'] ) : '';
+			if ( '' === $allergies_other ) {
+				$allergies_other = __( 'Other', 'wedding-party-rsvp' );
+			}
+			$diet_ph = isset( $settings['text_dietary_other_placeholder'] ) ? trim( (string) $settings['text_dietary_other_placeholder'] ) : '';
+			if ( '' === $diet_ph ) {
+				$diet_ph = __( 'Please specify…', 'wedding-party-rsvp' );
+			}
+			$all_ph = isset( $settings['text_allergies_other_placeholder'] ) ? trim( (string) $settings['text_allergies_other_placeholder'] ) : '';
+			if ( '' === $all_ph ) {
+				$all_ph = __( 'Please specify…', 'wedding-party-rsvp' );
+			}
+
+			return array(
+				'dietary_label'               => $dietary_label,
+				'allergies_label'             => $allergies_label,
+				'dietary_other_label'         => $dietary_other,
+				'allergies_other_label'       => $allergies_other,
+				'dietary_other_placeholder'   => $diet_ph,
+				'allergies_other_placeholder' => $all_ph,
+				'dietary_options'             => $this->wgrsvp_parse_option_list(
+					isset( $settings['dietary_option_list'] ) ? (string) $settings['dietary_option_list'] : '',
+					$this->wgrsvp_default_dietary_options()
+				),
+				'allergy_options'             => $this->wgrsvp_parse_option_list(
+					isset( $settings['allergy_option_list'] ) ? (string) $settings['allergy_option_list'] : '',
+					$this->wgrsvp_default_allergy_options()
+				),
+			);
+		}
+
+		/**
+		 * Split a stored comma-separated field into trimmed tokens.
+		 *
+		 * @param string $raw Stored value.
+		 * @return string[]
+		 */
+		private function wgrsvp_tokenize_csv_field( $raw ) {
+			$parts = preg_split( '/\s*,\s*/', (string) $raw );
+			$out   = array();
+			if ( ! is_array( $parts ) ) {
+				return $out;
+			}
+			foreach ( $parts as $part ) {
+				$part = trim( (string) $part );
+				if ( '' === $part ) {
+					continue;
+				}
+				$out[] = $part;
+			}
+			return $out;
+		}
+
+		/**
+		 * Build stored CSV string from checkbox array + optional “other” text.
+		 *
+		 * @param array  $data      Guest POST slice.
+		 * @param string $list_key  Checkbox array key.
+		 * @param string $other_key Other text key.
+		 * @return string
+		 */
+		private function wgrsvp_parse_checkbox_group_from_post( $data, $list_key, $other_key ) {
+			if ( ! is_array( $data ) ) {
+				return '';
+			}
+			$arr = isset( $data[ $list_key ] ) ? (array) $data[ $list_key ] : array();
+			$arr = array_map(
+				static function ( $v ) {
+					return sanitize_text_field( wp_unslash( (string) $v ) );
+				},
+				$arr
+			);
+			$arr = array_values( array_filter( $arr ) );
+			if ( isset( $data[ $other_key ] ) && '' !== trim( (string) $data[ $other_key ] ) ) {
+				$arr[] = sanitize_text_field( wp_unslash( (string) $data[ $other_key ] ) );
+			}
+			$arr = array_values( array_unique( array_filter( $arr ) ) );
+			return implode( ', ', $arr );
+		}
+
+
 		private function save_rsvp_guest_updates_for_party( $party_id ) {
 			global $wpdb;
 
@@ -1012,17 +1187,17 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 					continue;
 				}
 				$name      = sanitize_text_field( wp_unslash( (string) ( $data['name_edit'] ?? $data['name_hidden'] ?? '' ) ) );
-				$allergies = '';
-				if ( isset( $data['allergies'] ) && is_array( $data['allergies'] ) ) {
-					$allergy_bits = array_map(
-						static function ( $v ) {
-							return sanitize_text_field( wp_unslash( (string) $v ) );
-						},
-						$data['allergies']
-					);
-					$allergy_bits = array_filter( $allergy_bits );
-					$allergies    = implode( ', ', $allergy_bits );
+				// Prefer checkbox groups (dietary[] / allergies[]); fall back to legacy free-text dietary.
+				if ( isset( $data['dietary'] ) && is_array( $data['dietary'] ) ) {
+					$dietary = $this->wgrsvp_parse_checkbox_group_from_post( $data, 'dietary', 'dietary_other' );
+				} else {
+					$dietary = sanitize_text_field( wp_unslash( (string) ( $data['dietary'] ?? '' ) ) );
+					if ( isset( $data['dietary_other'] ) && '' !== trim( (string) $data['dietary_other'] ) ) {
+						$extra = sanitize_text_field( wp_unslash( (string) $data['dietary_other'] ) );
+						$dietary = '' === $dietary ? $extra : ( $dietary . ', ' . $extra );
+					}
 				}
+				$allergies = $this->wgrsvp_parse_checkbox_group_from_post( $data, 'allergies', 'allergies_other' );
 
 				$rsvp_raw = sanitize_text_field( wp_unslash( $data['rsvp'] ?? 'Pending' ) );
 				$rsvp     = in_array( $rsvp_raw, $allowed_rsvp, true ) ? $rsvp_raw : 'Pending';
@@ -1031,8 +1206,7 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 					'guest_name'           => $name,
 					'rsvp_status'          => $rsvp,
 					'menu_choice'          => sanitize_text_field( wp_unslash( $data['menu'] ?? '' ) ),
-					// Dietary notes: single-line field on the public RSVP form (`input`); use `sanitize_textarea_field` only if the UI becomes a textarea.
-					'dietary_restrictions' => sanitize_text_field( wp_unslash( $data['dietary'] ?? '' ) ),
+					'dietary_restrictions' => $dietary,
 					'allergies'            => $allergies,
 					'song_request'         => sanitize_text_field( wp_unslash( $data['song'] ?? '' ) ),
 					'guest_message'        => sanitize_textarea_field( wp_unslash( $data['message'] ?? '' ) ),
@@ -3164,7 +3338,7 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 				'wgrsvp-address-focus',
 				plugins_url( 'assets/js/wgrsvp-address-focus.js', __FILE__ ),
 				array(),
-				'8.2.11',
+				'8.2.12',
 				true
 			);
 			wp_localize_script(
@@ -3836,24 +4010,27 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 				}
 			}
 			$meal_elements = apply_filters( 'wgrsvp_guest_dataviews_meal_filter_elements', $meal_elements );
+			$filter_opts   = $this->wgrsvp_get_guest_dataviews_filter_options();
 			wp_localize_script(
 				'wgrsvp-guest-dataviews',
 				'wgrsvpGuestDataviews',
 				array(
-					'listUrl'      => admin_url( 'admin.php?page=wedding-rsvp-main' ),
-					'mealElements' => $meal_elements,
-					'proDataviews' => (
+					'listUrl'        => admin_url( 'admin.php?page=wedding-rsvp-main' ),
+					'mealElements'   => $meal_elements,
+					'filterOptions'  => $filter_opts,
+					'proDataviews'   => (
 						function_exists( 'wgrsvp_is_pro_plugin_active' )
 						&& wgrsvp_is_pro_plugin_active()
 						&& function_exists( 'wgrsvp_is_pro_license_effectively_valid' )
 						&& wgrsvp_is_pro_license_effectively_valid()
 					),
-					'i18n'         => array(
+					'i18n'           => array(
 						'error'            => __( 'Could not load guest data.', 'wedding-party-rsvp' ),
 						'filterMeal'       => __( 'Meal (filter)', 'wedding-party-rsvp' ),
-						'filterDietary'    => __( 'Dietary contains', 'wedding-party-rsvp' ),
-						'filterAllergies'  => __( 'Allergies contain', 'wedding-party-rsvp' ),
-						'filterTable'      => __( 'Table number (exact)', 'wedding-party-rsvp' ),
+						'filterDietary'    => __( 'Dietary', 'wedding-party-rsvp' ),
+						'filterAllergies'  => __( 'Allergies', 'wedding-party-rsvp' ),
+						'filterTable'      => __( 'Table number', 'wedding-party-rsvp' ),
+						'filterAny'        => __( 'Any', 'wedding-party-rsvp' ),
 						'filterHasTable'   => __( 'Only guests with a table number', 'wedding-party-rsvp' ),
 						'filterApplyNote'  => __( 'These filters apply to the table below (combined with column filters).', 'wedding-party-rsvp' ),
 						'filterPlannerTag' => __( 'Planner tag (slug)', 'wedding-party-rsvp' ),
@@ -3861,6 +4038,113 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 					),
 				)
 			);
+		}
+
+		/**
+		 * Distinct dietary / allergy / table values currently used on the guest list (for DataViews filter dropdowns).
+		 *
+		 * @return array{dietary: array<int, array{label: string, value: string}>, allergies: array<int, array{label: string, value: string}>, tables: array<int, array{label: string, value: string}>}
+		 */
+		private function wgrsvp_get_guest_dataviews_filter_options() {
+			global $wpdb;
+			$table = $this->table_name;
+			$out   = array(
+				'dietary'   => array(),
+				'allergies' => array(),
+				'tables'    => array(),
+			);
+
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- admin facet list for filter dropdowns.
+			$diet_rows = $wpdb->get_col(
+				$wpdb->prepare(
+					"SELECT DISTINCT TRIM(dietary_restrictions) FROM %i WHERE TRIM(COALESCE(dietary_restrictions, '')) <> '' ORDER BY TRIM(dietary_restrictions) ASC LIMIT %d",
+					$table,
+					200
+				)
+			);
+			if ( is_array( $diet_rows ) ) {
+				foreach ( $diet_rows as $val ) {
+					$val = sanitize_text_field( (string) $val );
+					if ( '' === $val ) {
+						continue;
+					}
+					$out['dietary'][] = array(
+						'label' => $val,
+						'value' => $val,
+					);
+				}
+			}
+
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- admin facet list for filter dropdowns.
+			$allergy_rows = $wpdb->get_col(
+				$wpdb->prepare(
+					"SELECT allergies FROM %i WHERE TRIM(COALESCE(allergies, '')) <> '' LIMIT %d",
+					$table,
+					2000
+				)
+			);
+			$allergy_set = array();
+			if ( is_array( $allergy_rows ) ) {
+				foreach ( $allergy_rows as $raw ) {
+					$parts = preg_split( '/\s*,\s*/', (string) $raw );
+					if ( ! is_array( $parts ) ) {
+						continue;
+					}
+					foreach ( $parts as $part ) {
+						$part = sanitize_text_field( trim( (string) $part ) );
+						if ( '' === $part ) {
+							continue;
+						}
+						$allergy_set[ $part ] = true;
+					}
+				}
+			}
+			$allergy_keys = array_keys( $allergy_set );
+			natcasesort( $allergy_keys );
+			$allergy_keys = array_slice( array_values( $allergy_keys ), 0, 200 );
+			foreach ( $allergy_keys as $val ) {
+				$out['allergies'][] = array(
+					'label' => $val,
+					'value' => $val,
+				);
+			}
+
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- admin facet list for filter dropdowns.
+			$table_rows = $wpdb->get_col(
+				$wpdb->prepare(
+					"SELECT DISTINCT TRIM(table_number) FROM %i WHERE TRIM(COALESCE(table_number, '')) <> '' ORDER BY TRIM(table_number) ASC LIMIT %d",
+					$table,
+					200
+				)
+			);
+			if ( is_array( $table_rows ) ) {
+				foreach ( $table_rows as $val ) {
+					$val = sanitize_text_field( (string) $val );
+					if ( '' === $val ) {
+						continue;
+					}
+					$out['tables'][] = array(
+						'label' => $val,
+						'value' => $val,
+					);
+				}
+			}
+
+			/**
+			 * Filter DataViews extra-filter dropdown options (dietary, allergies, tables).
+			 *
+			 * @param array{dietary: array, allergies: array, tables: array} $out Options.
+			 */
+			$filtered = apply_filters( 'wgrsvp_guest_dataviews_filter_options', $out );
+			if ( ! is_array( $filtered ) ) {
+				return $out;
+			}
+			foreach ( array( 'dietary', 'allergies', 'tables' ) as $key ) {
+				if ( ! isset( $filtered[ $key ] ) || ! is_array( $filtered[ $key ] ) ) {
+					$filtered[ $key ] = $out[ $key ];
+				}
+			}
+			return $filtered;
 		}
 
 		/**
@@ -4636,6 +4920,15 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 							'amazon_affiliate_tag'    => $amazon_affiliate_tag,
 							'skimlinks_enabled'       => isset( $_POST['skimlinks_enabled'] ) ? 1 : 0,
 							'skimlinks_publisher_id'  => $skimlinks_publisher_id,
+							'show_print_partners'     => isset( $_POST['show_print_partners'] ) ? 1 : 0,
+							'text_dietary_label'      => isset( $_POST['text_dietary_label'] ) ? sanitize_text_field( wp_unslash( (string) $_POST['text_dietary_label'] ) ) : '',
+							'text_allergies_label'    => isset( $_POST['text_allergies_label'] ) ? sanitize_text_field( wp_unslash( (string) $_POST['text_allergies_label'] ) ) : '',
+							'text_dietary_other'      => isset( $_POST['text_dietary_other'] ) ? sanitize_text_field( wp_unslash( (string) $_POST['text_dietary_other'] ) ) : '',
+							'text_allergies_other'    => isset( $_POST['text_allergies_other'] ) ? sanitize_text_field( wp_unslash( (string) $_POST['text_allergies_other'] ) ) : '',
+							'text_dietary_other_placeholder' => isset( $_POST['text_dietary_other_placeholder'] ) ? sanitize_text_field( wp_unslash( (string) $_POST['text_dietary_other_placeholder'] ) ) : '',
+							'text_allergies_other_placeholder' => isset( $_POST['text_allergies_other_placeholder'] ) ? sanitize_text_field( wp_unslash( (string) $_POST['text_allergies_other_placeholder'] ) ) : '',
+							'dietary_option_list'     => isset( $_POST['dietary_option_list'] ) ? sanitize_textarea_field( wp_unslash( (string) $_POST['dietary_option_list'] ) ) : '',
+							'allergy_option_list'     => isset( $_POST['allergy_option_list'] ) ? sanitize_textarea_field( wp_unslash( (string) $_POST['allergy_option_list'] ) ) : '',
 						)
 					);
 					update_option( $this->opt_settings, $settings );
@@ -4830,23 +5123,43 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 							</p>
 						</div>
 						<?php endif; ?>
+						<hr style="margin:1.25em 0;border:0;border-top:1px solid #ddd;">
+						<p><strong><?php esc_html_e( 'Dietary & allergies (RSVP form)', 'wedding-party-rsvp' ); ?></strong></p>
+						<p class="description"><?php esc_html_e( 'Separate sections on the public RSVP form. Option lists are one choice per line. Defaults: dietary = Gluten Free, Dairy Free, Vegetarian, Vegan; allergies = Nut Allergy.', 'wedding-party-rsvp' ); ?></p>
+						<p><label for="wgrsvp_text_dietary_label"><strong><?php esc_html_e( 'Dietary section label', 'wedding-party-rsvp' ); ?></strong></label><br>
+						<input type="text" id="wgrsvp_text_dietary_label" name="text_dietary_label" value="<?php echo esc_attr( $s['text_dietary_label'] ?? '' ); ?>" style="width:100%;max-width:520px;" placeholder="<?php esc_attr_e( 'Dietary Restrictions', 'wedding-party-rsvp' ); ?>"></p>
+						<p><label for="wgrsvp_dietary_option_list"><strong><?php esc_html_e( 'Dietary options (one per line)', 'wedding-party-rsvp' ); ?></strong></label><br>
+						<textarea id="wgrsvp_dietary_option_list" name="dietary_option_list" rows="5" class="large-text code" style="max-width:520px;"><?php echo esc_textarea( isset( $s['dietary_option_list'] ) ? (string) $s['dietary_option_list'] : "Gluten Free\nDairy Free\nVegetarian\nVegan" ); ?></textarea></p>
+						<p><label for="wgrsvp_text_dietary_other"><strong><?php esc_html_e( 'Dietary “Other” label', 'wedding-party-rsvp' ); ?></strong></label><br>
+						<input type="text" id="wgrsvp_text_dietary_other" name="text_dietary_other" value="<?php echo esc_attr( $s['text_dietary_other'] ?? '' ); ?>" style="width:100%;max-width:520px;" placeholder="<?php esc_attr_e( 'Other', 'wedding-party-rsvp' ); ?>"></p>
+						<p><label for="wgrsvp_text_dietary_other_placeholder"><strong><?php esc_html_e( 'Dietary “Other” placeholder', 'wedding-party-rsvp' ); ?></strong></label><br>
+						<input type="text" id="wgrsvp_text_dietary_other_placeholder" name="text_dietary_other_placeholder" value="<?php echo esc_attr( $s['text_dietary_other_placeholder'] ?? '' ); ?>" style="width:100%;max-width:520px;" placeholder="<?php esc_attr_e( 'Please specify…', 'wedding-party-rsvp' ); ?>"></p>
+						<p><label for="wgrsvp_text_allergies_label"><strong><?php esc_html_e( 'Allergies section label', 'wedding-party-rsvp' ); ?></strong></label><br>
+						<input type="text" id="wgrsvp_text_allergies_label" name="text_allergies_label" value="<?php echo esc_attr( $s['text_allergies_label'] ?? '' ); ?>" style="width:100%;max-width:520px;" placeholder="<?php esc_attr_e( 'Allergies', 'wedding-party-rsvp' ); ?>"></p>
+						<p><label for="wgrsvp_allergy_option_list"><strong><?php esc_html_e( 'Allergy options (one per line)', 'wedding-party-rsvp' ); ?></strong></label><br>
+						<textarea id="wgrsvp_allergy_option_list" name="allergy_option_list" rows="4" class="large-text code" style="max-width:520px;"><?php echo esc_textarea( isset( $s['allergy_option_list'] ) ? (string) $s['allergy_option_list'] : 'Nut Allergy' ); ?></textarea></p>
+						<p><label for="wgrsvp_text_allergies_other"><strong><?php esc_html_e( 'Allergies “Other” label', 'wedding-party-rsvp' ); ?></strong></label><br>
+						<input type="text" id="wgrsvp_text_allergies_other" name="text_allergies_other" value="<?php echo esc_attr( $s['text_allergies_other'] ?? '' ); ?>" style="width:100%;max-width:520px;" placeholder="<?php esc_attr_e( 'Other', 'wedding-party-rsvp' ); ?>"></p>
+						<p><label for="wgrsvp_text_allergies_other_placeholder"><strong><?php esc_html_e( 'Allergies “Other” placeholder', 'wedding-party-rsvp' ); ?></strong></label><br>
+						<input type="text" id="wgrsvp_text_allergies_other_placeholder" name="text_allergies_other_placeholder" value="<?php echo esc_attr( $s['text_allergies_other_placeholder'] ?? '' ); ?>" style="width:100%;max-width:520px;" placeholder="<?php esc_attr_e( 'Please specify…', 'wedding-party-rsvp' ); ?>"></p>
+						<?php
+						if ( class_exists( 'WGRSVP_Print_Partners', false ) ) {
+							WGRSVP_Print_Partners::render_settings_fields( is_array( $s ) ? $s : array() );
+						}
+						?>
+						<p style="margin-top:1.25em;">
+							<input type="submit" name="wgrsvp_save_settings" class="button button-primary" value="<?php esc_attr_e( 'Save Settings', 'wedding-party-rsvp' ); ?>">
+							<span class="description" style="margin-left:8px;"><?php esc_html_e( 'Saves gift registries, Amazon/Skimlinks, dietary labels, and everything else on this settings page.', 'wedding-party-rsvp' ); ?></span>
+						</p>
 					</div>
 
 					<div style="background:#fff; padding:20px; border:1px solid #ddd; margin-bottom:20px;">
 						<h3 id="wgrsvp-logistics-heading"><?php esc_html_e( 'Logistics', 'wedding-party-rsvp' ); ?></h3>
 						<p><label><strong><?php esc_html_e( 'RSVP Page URL:', 'wedding-party-rsvp' ); ?></strong></label><br><input type="text" name="rsvp_page_url" value="<?php echo esc_url( $s['rsvp_page_url'] ?? '' ); ?>" style="width:100%" placeholder="<?php esc_attr_e( 'e.g. https://mysite.com/rsvp', 'wedding-party-rsvp' ); ?>"></p>
 						<p><label><strong><?php esc_html_e( 'RSVP Deadline:', 'wedding-party-rsvp' ); ?></strong></label><br><input type="date" name="deadline_date" value="<?php echo esc_attr( $s['deadline_date'] ?? '' ); ?>"></p>
-						<?php
-						if ( class_exists( 'WGRSVP_Drip', false ) ) {
-							echo '<h3>' . esc_html__( 'Multi-step drip journey (v1)', 'wedding-party-rsvp' ) . '</h3>';
-							echo '<p class="description">' . esc_html__( 'Optional sequenced follow-ups. When the drip journey is enabled, it supersedes the legacy daily deadline reminder cron. Use Migrate to copy legacy reminder settings into steps.', 'wedding-party-rsvp' ) . '</p>';
-							WGRSVP_Drip::render_settings_section();
-							echo '<hr style="margin:24px 0;" />';
-						}
-						?>
 						<details style="margin:12px 0 20px;">
 							<summary style="cursor:pointer;font-weight:600;"><?php esc_html_e( 'Legacy: daily deadline reminder emails', 'wedding-party-rsvp' ); ?></summary>
-							<p class="description"><?php esc_html_e( 'Single-rule daily cron. Prefer the multi-step drip journey above when available; if drip is enabled, this legacy cron does not send.', 'wedding-party-rsvp' ); ?></p>
+							<p class="description"><?php esc_html_e( 'Older one-rule daily reminder. Prefer the automatic reminder series farther down this page when you can; if that series is turned on, these older reminders will not send.', 'wedding-party-rsvp' ); ?></p>
 						<p><label><input type="checkbox" name="deadline_nudges_enabled" value="1" <?php checked( ! empty( $s['deadline_nudges_enabled'] ) ); ?>> <?php esc_html_e( 'Send automatic RSVP reminder emails (daily check; uses your site email / SMTP)', 'wedding-party-rsvp' ); ?></label></p>
 						<p><label><strong><?php esc_html_e( 'Reminder days before deadline (comma-separated):', 'wedding-party-rsvp' ); ?></strong></label><br>
 						<input type="text" name="deadline_nudge_days" value="<?php echo esc_attr( $s['deadline_nudge_days'] ?? '7,3,1' ); ?>" class="regular-text" placeholder="7,3,1"></p>
@@ -4945,10 +5258,17 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 					</div>
 					<?php endif; ?>
 
-					<div style="display:flex; gap:10px;">
+					<div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
 						<input type="submit" name="wgrsvp_save_settings" class="button button-primary" value="<?php esc_attr_e( 'Save Settings', 'wedding-party-rsvp' ); ?>">
+						<span class="description"><?php esc_html_e( 'Saves general settings on this page (not the automatic reminder series below).', 'wedding-party-rsvp' ); ?></span>
 					</div>
 				</form>
+
+				<?php if ( class_exists( 'WGRSVP_Drip', false ) ) : ?>
+				<div style="background:#fff; padding:20px; border:1px solid #ddd; margin:30px 0 20px; border-left:4px solid #2271b1;">
+					<?php WGRSVP_Drip::render_settings_section(); ?>
+				</div>
+				<?php endif; ?>
 				
 				<form method="post" style="margin-top:50px;">
 					<?php wp_nonce_field( 'wgrsvp_factory_reset_plugin', 'wgrsvp_factory_reset_plugin_nonce' ); ?>
@@ -5864,28 +6184,65 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 					$menu_sel .= '</select></div>';
 					$output   .= $menu_sel;
 
-					$output         .= '<div class="wpr-field"><label>' . esc_html__( 'Dietary Restrictions', 'wedding-party-rsvp' ) . '</label>';
-					$allergy_options = array(
-						'Gluten Free' => __( 'Gluten Free', 'wedding-party-rsvp' ),
-						'Dairy Free'  => __( 'Dairy Free', 'wedding-party-rsvp' ),
-						'Vegetarian'  => __( 'Vegetarian', 'wedding-party-rsvp' ),
-						'Vegan'       => __( 'Vegan', 'wedding-party-rsvp' ),
-						'Nut Allergy' => __( 'Nut Allergy', 'wedding-party-rsvp' ),
+					$diet_cfg   = $this->wgrsvp_get_diet_allergy_form_config( $settings );
+					$diet_opts  = $diet_cfg['dietary_options'];
+					$all_opts   = $diet_cfg['allergy_options'];
+					$saved_diet = $this->wgrsvp_tokenize_csv_field( isset( $g->dietary_restrictions ) ? (string) $g->dietary_restrictions : '' );
+					$saved_all  = $this->wgrsvp_tokenize_csv_field( isset( $g->allergies ) ? (string) $g->allergies : '' );
+					// Legacy free: dietary-style options were stored in allergies.
+					foreach ( $saved_all as $token ) {
+						if ( in_array( $token, $diet_opts, true ) && ! in_array( $token, $saved_diet, true ) ) {
+							$saved_diet[] = $token;
+						}
+					}
+					$saved_all = array_values(
+						array_filter(
+							$saved_all,
+							static function ( $token ) use ( $diet_opts ) {
+								return ! in_array( $token, $diet_opts, true );
+							}
+						)
 					);
-					$saved_allergies = explode( ', ', $g->allergies );
-					$output         .= '<div class="wpr-checkbox-group">';
-					foreach ( $allergy_options as $allergy_key => $allergy_label ) {
-						$output .= '<label><input type="checkbox" name="guest[' . absint( $g->id ) . '][allergies][]" value="' . esc_attr( $allergy_key ) . '" ' . checked( in_array( $allergy_key, $saved_allergies, true ), true, false ) . '> ' . esc_html( $allergy_label ) . '</label>';
+					$diet_other = '';
+					foreach ( $saved_diet as $saved ) {
+						if ( ! in_array( $saved, $diet_opts, true ) ) {
+							$diet_other = $saved;
+							break;
+						}
+					}
+					$all_other = '';
+					foreach ( $saved_all as $saved ) {
+						if ( ! in_array( $saved, $all_opts, true ) ) {
+							$all_other = $saved;
+							break;
+						}
+					}
+					$gid = absint( $g->id );
+
+					$output .= '<div class="wpr-field"><label>' . esc_html( $diet_cfg['dietary_label'] ) . '</label>';
+					$output .= '<div class="wpr-checkbox-group wpr-dietary-checkboxes">';
+					foreach ( $diet_opts as $opt ) {
+						$output .= '<label><input type="checkbox" name="guest[' . $gid . '][dietary][]" value="' . esc_attr( $opt ) . '" ' . checked( in_array( $opt, $saved_diet, true ), true, false ) . '> ' . esc_html( $opt ) . '</label>';
 					}
 					$output .= '</div>';
 					if ( $use_ia ) {
 						$output .= '<div class="wgrsvp-menu-extra-dietary" data-wp-bind--hidden="!context.showMenuDetail">';
 					}
-					$diet_inp = '<input type="text" name="guest[' . absint( $g->id ) . '][dietary]" value="' . esc_attr( $g->dietary_restrictions ) . '" placeholder="' . esc_attr__( 'Other dietary notes…', 'wedding-party-rsvp' ) . '">';
-					$output  .= $diet_inp;
+					$output .= '<label class="description" style="display:block;margin-top:6px;font-weight:normal;">' . esc_html( $diet_cfg['dietary_other_label'] ) . '</label>';
+					$output .= '<input type="text" name="guest[' . $gid . '][dietary_other]" value="' . esc_attr( $diet_other ) . '" placeholder="' . esc_attr( $diet_cfg['dietary_other_placeholder'] ) . '">';
 					if ( $use_ia ) {
 						$output .= '<p class="description" style="margin-top:6px;">' . esc_html__( 'Shown when Entrée is Vegetarian or Vegan—add details for your caterer.', 'wedding-party-rsvp' ) . '</p></div>';
 					}
+					$output .= '</div>';
+
+					$output .= '<div class="wpr-field"><label>' . esc_html( $diet_cfg['allergies_label'] ) . '</label>';
+					$output .= '<div class="wpr-checkbox-group wpr-allergy-checkboxes">';
+					foreach ( $all_opts as $opt ) {
+						$output .= '<label><input type="checkbox" name="guest[' . $gid . '][allergies][]" value="' . esc_attr( $opt ) . '" ' . checked( in_array( $opt, $saved_all, true ), true, false ) . '> ' . esc_html( $opt ) . '</label>';
+					}
+					$output .= '</div>';
+					$output .= '<label class="description" style="display:block;margin-top:6px;font-weight:normal;">' . esc_html( $diet_cfg['allergies_other_label'] ) . '</label>';
+					$output .= '<input type="text" name="guest[' . $gid . '][allergies_other]" value="' . esc_attr( $all_other ) . '" placeholder="' . esc_attr( $diet_cfg['allergies_other_placeholder'] ) . '">';
 					$output .= '</div>';
 
 					$output .= '<div class="wpr-field"><label>' . esc_html__( 'I promise to dance if you play:', 'wedding-party-rsvp' ) . '</label><input type="text" name="guest[' . absint( $g->id ) . '][song]" value="' . esc_attr( $g->song_request ) . '"></div>';

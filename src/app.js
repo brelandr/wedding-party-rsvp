@@ -2,7 +2,7 @@
  * DataViews guest table: fetches wgrsvp/v1/guest-rows on each view change.
  */
 import { DataViews } from '@wordpress/dataviews/wp';
-import { TextControl, CheckboxControl } from '@wordpress/components';
+import { TextControl, CheckboxControl, SelectControl } from '@wordpress/components';
 import { useState, useEffect, useMemo, useRef } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
 import apiFetch from '@wordpress/api-fetch';
@@ -123,6 +123,31 @@ export default function App() {
 	const mealElements = useMemo( () => {
 		const raw = cfg && cfg.mealElements ? cfg.mealElements : [];
 		return Array.isArray( raw ) ? raw : [];
+	}, [ cfg ] );
+	const filterOptions = useMemo( () => {
+		const raw = cfg && cfg.filterOptions ? cfg.filterOptions : {};
+		const asOptions = ( list ) =>
+			Array.isArray( list )
+				? list
+						.filter(
+							( item ) =>
+								item &&
+								typeof item.value === 'string' &&
+								item.value !== ''
+						)
+						.map( ( item ) => ( {
+							label:
+								typeof item.label === 'string' && item.label
+									? item.label
+									: item.value,
+							value: item.value,
+						} ) )
+				: [];
+		return {
+			dietary: asOptions( raw.dietary ),
+			allergies: asOptions( raw.allergies ),
+			tables: asOptions( raw.tables ),
+		};
 	}, [ cfg ] );
 	const fields = useMemo( () => {
 		const mealField = {
@@ -370,44 +395,74 @@ export default function App() {
 							'wedding-party-rsvp'
 						) }
 				</p>
-				<TextControl
+				<SelectControl
 					label={
 						ix.filterDietary ||
-						__( 'Dietary contains', 'wedding-party-rsvp' )
+						__( 'Dietary', 'wedding-party-rsvp' )
 					}
 					value={ extraFilters.dietary }
+					options={ [
+						{
+							label:
+								ix.filterAny ||
+								__( 'Any', 'wedding-party-rsvp' ),
+							value: '',
+						},
+						...filterOptions.dietary,
+					] }
 					onChange={ ( v ) =>
 						setExtraFilters( ( prev ) => ( {
 							...prev,
 							dietary: v,
 						} ) )
 					}
+					__nextHasNoMarginBottom
 				/>
-				<TextControl
+				<SelectControl
 					label={
 						ix.filterAllergies ||
-						__( 'Allergies contain', 'wedding-party-rsvp' )
+						__( 'Allergies', 'wedding-party-rsvp' )
 					}
 					value={ extraFilters.allergy }
+					options={ [
+						{
+							label:
+								ix.filterAny ||
+								__( 'Any', 'wedding-party-rsvp' ),
+							value: '',
+						},
+						...filterOptions.allergies,
+					] }
 					onChange={ ( v ) =>
 						setExtraFilters( ( prev ) => ( {
 							...prev,
 							allergy: v,
 						} ) )
 					}
+					__nextHasNoMarginBottom
 				/>
-				<TextControl
+				<SelectControl
 					label={
 						ix.filterTable ||
-						__( 'Table number (exact)', 'wedding-party-rsvp' )
+						__( 'Table number', 'wedding-party-rsvp' )
 					}
 					value={ extraFilters.table }
+					options={ [
+						{
+							label:
+								ix.filterAny ||
+								__( 'Any', 'wedding-party-rsvp' ),
+							value: '',
+						},
+						...filterOptions.tables,
+					] }
 					onChange={ ( v ) =>
 						setExtraFilters( ( prev ) => ( {
 							...prev,
 							table: v,
 						} ) )
 					}
+					__nextHasNoMarginBottom
 				/>
 				<CheckboxControl
 					label={

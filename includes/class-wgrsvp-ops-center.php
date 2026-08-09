@@ -417,12 +417,12 @@ if ( ! class_exists( 'WGRSVP_Ops_Center' ) ) {
 				return;
 			}
 			$summary = WGRSVP_Drip::get_status_summary();
-			$settings_url = admin_url( 'admin.php?page=wedding-rsvp-settings#wgrsvp-logistics-heading' );
+			$settings_url = admin_url( 'admin.php?page=wedding-rsvp-settings#wgrsvp-drip-settings' );
 			?>
 			<div style="background:#fff; border:1px solid #c3c4c7; border-radius:4px; padding:14px 16px; margin-bottom:20px;">
-				<h2 style="margin-top:0;"><?php esc_html_e( 'Multi-step drip', 'wedding-party-rsvp' ); ?></h2>
+				<h2 style="margin-top:0;"><?php esc_html_e( 'Automatic guest reminders', 'wedding-party-rsvp' ); ?></h2>
 				<?php if ( empty( $summary['enabled'] ) ) : ?>
-					<p class="description"><?php esc_html_e( 'Drip journey is off. Configure steps under Settings → Logistics.', 'wedding-party-rsvp' ); ?></p>
+					<p class="description"><?php esc_html_e( 'Automatic reminders are off. Set them up under Settings → Logistics.', 'wedding-party-rsvp' ); ?></p>
 				<?php else : ?>
 					<p>
 						<?php
@@ -439,10 +439,10 @@ if ( ! class_exists( 'WGRSVP_Ops_Center' ) ) {
 					<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" style="display:inline-block;margin-right:8px;">
 						<input type="hidden" name="action" value="wgrsvp_drip_run_now">
 						<?php wp_nonce_field( 'wgrsvp_drip_run_now', 'wgrsvp_drip_run_now_nonce' ); ?>
-						<button type="submit" class="button"><?php esc_html_e( 'Run due steps now', 'wedding-party-rsvp' ); ?></button>
+						<button type="submit" class="button"><?php esc_html_e( 'Send any due reminders now', 'wedding-party-rsvp' ); ?></button>
 					</form>
 				<?php endif; ?>
-				<p><a href="<?php echo esc_url( $settings_url ); ?>"><?php esc_html_e( 'Open Logistics drip settings', 'wedding-party-rsvp' ); ?></a></p>
+				<p><a href="<?php echo esc_url( $settings_url ); ?>"><?php esc_html_e( 'Open reminder settings', 'wedding-party-rsvp' ); ?></a></p>
 			</div>
 			<?php
 		}

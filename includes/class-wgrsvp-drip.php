@@ -27,6 +27,16 @@ if ( ! class_exists( 'WGRSVP_Drip' ) ) {
 		const MAX_STEPS          = 5;
 		const MAX_SENDS_PER_TICK = 50;
 		const JOURNEY_ID         = 'primary';
+		const FORM_SAVE_ID       = 'wgrsvp-drip-save-form';
+		const FORM_MIGRATE_ID    = 'wgrsvp-drip-migrate-form';
+		const FORM_RUN_NOW_ID    = 'wgrsvp-drip-run-now-form';
+
+		/**
+		 * Whether detached admin-post form shells were queued for admin_footer.
+		 *
+		 * @var bool
+		 */
+		private static $shells_queued = false;
 
 		/**
 		 * Register cron, schema, and admin-post handlers.
@@ -42,6 +52,7 @@ if ( ! class_exists( 'WGRSVP_Drip' ) ) {
 			add_action( 'admin_post_wgrsvp_drip_migrate', array( __CLASS__, 'handle_migrate_from_deadline' ) );
 			add_action( 'admin_post_wgrsvp_drip_run_now', array( __CLASS__, 'handle_run_due_now' ) );
 			add_action( 'wgrsvp_after_factory_reset', array( __CLASS__, 'purge_on_factory_reset' ) );
+			add_action( 'admin_notices', array( __CLASS__, 'maybe_admin_notices' ) );
 		}
 
 		/**
@@ -584,6 +595,10 @@ if ( ! class_exists( 'WGRSVP_Drip' ) ) {
 		/**
 		 * Admin settings UI: journey fields, migrate + run-now buttons.
 		 *
+		 * Fields use the HTML form= attribute so this block can sit inside the
+		 * general Settings form without nesting <form> tags (browsers discard nested forms).
+		 * Detached form shells are printed in admin_footer via render_form_shells().
+		 *
 		 * @return void
 		 */
 		public static function render_settings_section() {
@@ -604,26 +619,35 @@ if ( ! class_exists( 'WGRSVP_Drip' ) ) {
 			$summary = self::get_status_summary();
 			$seg     = isset( $journey['segment'] ) ? (string) $journey['segment'] : 'pending';
 			$mode    = isset( $journey['mode'] ) ? (string) $journey['mode'] : 'relative';
+			$fid     = self::FORM_SAVE_ID;
 
 			$segments = array(
-				'pending'                   => __( 'Pending RSVP', 'wedding-party-rsvp' ),
-				'missing_meal'              => __( 'Missing meal choice', 'wedding-party-rsvp' ),
-				'missing_address'           => __( 'Missing address', 'wedding-party-rsvp' ),
-				'missing_phone'             => __( 'Missing phone', 'wedding-party-rsvp' ),
-				'accepted_missing_meal'     => __( 'Accepted, missing meal', 'wedding-party-rsvp' ),
-				'accepted_sub_event_pending'=> __( 'Accepted, sub-event pending', 'wedding-party-rsvp' ),
+				'pending'                    => __( 'Pending RSVP', 'wedding-party-rsvp' ),
+				'missing_meal'               => __( 'Missing meal choice', 'wedding-party-rsvp' ),
+				'missing_address'            => __( 'Missing address', 'wedding-party-rsvp' ),
+				'missing_phone'              => __( 'Missing phone', 'wedding-party-rsvp' ),
+				'accepted_missing_meal'      => __( 'Accepted, missing meal', 'wedding-party-rsvp' ),
+				'accepted_sub_event_pending' => __( 'Accepted, sub-event pending', 'wedding-party-rsvp' ),
 			);
+
+			self::queue_form_shells();
 			?>
 			<div class="wgrsvp-drip-settings" id="wgrsvp-drip-settings">
-				<h2><?php esc_html_e( 'Multi-step drip journey', 'wedding-party-rsvp' ); ?></h2>
+				<h2><?php esc_html_e( 'Automatic guest reminders', 'wedding-party-rsvp' ); ?></h2>
+				<p>
+					<?php esc_html_e( 'Set up a short series of friendly follow-up emails (or texts) that go out on a schedule—for example a first nudge a week before the RSVP deadline, then another a few days later. Guests who still need to respond (or finish meal/address details) get the next message automatically, so you do not have to chase everyone by hand.', 'wedding-party-rsvp' ); ?>
+				</p>
 				<p class="description">
-					<?php esc_html_e( 'One active journey per site. Free sends email via your site mailer; SMS steps require Pro + Twilio.', 'wedding-party-rsvp' ); ?>
+					<?php esc_html_e( 'You can define up to five steps. Emails send through your website’s normal mail setup. Text (SMS) steps need Wedding Party RSVP Pro with Twilio configured. Only one reminder series can be active at a time; turning this on replaces the older single daily deadline reminder below.', 'wedding-party-rsvp' ); ?>
+				</p>
+				<p class="description">
+					<?php esc_html_e( 'This section has its own save button. Gift registries, Amazon links, RSVP URL, deadline, and calendar options are saved with “Save Settings” above—not with “Save reminder series”.', 'wedding-party-rsvp' ); ?>
 				</p>
 				<p>
 					<?php
 					printf(
 						/* translators: 1: active count, 2: due count, 3: completed count */
-						esc_html__( 'Active: %1$d · Due now: %2$d · Completed: %3$d', 'wedding-party-rsvp' ),
+						esc_html__( 'In progress: %1$d · Ready to send: %2$d · Finished: %3$d', 'wedding-party-rsvp' ),
 						(int) $summary['active'],
 						(int) $summary['due'],
 						(int) $summary['completed']
@@ -631,33 +655,29 @@ if ( ! class_exists( 'WGRSVP_Drip' ) ) {
 					?>
 				</p>
 
-				<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
-					<input type="hidden" name="action" value="wgrsvp_drip_save">
-					<?php wp_nonce_field( 'wgrsvp_drip_save', 'wgrsvp_drip_save_nonce' ); ?>
-
 					<p>
 						<label>
-							<input type="checkbox" name="wgrsvp_drip_enabled" value="1" <?php checked( ! empty( $journey['enabled'] ) ); ?>>
-							<?php esc_html_e( 'Enable drip journey', 'wedding-party-rsvp' ); ?>
+							<input type="checkbox" name="wgrsvp_drip_enabled" value="1" form="<?php echo esc_attr( $fid ); ?>" <?php checked( ! empty( $journey['enabled'] ) ); ?>>
+							<?php esc_html_e( 'Turn on automatic reminders', 'wedding-party-rsvp' ); ?>
 						</label>
 					</p>
 
 					<p>
-						<label for="wgrsvp_drip_name"><strong><?php esc_html_e( 'Journey name', 'wedding-party-rsvp' ); ?></strong></label><br>
-						<input type="text" class="regular-text" id="wgrsvp_drip_name" name="wgrsvp_drip_name" value="<?php echo esc_attr( (string) $journey['name'] ); ?>">
+						<label for="wgrsvp_drip_name"><strong><?php esc_html_e( 'Name for this series (for your reference)', 'wedding-party-rsvp' ); ?></strong></label><br>
+						<input type="text" class="regular-text" id="wgrsvp_drip_name" name="wgrsvp_drip_name" form="<?php echo esc_attr( $fid ); ?>" value="<?php echo esc_attr( (string) $journey['name'] ); ?>" placeholder="<?php esc_attr_e( 'e.g. RSVP follow-ups', 'wedding-party-rsvp' ); ?>">
 					</p>
 
 					<p>
-						<label for="wgrsvp_drip_mode"><strong><?php esc_html_e( 'Anchor mode', 'wedding-party-rsvp' ); ?></strong></label><br>
-						<select name="wgrsvp_drip_mode" id="wgrsvp_drip_mode">
-							<option value="relative" <?php selected( $mode, 'relative' ); ?>><?php esc_html_e( 'Relative (days after previous step)', 'wedding-party-rsvp' ); ?></option>
-							<option value="deadline_offsets" <?php selected( $mode, 'deadline_offsets' ); ?>><?php esc_html_e( 'Deadline offsets (days before RSVP deadline)', 'wedding-party-rsvp' ); ?></option>
+						<label for="wgrsvp_drip_mode"><strong><?php esc_html_e( 'When should messages go out?', 'wedding-party-rsvp' ); ?></strong></label><br>
+						<select name="wgrsvp_drip_mode" id="wgrsvp_drip_mode" form="<?php echo esc_attr( $fid ); ?>">
+							<option value="relative" <?php selected( $mode, 'relative' ); ?>><?php esc_html_e( 'A set number of days after the previous message', 'wedding-party-rsvp' ); ?></option>
+							<option value="deadline_offsets" <?php selected( $mode, 'deadline_offsets' ); ?>><?php esc_html_e( 'A set number of days before the RSVP deadline', 'wedding-party-rsvp' ); ?></option>
 						</select>
 					</p>
 
 					<p>
-						<label for="wgrsvp_drip_segment"><strong><?php esc_html_e( 'Audience segment', 'wedding-party-rsvp' ); ?></strong></label><br>
-						<select name="wgrsvp_drip_segment" id="wgrsvp_drip_segment">
+						<label for="wgrsvp_drip_segment"><strong><?php esc_html_e( 'Who should receive these reminders?', 'wedding-party-rsvp' ); ?></strong></label><br>
+						<select name="wgrsvp_drip_segment" id="wgrsvp_drip_segment" form="<?php echo esc_attr( $fid ); ?>">
 							<?php foreach ( $segments as $key => $label ) : ?>
 								<option value="<?php echo esc_attr( $key ); ?>" <?php selected( $seg, $key ); ?>><?php echo esc_html( $label ); ?></option>
 							<?php endforeach; ?>
@@ -666,88 +686,183 @@ if ( ! class_exists( 'WGRSVP_Drip' ) ) {
 
 					<p>
 						<label>
-							<input type="checkbox" name="wgrsvp_drip_include_declined" value="1" <?php checked( ! empty( $journey['include_declined'] ) ); ?>>
-							<?php esc_html_e( 'Include guests who previously declined (pending-family segments)', 'wedding-party-rsvp' ); ?>
+							<input type="checkbox" name="wgrsvp_drip_include_declined" value="1" form="<?php echo esc_attr( $fid ); ?>" <?php checked( ! empty( $journey['include_declined'] ) ); ?>>
+							<?php esc_html_e( 'Also include guests who already said they cannot attend (only for “pending” style audiences)', 'wedding-party-rsvp' ); ?>
 						</label>
 					</p>
 
 					<p>
-						<label for="wgrsvp_drip_quiet_start"><strong><?php esc_html_e( 'Quiet hours (site timezone)', 'wedding-party-rsvp' ); ?></strong></label><br>
+						<label for="wgrsvp_drip_quiet_start"><strong><?php esc_html_e( 'Do not send overnight (site timezone)', 'wedding-party-rsvp' ); ?></strong></label><br>
 						<?php esc_html_e( 'From', 'wedding-party-rsvp' ); ?>
-						<input type="number" name="wgrsvp_drip_quiet_start" id="wgrsvp_drip_quiet_start" min="-1" max="23" step="1" value="<?php echo esc_attr( (string) (int) $journey['quiet_start'] ); ?>" style="width:4.5em;">
+						<input type="number" name="wgrsvp_drip_quiet_start" id="wgrsvp_drip_quiet_start" form="<?php echo esc_attr( $fid ); ?>" min="-1" max="23" step="1" value="<?php echo esc_attr( (string) (int) $journey['quiet_start'] ); ?>" style="width:4.5em;">
 						<?php esc_html_e( 'to', 'wedding-party-rsvp' ); ?>
-						<input type="number" name="wgrsvp_drip_quiet_end" id="wgrsvp_drip_quiet_end" min="-1" max="23" step="1" value="<?php echo esc_attr( (string) (int) $journey['quiet_end'] ); ?>" style="width:4.5em;">
-						<span class="description"><?php esc_html_e( 'Use -1 for both to disable. Example: 21 to 8 skips overnight sends.', 'wedding-party-rsvp' ); ?></span>
+						<input type="number" name="wgrsvp_drip_quiet_end" id="wgrsvp_drip_quiet_end" form="<?php echo esc_attr( $fid ); ?>" min="-1" max="23" step="1" value="<?php echo esc_attr( (string) (int) $journey['quiet_end'] ); ?>" style="width:4.5em;">
+						<span class="description"><?php esc_html_e( 'Hours 0–23. Use -1 for both to allow any hour. Example: 21 to 8 skips late-night and early-morning sends.', 'wedding-party-rsvp' ); ?></span>
 					</p>
 
-					<h3><?php esc_html_e( 'Steps (up to 5)', 'wedding-party-rsvp' ); ?></h3>
+					<h3><?php esc_html_e( 'Reminder messages (up to 5)', 'wedding-party-rsvp' ); ?></h3>
 					<p class="description">
-						<?php esc_html_e( 'Placeholders: {name}, {guest_name}, {party_id}, {rsvp_url}, {deadline}. Leave subject and body empty to omit a step slot.', 'wedding-party-rsvp' ); ?>
+						<?php esc_html_e( 'Write the subject and message for each step. You can insert {name}, {guest_name}, {party_id}, {rsvp_url}, or {deadline} and those will be filled in for each guest. Leave a step’s subject and body blank to skip that slot.', 'wedding-party-rsvp' ); ?>
 					</p>
 
 					<?php
 					for ( $i = 0; $i < self::MAX_STEPS; $i++ ) {
-						$step     = $steps[ $i ];
-						$num      = $i + 1;
-						$field    = 'wgrsvp_drip_steps[' . $i . ']';
-						$delay    = isset( $step['delay_days'] ) ? (int) $step['delay_days'] : 0;
-						$before   = isset( $step['days_before_deadline'] ) ? (int) $step['days_before_deadline'] : 0;
-						$channel  = isset( $step['channel'] ) ? (string) $step['channel'] : 'email';
-						$subject  = isset( $step['subject'] ) ? (string) $step['subject'] : '';
-						$body     = isset( $step['body'] ) ? (string) $step['body'] : '';
-						$step_id  = isset( $step['id'] ) ? (string) $step['id'] : ( 's' . (string) $num );
+						$step    = $steps[ $i ];
+						$num     = $i + 1;
+						$field   = 'wgrsvp_drip_steps[' . $i . ']';
+						$delay   = isset( $step['delay_days'] ) ? (int) $step['delay_days'] : 0;
+						$before  = isset( $step['days_before_deadline'] ) ? (int) $step['days_before_deadline'] : 0;
+						$channel = isset( $step['channel'] ) ? (string) $step['channel'] : 'email';
+						$subject = isset( $step['subject'] ) ? (string) $step['subject'] : '';
+						$body    = isset( $step['body'] ) ? (string) $step['body'] : '';
+						$step_id = isset( $step['id'] ) ? (string) $step['id'] : ( 's' . (string) $num );
 						?>
 						<fieldset style="border:1px solid #ccd0d4; padding:12px 14px; margin:0 0 14px; max-width:720px;">
 							<legend><strong><?php echo esc_html( sprintf( /* translators: %d: step number */ __( 'Step %d', 'wedding-party-rsvp' ), $num ) ); ?></strong></legend>
-							<input type="hidden" name="<?php echo esc_attr( $field ); ?>[id]" value="<?php echo esc_attr( $step_id ); ?>">
+							<input type="hidden" name="<?php echo esc_attr( $field ); ?>[id]" form="<?php echo esc_attr( $fid ); ?>" value="<?php echo esc_attr( $step_id ); ?>">
 							<p>
-								<label><?php esc_html_e( 'Delay days (relative mode)', 'wedding-party-rsvp' ); ?>
-									<input type="number" name="<?php echo esc_attr( $field ); ?>[delay_days]" min="0" max="365" value="<?php echo esc_attr( (string) $delay ); ?>" style="width:5em;">
+								<label><?php esc_html_e( 'Days after previous message', 'wedding-party-rsvp' ); ?>
+									<input type="number" name="<?php echo esc_attr( $field ); ?>[delay_days]" form="<?php echo esc_attr( $fid ); ?>" min="0" max="365" value="<?php echo esc_attr( (string) $delay ); ?>" style="width:5em;">
 								</label>
 								&nbsp;
-								<label><?php esc_html_e( 'Days before deadline (deadline mode)', 'wedding-party-rsvp' ); ?>
-									<input type="number" name="<?php echo esc_attr( $field ); ?>[days_before_deadline]" min="0" max="365" value="<?php echo esc_attr( (string) $before ); ?>" style="width:5em;">
+								<label><?php esc_html_e( 'Days before RSVP deadline', 'wedding-party-rsvp' ); ?>
+									<input type="number" name="<?php echo esc_attr( $field ); ?>[days_before_deadline]" form="<?php echo esc_attr( $fid ); ?>" min="0" max="365" value="<?php echo esc_attr( (string) $before ); ?>" style="width:5em;">
 								</label>
 							</p>
 							<p>
-								<label><?php esc_html_e( 'Channel', 'wedding-party-rsvp' ); ?>
-									<select name="<?php echo esc_attr( $field ); ?>[channel]">
+								<label><?php esc_html_e( 'Send by', 'wedding-party-rsvp' ); ?>
+									<select name="<?php echo esc_attr( $field ); ?>[channel]" form="<?php echo esc_attr( $fid ); ?>">
 										<option value="email" <?php selected( $channel, 'email' ); ?>><?php esc_html_e( 'Email', 'wedding-party-rsvp' ); ?></option>
-										<option value="sms" <?php selected( $channel, 'sms' ); ?>><?php esc_html_e( 'SMS (Pro)', 'wedding-party-rsvp' ); ?></option>
+										<option value="sms" <?php selected( $channel, 'sms' ); ?>><?php esc_html_e( 'Text message (Pro)', 'wedding-party-rsvp' ); ?></option>
 									</select>
 								</label>
 							</p>
 							<p>
-								<label for="wgrsvp_drip_step_<?php echo esc_attr( (string) $i ); ?>_subject"><strong><?php esc_html_e( 'Subject', 'wedding-party-rsvp' ); ?></strong></label><br>
-								<input type="text" class="large-text" id="wgrsvp_drip_step_<?php echo esc_attr( (string) $i ); ?>_subject" name="<?php echo esc_attr( $field ); ?>[subject]" value="<?php echo esc_attr( $subject ); ?>">
+								<label for="wgrsvp_drip_step_<?php echo esc_attr( (string) $i ); ?>_subject"><strong><?php esc_html_e( 'Email subject', 'wedding-party-rsvp' ); ?></strong></label><br>
+								<input type="text" class="large-text" id="wgrsvp_drip_step_<?php echo esc_attr( (string) $i ); ?>_subject" name="<?php echo esc_attr( $field ); ?>[subject]" form="<?php echo esc_attr( $fid ); ?>" value="<?php echo esc_attr( $subject ); ?>">
 							</p>
 							<p>
-								<label for="wgrsvp_drip_step_<?php echo esc_attr( (string) $i ); ?>_body"><strong><?php esc_html_e( 'Body', 'wedding-party-rsvp' ); ?></strong></label><br>
-								<textarea class="large-text" rows="4" id="wgrsvp_drip_step_<?php echo esc_attr( (string) $i ); ?>_body" name="<?php echo esc_attr( $field ); ?>[body]"><?php echo esc_textarea( $body ); ?></textarea>
+								<label for="wgrsvp_drip_step_<?php echo esc_attr( (string) $i ); ?>_body"><strong><?php esc_html_e( 'Message', 'wedding-party-rsvp' ); ?></strong></label><br>
+								<textarea class="large-text" rows="4" id="wgrsvp_drip_step_<?php echo esc_attr( (string) $i ); ?>_body" name="<?php echo esc_attr( $field ); ?>[body]" form="<?php echo esc_attr( $fid ); ?>"><?php echo esc_textarea( $body ); ?></textarea>
 							</p>
 						</fieldset>
 						<?php
 					}
 					?>
 
-					<?php submit_button( __( 'Save drip journey', 'wedding-party-rsvp' ), 'primary', 'submit', false ); ?>
-				</form>
+					<?php
+					submit_button(
+						__( 'Save reminder series', 'wedding-party-rsvp' ),
+						'primary',
+						'wgrsvp_drip_save_submit',
+						false,
+						array( 'form' => self::FORM_SAVE_ID )
+					);
+					?>
 
 				<hr>
 
-				<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" style="display:inline-block; margin-right:12px;">
-					<input type="hidden" name="action" value="wgrsvp_drip_migrate">
-					<?php wp_nonce_field( 'wgrsvp_drip_migrate', 'wgrsvp_drip_migrate_nonce' ); ?>
-					<?php submit_button( __( 'Migrate deadline nudge → journey', 'wedding-party-rsvp' ), 'secondary', 'submit', false ); ?>
-				</form>
+				<p style="display:inline-block; margin-right:12px;">
+					<?php
+					submit_button(
+						__( 'Copy older deadline reminders into this series', 'wedding-party-rsvp' ),
+						'secondary',
+						'wgrsvp_drip_migrate_submit',
+						false,
+						array( 'form' => self::FORM_MIGRATE_ID )
+					);
+					?>
+				</p>
 
-				<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" style="display:inline-block;">
-					<input type="hidden" name="action" value="wgrsvp_drip_run_now">
-					<?php wp_nonce_field( 'wgrsvp_drip_run_now', 'wgrsvp_drip_run_now_nonce' ); ?>
-					<?php submit_button( __( 'Run due steps now', 'wedding-party-rsvp' ), 'secondary', 'submit', false ); ?>
-				</form>
+				<p style="display:inline-block;">
+					<?php
+					submit_button(
+						__( 'Send any due reminders now', 'wedding-party-rsvp' ),
+						'secondary',
+						'wgrsvp_drip_run_now_submit',
+						false,
+						array( 'form' => self::FORM_RUN_NOW_ID )
+					);
+					?>
+				</p>
 			</div>
 			<?php
+		}
+
+		/**
+		 * Queue detached admin-post form shells for admin_footer (outside any parent form).
+		 *
+		 * @return void
+		 */
+		public static function queue_form_shells() {
+			if ( self::$shells_queued ) {
+				return;
+			}
+			self::$shells_queued = true;
+			add_action( 'admin_footer', array( __CLASS__, 'render_form_shells' ) );
+		}
+
+		/**
+		 * Print empty form shells that drip fields associate with via form=.
+		 *
+		 * @return void
+		 */
+		public static function render_form_shells() {
+			$admin_post = admin_url( 'admin-post.php' );
+			?>
+			<form id="<?php echo esc_attr( self::FORM_SAVE_ID ); ?>" method="post" action="<?php echo esc_url( $admin_post ); ?>">
+				<input type="hidden" name="action" value="wgrsvp_drip_save">
+				<?php wp_nonce_field( 'wgrsvp_drip_save', 'wgrsvp_drip_save_nonce' ); ?>
+			</form>
+			<form id="<?php echo esc_attr( self::FORM_MIGRATE_ID ); ?>" method="post" action="<?php echo esc_url( $admin_post ); ?>">
+				<input type="hidden" name="action" value="wgrsvp_drip_migrate">
+				<?php wp_nonce_field( 'wgrsvp_drip_migrate', 'wgrsvp_drip_migrate_nonce' ); ?>
+			</form>
+			<form id="<?php echo esc_attr( self::FORM_RUN_NOW_ID ); ?>" method="post" action="<?php echo esc_url( $admin_post ); ?>">
+				<input type="hidden" name="action" value="wgrsvp_drip_run_now">
+				<?php wp_nonce_field( 'wgrsvp_drip_run_now', 'wgrsvp_drip_run_now_nonce' ); ?>
+			</form>
+			<?php
+		}
+
+		/**
+		 * Success / status notices after drip admin-post redirects.
+		 *
+		 * @return void
+		 */
+		public static function maybe_admin_notices() {
+			if ( ! is_admin() || ! current_user_can( 'manage_options' ) ) {
+				return;
+			}
+
+			// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only flash notices after redirect.
+			$saved = isset( $_GET['wgrsvp_drip_saved'] ) ? sanitize_text_field( wp_unslash( (string) $_GET['wgrsvp_drip_saved'] ) ) : '';
+			// phpcs:ignore WordPress.Security.NonceVerification.Recommended
+			$migrated = isset( $_GET['wgrsvp_drip_migrated'] ) ? sanitize_text_field( wp_unslash( (string) $_GET['wgrsvp_drip_migrated'] ) ) : '';
+			// phpcs:ignore WordPress.Security.NonceVerification.Recommended
+			$sent_raw = isset( $_GET['wgrsvp_drip_sent'] ) ? sanitize_text_field( wp_unslash( (string) $_GET['wgrsvp_drip_sent'] ) ) : '';
+			// phpcs:ignore WordPress.Security.NonceVerification.Recommended
+			$err_raw = isset( $_GET['wgrsvp_drip_err'] ) ? sanitize_text_field( wp_unslash( (string) $_GET['wgrsvp_drip_err'] ) ) : '';
+
+			if ( '1' === $saved ) {
+				echo '<div class="notice notice-success is-dismissible"><p>' . esc_html__( 'Automatic reminder series saved.', 'wedding-party-rsvp' ) . '</p></div>';
+			}
+			if ( '1' === $migrated ) {
+				echo '<div class="notice notice-success is-dismissible"><p>' . esc_html__( 'Your older deadline reminder settings were copied into this series. Review the messages, then click Save reminder series if you make changes.', 'wedding-party-rsvp' ) . '</p></div>';
+			}
+			if ( '' !== $sent_raw && is_numeric( $sent_raw ) ) {
+				$sent = (int) $sent_raw;
+				echo '<div class="notice notice-success is-dismissible"><p>';
+				printf(
+					/* translators: %d: number of reminder messages sent */
+					esc_html( _n( 'Sent %d due reminder.', 'Sent %d due reminders.', $sent, 'wedding-party-rsvp' ) ),
+					$sent
+				);
+				echo '</p></div>';
+			}
+			if ( '' !== $err_raw && 'false' !== $err_raw && '0' !== $err_raw ) {
+				echo '<div class="notice notice-error is-dismissible"><p>' . esc_html( $err_raw ) . '</p></div>';
+			}
 		}
 
 		/**
@@ -862,6 +977,10 @@ if ( ! class_exists( 'WGRSVP_Drip' ) ) {
 			$referer = wp_get_referer();
 			$base    = $referer ? $referer : admin_url( 'admin.php?page=wedding-rsvp-settings' );
 			$url     = add_query_arg( $args, $base );
+			// Return to the drip block after save so the success notice is visible in context.
+			if ( false === strpos( $url, '#' ) ) {
+				$url .= '#wgrsvp-drip-settings';
+			}
 			wp_safe_redirect( esc_url_raw( $url ) );
 			exit;
 		}

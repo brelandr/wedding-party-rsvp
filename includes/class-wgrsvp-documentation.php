@@ -97,6 +97,8 @@ class WGRSVP_Documentation {
 		echo '<nav class="wgrsvp-help-toc" aria-label="' . esc_attr__( 'Help table of contents', 'wedding-party-rsvp' ) . '" style="max-width:920px;margin:16px 0;padding:12px 16px;background:#fff;border:1px solid #dcdcde;border-radius:4px;">';
 		echo '<h2 style="margin-top:0;">' . esc_html__( 'Contents', 'wedding-party-rsvp' ) . '</h2>';
 		echo '<ul style="margin:0;columns:2;column-gap:24px;">';
+		echo '<li><a href="#wgrsvp-help-setup-guide">' . esc_html__( 'Wedding setup guide', 'wedding-party-rsvp' ) . '</a></li>';
+		echo '<li><a href="#wgrsvp-help-order-prints">' . esc_html__( 'Order prints (partners)', 'wedding-party-rsvp' ) . '</a></li>';
 		echo '<li><a href="#wgrsvp-help-gift-registries">' . esc_html__( 'Gift registry links (free)', 'wedding-party-rsvp' ) . '</a></li>';
 		echo '<li><a href="#wgrsvp-help-amazon">' . esc_html__( 'Amazon Associates (free)', 'wedding-party-rsvp' ) . '</a></li>';
 		echo '<li><a href="#wgrsvp-help-skimlinks">' . esc_html__( 'Skimlinks (free)', 'wedding-party-rsvp' ) . '</a></li>';
@@ -107,6 +109,8 @@ class WGRSVP_Documentation {
 		echo '<li><a href="#wgrsvp-help-pro-more">' . esc_html__( 'More Pro gift tools', 'wedding-party-rsvp' ) . '</a></li>';
 		echo '</ul></nav>';
 
+		self::render_setup_guide_help();
+		self::render_order_prints_help();
 		self::render_free_gift_registries();
 		self::render_amazon();
 		self::render_skimlinks();
@@ -129,6 +133,35 @@ class WGRSVP_Documentation {
 		echo '<span class="wgrsvp-help-pro-badge" style="display:inline-block;margin-left:8px;padding:2px 8px;border-radius:10px;background:#fcf0e3;color:#996800;font-size:12px;font-weight:600;vertical-align:middle;">';
 		echo esc_html__( 'Available in Pro', 'wedding-party-rsvp' );
 		echo '</span>';
+	}
+
+	/**
+	 * Wedding setup guide pointer.
+	 *
+	 * @return void
+	 */
+	private static function render_setup_guide_help() {
+		echo '<h2 id="wgrsvp-help-setup-guide">' . esc_html__( 'Wedding setup guide', 'wedding-party-rsvp' ) . '</h2>';
+		echo '<p>' . esc_html__( 'Use Wedding RSVP → Setup guide for an ordered checklist that walks a coordinator through first-time setup (RSVP page, menus, guests, testing, and optional reminders).', 'wedding-party-rsvp' ) . '</p>';
+		echo '<p>' . esc_html__( 'When Wedding Party RSVP Pro is active, extra Pro steps (license, form wording, communications, registry hub, seating, mobile app, and more) appear in the same guide automatically.', 'wedding-party-rsvp' ) . '</p>';
+		if ( class_exists( 'WGRSVP_Setup_Guide', false ) ) {
+			echo '<p><a class="button button-primary" href="' . esc_url( WGRSVP_Setup_Guide::url() ) . '">' . esc_html__( 'Open setup guide', 'wedding-party-rsvp' ) . '</a></p>';
+		}
+	}
+
+	/**
+	 * Order prints partners help.
+	 *
+	 * @return void
+	 */
+	private static function render_order_prints_help() {
+		echo '<h2 id="wgrsvp-help-order-prints">' . esc_html__( 'Order prints (partners)', 'wedding-party-rsvp' ) . '</h2>';
+		echo '<p>' . esc_html__( 'On the guest list, after you export place cards (CSV/PDF), the Order prints panel links to Printful, Canva, and Gelato so you can order place cards, seating posters, and related stationery.', 'wedding-party-rsvp' ) . '</p>';
+		echo '<p>' . esc_html__( 'These are optional third-party services. Opening a link happens in your browser; the plugin does not upload your guest list to the printer automatically. Export your file first, then upload or paste into the partner’s tools.', 'wedding-party-rsvp' ) . '</p>';
+		echo '<p>' . esc_html__( 'Affiliate disclosure: partner links may include tracking so Land Tech Web Designs (Wedding Party RSVP) can earn a commission at no extra cost to you. Affiliate destination URLs are configured on the weddingrsvp.pro network hub (Mobile App → hub settings) when Pro is active on the hub. Hide the panel under Settings → Frontend Display if you prefer not to see it.', 'wedding-party-rsvp' ) . '</p>';
+		if ( class_exists( 'WGRSVP_Print_Partners', false ) ) {
+			WGRSVP_Print_Partners::render_panel();
+		}
 	}
 
 	/**

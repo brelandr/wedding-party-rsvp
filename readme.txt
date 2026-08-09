@@ -4,7 +4,7 @@ Tags: wedding, rsvp, guest list, invitation, event management
 Requires at least: 6.2
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 8.2.11
+Stable tag: 8.2.12
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -21,7 +21,7 @@ Stop chasing replies across group chats and reconciling spreadsheets the week be
 * **Confidence at the venue** – One accurate count for who is attending, meals, and plus ones.
 * **Faster setup** – Getting started checklist, Next steps for pending RSVPs, straggler filters (missing email, phone, or address), plus **Live demo** (WordPress Playground) and **Try Premium** (InstaWP) links on the Plugins screen.
 
-**8.2.11** adds in-admin **Help** for free gift registry links (and Pro gift tools marked Available in Pro), plus WordPress.org compliance hardening. The free **Wedding RSVP** companion app is on [Google Play](https://play.google.com/store/apps/details?id=pro.weddingrsvp.companion); with **Pro**, guests can upload event photos from the app to your site gallery.
+**8.2.12** fixes Settings save confusion for gift registries and automatic guest reminders, and adds a wedding setup guide plus clearer dietary filters. The free **Wedding RSVP** companion app is on [Google Play](https://play.google.com/store/apps/details?id=pro.weddingrsvp.companion); with **Pro**, guests can upload event photos from the app to your site gallery.
 
 Guests sign in with a **Party ID** so households RSVP together. Collect adult entrée choices and dietary notes, set **event capacity limits**, and **export** the guest list when catering or your venue needs numbers.
 
@@ -191,6 +191,8 @@ This plugin does not call third-party APIs for core RSVP storage. Optional behav
 
 * **Skimlinks affiliate links (optional, off by default)** — When the site owner enables the Skimlinks option under the gift registry settings and provides their Skimlinks publisher ID, non-Amazon registry links are rewritten to the documented Skimlinks redirect format (`https://go.skimresources.com/?id=…&url=…`). When a guest clicks such a link, their browser is sent to **Skimlinks** (Taboola), which records the click for commission attribution and redirects to the destination store; the destination URL and standard request data (such as IP address and user agent) are processed by Skimlinks at that time. The plugin makes **no server-to-server calls** to Skimlinks and loads **no Skimlinks JavaScript**. An affiliate disclosure is shown automatically below the registry links while the feature is active. See the [Skimlinks Publisher Terms](https://skimlinks.com/publisher-terms-and-conditions/) and [Skimlinks Privacy Policy](https://skimlinks.com/privacy-policies/).
 
+* **Order prints partners (optional admin links)** — The guest list may show **Order prints** links to **Printful**, **Canva**, and **Gelato** so coordinators can order place cards and related stationery after exporting CSV/PDF. Opening a link is done in the administrator’s browser; the plugin makes **no server-to-server calls** and does **not** upload the guest list automatically. Links may include affiliate/referral tracking so **Land Tech Web Designs** can earn a commission at no extra cost to the site; an affiliate disclosure is shown with the panel. Destination URLs can be configured on the **weddingrsvp.pro** hub (Pro → Mobile App → hub settings). Site owners can hide the panel under **Settings → Frontend Display**. See [Printful Terms](https://www.printful.com/policies/terms-of-service), [Canva Terms](https://www.canva.com/policies/terms-of-use/), and [Gelato Terms](https://www.gelato.com/legal/terms).
+
 * **Caterer portal (optional magic link)** — **Wedding RSVP → Caterer portal** lets administrators generate a secret URL that shows a **read-only** meal summary by table on your own site. No off-site API is called; anyone with the link can view the summary until you revoke or regenerate the token.
 
 * **Client summary link (optional magic link)** — **Wedding RSVP → Client summary** lets administrators generate a secret URL that shows **aggregate** RSVP and meal/dietary **counts** on your own site (no guest names). No off-site API is called; anyone with the link can view the summary until you revoke or regenerate the token.
@@ -200,6 +202,15 @@ This plugin does not call third-party APIs for core RSVP storage. Optional behav
 This plugin bundles **FPDF** (version 1.86, © Olivier Plathey) under `includes/lib/fpdf/` for optional **Export check-in PDF** in the guest list. FPDF is free software; see the header comment in `fpdf.php` for license terms.
 
 == Changelog ==
+= 8.2.12 =
+
+* **Fix: Settings save buttons** — Automatic guest reminders no longer sit in the middle of the general Settings form with a primary Save button that looked like it saved gift registries / Amazon links. Reminder series moved below **Save Settings**, with an extra **Save Settings** control under Frontend Display (registries). Reminder fields save via their own button to `admin-post` (no nested-form breakage).
+* **UX** — Plain-language “Automatic guest reminders” copy explains the feature for non-developers; clearer who/when/message labels.
+* **Setup guide** — New **Wedding RSVP → Setup guide** checklist for first-time coordinators (RSVP page, menus, guests, testing, optional reminders).
+* **Order prints** — Optional partner links (Printful, Canva, Gelato) after place-card export; documented under External Services / Help.
+* **Guest table** — Dietary, allergy, and table filters use dropdowns fed from guest data.
+* **Settings** — Configurable dietary / allergy option lists and labels for the public RSVP form.
+
 = 8.2.11 =
 
 * **Help & Documentation** — New **Wedding RSVP → Help** admin page: guides for free gift registry links, Amazon Associates, and Skimlinks, plus plain-English docs for Pro gift tools (registry setup wizard, wish list, Stripe cash fund, gift CSV import) clearly marked **Available in Pro**. When Pro Documentation is present, Help links to the full Pro manuals.
