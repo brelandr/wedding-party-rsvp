@@ -76,6 +76,101 @@ function mountGuestHubFromPayload( root, hub, i18n ) {
 		card.appendChild( p );
 	}
 
+	const schedule = Array.isArray( hub.schedule ) ? hub.schedule : [];
+	if ( schedule.length ) {
+		const schedHeading = document.createElement( 'h4' );
+		schedHeading.className = 'wgrsvp-guest-hub__schedule-heading';
+		schedHeading.textContent =
+			hub.scheduleHeading || i18n.hubSchedule || 'Your schedule';
+		card.appendChild( schedHeading );
+		const sul = document.createElement( 'ul' );
+		sul.className = 'wgrsvp-guest-hub__schedule';
+		schedule.forEach( ( item ) => {
+			if ( ! item || typeof item !== 'object' ) {
+				return;
+			}
+			const li = document.createElement( 'li' );
+			const title = document.createElement( 'strong' );
+			title.textContent = item.title != null ? String( item.title ) : '';
+			li.appendChild( title );
+			if ( item.start ) {
+				li.appendChild(
+					document.createTextNode( ' — ' + String( item.start ) )
+				);
+			}
+			if ( item.status ) {
+				li.appendChild(
+					document.createTextNode( ' (' + String( item.status ) + ')' )
+				);
+			}
+			sul.appendChild( li );
+		} );
+		card.appendChild( sul );
+	}
+
+	const travel = hub.travel && typeof hub.travel === 'object' ? hub.travel : null;
+	const travelHeading =
+		( travel && travel.heading ) ||
+		hub.travelHeading ||
+		hub.hotel_name ||
+		'';
+	if (
+		travel ||
+		hub.hotel_url ||
+		hub.hotel_name ||
+		hub.travel_note
+	) {
+		const th = document.createElement( 'h4' );
+		th.className = 'wgrsvp-guest-hub__travel-heading';
+		th.textContent =
+			travelHeading || i18n.hubTravel || 'Travel & lodging';
+		card.appendChild( th );
+		const hotelName =
+			( travel && travel.hotelName ) || hub.hotel_name || '';
+		const hotelUrl = ( travel && travel.hotelUrl ) || hub.hotel_url || '';
+		const hotelCode =
+			( travel && travel.hotelCode ) || hub.hotel_code || '';
+		const cutoff =
+			( travel && travel.cutoff ) || hub.hotel_cutoff || '';
+		const note = ( travel && travel.note ) || hub.travel_note || '';
+		if ( hotelName ) {
+			const p = document.createElement( 'p' );
+			p.className = 'wgrsvp-guest-hub__hotel-name';
+			p.textContent = String( hotelName );
+			card.appendChild( p );
+		}
+		if ( hotelUrl ) {
+			const p = document.createElement( 'p' );
+			const a = document.createElement( 'a' );
+			a.className = 'wpr-button';
+			a.href = String( hotelUrl );
+			a.target = '_blank';
+			a.rel = 'noopener noreferrer';
+			a.textContent = i18n.hubHotelBook || 'Book lodging';
+			p.appendChild( a );
+			card.appendChild( p );
+		}
+		if ( hotelCode ) {
+			const p = document.createElement( 'p' );
+			p.className = 'wgrsvp-guest-hub__hotel-code';
+			p.textContent =
+				( i18n.hubHotelCode || 'Group code:' ) + ' ' + String( hotelCode );
+			card.appendChild( p );
+		}
+		if ( cutoff ) {
+			const p = document.createElement( 'p' );
+			p.className = 'wgrsvp-guest-hub__hotel-cutoff';
+			p.textContent = String( cutoff );
+			card.appendChild( p );
+		}
+		if ( note ) {
+			const p = document.createElement( 'p' );
+			p.className = 'wgrsvp-guest-hub__travel-note';
+			p.textContent = String( note );
+			card.appendChild( p );
+		}
+	}
+
 	const ul = document.createElement( 'ul' );
 	ul.className = 'wgrsvp-guest-hub__guests';
 	hub.guests.forEach( ( g ) => {

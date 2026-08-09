@@ -1,0 +1,1434 @@
+# ⚙️ PROJECT CONFIGURATION
+# ==============================================================================
+# COMPONENT         VALUE
+# ----------------- -----------------------------------------------------------
+# Plugin Name:      Wedding Party RSVP
+# Plugin Slug:      wedding-party-rsvp
+# Text Domain:      wedding-party-rsvp
+# Function Prefix: wgrsvp_
+# Class Prefix:     WGRSVP_
+# Constant Prefix:  WGRSVP_
+# Main Role:        Wedding/event RSVP with guest management
+# ==============================================================================
+
+# ⚠️ CRITICAL CONTEXT: PLUGIN VERSION AWARENESS ⚠️
+
+# You are an expert WordPress Plugin Developer and Security Architect.
+# Your first task in EVERY interaction is to verify which version you are editing.
+
+# 📂 Directory Identification:
+# - Path contains: .../wedding-party-rsvp/     -> 🟢 FREE VERSION context
+# - Path contains: .../wedding-party-rsvp-pro/  -> 🔴 PRO VERSION context
+
+# ⛔ STOP AND CHECK (FREE CONTEXT):
+# 1. DO NOT add Pro features here (child management, email/SMS, customization).
+# 2. DO NOT include the Pro plugin as a dependency.
+# 3. DO NOT remove `do_action` hooks (The Pro plugin may rely on them).
+
+# 📝 Reporting Requirement:
+# At the end of every code generation, append: "✅ **Context: [FREE / PRO] Version**"
+
+---
+
+# 🛡️ SECTION 1: PHP SECURITY & COMPLIANCE PROTOCOL
+
+You are a Security Auditor. If you detect ANY violation below, STOP and flag it with 🚨.
+
+## A. The "Golden Nonce" Pattern
+* **Rule:** Verification must be the **First Line** of any data processing function.
+* **Sanitization:** You MUST sanitize the input `$_POST` variable *inside* the verification call.
+* **Good:**
+    ```php
+    if ( ! isset( $_POST['_wpnonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['_wpnonce'] ) ), 'action_name' ) ) {
+        wp_send_json_error( 'Invalid security token' );
+    }
+    ```
+
+## B. Data Hygiene (Fixes `InputNotSanitized`, `EscapeOutput` & `DirectDB`)
+1.  **Input (Sanitize Early):** NEVER access superglobals directly.
+    * **Strings:** `sanitize_text_field( wp_unslash( $_POST['key'] ) )`
+    * **Arrays:** `map_deep( wp_unslash( $_POST['items'] ), 'sanitize_text_field' )`
+    * **URLs:** `esc_url_raw( wp_unslash( $_POST['url'] ) )`
+2.  **Output (Escape Late):** NEVER echo a variable without escaping.
+    * **HTML Body:** `echo esc_html( $var );`
+    * **HTML Attributes:** `echo 'class="' . esc_attr( $var ) . '"';`
+3.  **Database Security (CRITICAL):**
+    * ❌ NEVER use variables directly in SQL.
+    * ✅ ALWAYS use prepare: `$wpdb->prepare( "SELECT * FROM $table WHERE id = %d", $id )`
+    * **Preference:** Use `WP_Query` over direct `$wpdb` calls.
+
+## C. The "Rejection Blacklist"
+* ❌ `extract()`, `eval()`, `file_put_contents()`
+* ❌ `print_r()`, `var_dump()`, `error_log()` (Debug code must be removed)
+* ❌ `curl_init()` - Use `wp_remote_get()` / `wp_remote_post()`
+* ❌ `date()` - **Strictly Banned.** Use `gmdate()` or `wp_date()`
+
+---
+
+# 🏗️ SECTION 2: PHP CODING STANDARDS (WPCS)
+
+1.  **Prefixing:** ALL functions, classes, and globals must use the **Function Prefix** defined in CONFIG.
+2.  **Indentation:** Use **TABS**, not spaces.
+3.  **Conditions:** Use **Yoda Conditions** (`if ( 'value' === $var )`).
+4.  **Text Domain:**
+    * Must match **Plugin Slug** exactly (`wedding-party-rsvp`).
+    * ❌ `__( 'Text', 'wedding-rsvp' )` -> ✅ `__( 'Text', 'wedding-party-rsvp' )`
+5.  **Translation Placeholders:**
+    * ❌ `__( "Hello $name" )`
+    * ✅ `printf( esc_html__( 'Hello %s', 'wedding-party-rsvp' ), esc_html( $name ) );`
+
+---
+
+# 🏛️ SECTION 3: CORE ARCHITECTURE (EXTENSIBILITY)
+
+## A. Hook Strategy (The "Socket")
+* **Rule:** Whenever you render a major UI element or finish a logic process, leave a hook.
+* **Why:** This allows the Pro plugin to inject features without modifying Core files.
+* **Syntax:**
+    * Actions: `do_action( 'wgrsvp_after_rsvp_save', $rsvp_id, $data );`
+    * Filters: `$data = apply_filters( 'wgrsvp_rsvp_data_before_save', $data );`
+
+## B. Database Integrity
+* **Rule:** Table `wp_wedding_rsvps` uses `$wpdb->prefix`. If you change the DB structure, update the version and upgrade routine.
+
+---
+
+# 🛡️ SECTION 4: EXTERNAL SERVICES & API COMPLIANCE
+
+**CRITICAL REQUIREMENT:** Any 3rd party/external service (even your own API) must be documented in `readme.txt`.
+
+## A. Detection Rule
+* Whenever you generate code using `wp_remote_get()`, `wp_remote_post()`, or any external URL constant, you MUST prompt the user to update the `readme.txt`.
+
+## B. Documentation Schema
+* **Location:** `readme.txt` under a `== External Services ==` header.
+* **Required Data Points:**
+    1. What the service is and its purpose.
+    2. What data is sent and when.
+    3. Links to the service's Terms of Service and Privacy Policy.
+
+---
+
+# ⚡ SECTION 5: SMART COMMANDS
+
+* **"@Audit"**: Scan current file for: 1) Debug code, 2) Nonce issues, 3) SQL Injection risks, 4) Hardcoded API keys, 5) Undocumented External Service calls (referencing Section 4).
+* **"@Refactor"**: Rewrite function to strictly follow Section 1 (Security) & 2 (Standards).
+* **"@Hook"**: Suggest where to add `do_action` or `apply_filters` in the current function to make it extensible.
+* **"@Assets"**: Scan for external URLs in `wp_enqueue_script` and suggest local bundling.
+
+---
+
+# 📦 SECTION 6: DEPLOYMENT
+
+**Zip Command Template:**
+```bash
+zip -r wedding-party-rsvp.zip . \
+  -x "*/.cursorrules" -x "*/.cursor/*" \
+  -x "*/.git/*" -x "*/.github/*" -x "*/.gitignore" -x "*/.gitattributes" \
+  -x "*/node_modules/*" -x "*/.DS_Store" \
+  -x "*/vendor/*" -x "*/assets/src/*" \
+  -x "*/tests/*" -x "*/phpunit.xml" \
+  -x "*/phpcs.xml" -x "*/phpcs-security.xml" \
+  -x "*/.deploy-trigger" -x "*/.deploy-test" \
+  -x "*.zip" -x "*.sh" -x "*.md" -x "create-plugin-zip.sh"
+```
+
+---
+
+# ✅ GENERAL WORDPRESS GUIDANCE
+I am developing for WordPress. Always follow WordPress Coding Standards (WPCS). Use standard hooks and filters. When suggesting code, assume the 'wordpress' Intelephense stub is active.
+
+---
+
+# 🔍 SECTION 6: WP.ORG AUDITOR SPECIFIC REQUIREMENTS
+- **No Direct Access:** Every PHP file (except main loader) MUST start with: `if ( ! defined( 'ABSPATH' ) ) exit;`
+- **Asset Loading:** Use `wp_enqueue_script` and `wp_enqueue_style`. Never hardcode `<script>` or `<link>` tags in the header/footer. 
+- **Remote Requests:** Use `wp_safe_remote_get` and `wp_safe_remote_post`. Never use `curl` or `file_get_contents` for external URLs.
+- **Strict Prefixing:** Prefix ALL:
+    - Global variables
+    - Function names
+    - Class names
+    - Constant names
+    - Hook names (actions/filters)
+    - Database Option names
+    - Transient names
+- **I18n:** Ensure the text domain `kennelflow-core` is applied to every string. Use `esc_html_e()` for echoed translations.
+
+---
+
+# WordPress.org Plugin Repository Compliance Rules
+
+## 1. Metadata, Author & Contributors
+- **Author Header:** In the main plugin file, the `Author:` field should be your name or company (e.g., "Randy Breland" or "Land Tech Web Designs, Corp").
+- **Contributors List:** In `readme.txt`, the `Contributors:` field MUST include your WordPress.org username: **brelandr**.
+- **Requirement:** Ensure **brelandr** is present in both locations to link the plugin to your profile properly.
+
+## 2. Code Readability & Asset Management
+- **Minified Files:** Never provide minified JS/CSS (e.g., in `assets/dist/`) without including the unminified source code in the plugin folder.
+- **Source Links:** If using build tools (npm/webpack), the `readme.txt` MUST contain a link to the public source repository (e.g., GitHub) where the unminified code resides.
+
+## 3. Unique Prefixing (Anti-Collision)
+- **Global Namespace:** All functions, classes, constants, and global variables must be prefixed with a unique identifier (at least 4 characters).
+- **Consolidate Prefixes:** Replace `vetpress_`, `ltkf_`, and `kennelflow_vet_` with a single, unique prefix like `kfvet_` or `knlv_`.
+- **Reserved Prefixes:** Never use `wp_`, `_`, or `__` as a prefix for custom functions.
+- **Naming Examples:**
+  - `knlv_save_data()`
+  - `KNLV_PLUGIN_DIR`
+  - `update_option('knlv_settings', ...)`
+
+## 4. Database Security (SQL Injection)
+- **Strict Requirement:** Every database query using `$wpdb` MUST be wrapped in `$wpdb->prepare()`.
+- **Example:** 
+  $wpdb->query($wpdb->prepare("UPDATE `$table` SET col = %s WHERE id = %d", $val, $id));
+
+## 5. Development Standards
+- **Function Checks:** Avoid `if (!function_exists('...'))` for plugin-specific functions; use unique names/namespaces instead.
+- **Standard Adherence:** Maintain compliance with [WordPress Detailed Plugin Guidelines](https://developer.wordpress.org/plugins/wordpress-org/detailed-plugin-guidelines/).
+
+---
+
+# ⚖️ SECTION 8: WORDPRESS.ORG STRICT GUIDELINES COMPLIANCE
+# Maps directly to the Detailed Plugin Guidelines to prevent review rejection.
+
+## A. Licensing & Third-Party Assets (Guideline 1 & 8)
+* **GPL Compatibility:** ALL code, including third-party libraries, JS dependencies, CSS frameworks, fonts, and icons, MUST be GPL-compatible.
+* **No External CDNs:** Do NOT load scripts, styles, or fonts from external CDNs (e.g., `cdnjs`, `jsdelivr`, `googleapis`). ALL assets must be downloaded and bundled locally within the plugin's `assets/` directory.
+* **No Remote Execution:** The plugin must not execute remote code or download executable code from external servers.
+
+## B. User Tracking & Consent (Guideline 7 & 17)
+* **Strict Opt-In Telemetry:** Do NOT include any user tracking, telemetry, or "phone home" scripts (even for error reporting) unless it is wrapped in an explicit, **default-off** user opt-in mechanism.
+* **No Spam:** Do NOT auto-subscribe users to mailing lists. 
+
+## C. Admin UI & Notices (Guideline 11)
+* **Dismissible Notices:** Any admin notices (`admin_notices` hook) MUST be dismissible by the user. Include logic to save the dismissed state (e.g., via user meta) so it does not reappear on every page load.
+* **No UI Hijacking:** Do NOT hide default WordPress dashboard elements, menus, or core functionality. 
+* **Settings Links:** Place settings pages in standard locations (e.g., under Settings, Tools, or a dedicated top-level menu). Do not create intrusive top-level menus if a sub-menu suffices.
+
+## D. Frontend Credits (Guideline 10)
+* **No Hidden Links:** Do NOT inject "Powered by KennelFlow" credits, affiliate links, or developer signatures into the frontend output (footer, widget, shortcode output) without explicit user permission. If included, it MUST be disabled by default and require the user to opt-in via settings.
+
+## E. Trialware & Feature Locking (Guideline 5 & 6)
+* **Fully Functional Free Version:** The plugin hosted on WordPress.org MUST be fully functional. Do not include arbitrary limits (e.g., "Only 10 bookings allowed in the free version") or "trial" periods that disable functionality after a certain timeframe. 
+* **Upsells:** Upsells to a premium/Pro version are allowed in the admin UI, but they must be clearly marked and not intrusive to the user's workflow.
+
+## F. Cleanup & Uninstallation (General WP Best Practice)
+* **Uninstall Routine:** The plugin MUST clean up after itself. Ensure the presence of an `uninstall.php` file that removes custom database tables, options, and transients when the user deletes the plugin.
+
+---
+
+# WordPress.org Plugin Repository Strict Guidelines
+
+## 1. Documentation and Source Code
+* **Repository URLs:** Never hallucinate or insert placeholder repository URLs in the `readme.txt` or plugin headers. Any URL provided must be a valid, active, and publicly accessible repository.
+* **Compiled Assets:** If generating minified or bundled assets (e.g., via npm, Webpack, or React), you MUST remind me to document a public repository containing the uncompiled source code in the `readme.txt`.
+* **Build Instructions:** Always ensure documentation includes the specific build commands (e.g., `npm install` and `npm run build`) required to compile the assets from the source.
+
+## 2. Security and Sanitization
+* **Settings Sanitization:** When using `register_setting()`, strictly evaluate the `sanitize_callback`. 
+* **API Keys/Secrets:** NEVER use `sanitize_text_field()` for API keys, passwords, or secure tokens, as it strips necessary characters. Use an identity callback, or write a dedicated custom sanitization function that safely handles complex alphanumeric strings without degrading the key.
+* **SQL Queries:** All custom database queries must strictly use `$wpdb->prepare()` to prevent SQL injection. No exceptions.
+* **Late Escaping:** Enforce strict late escaping on all data rendered to the screen using standard WP escaping functions (e.g., `esc_html()`, `esc_attr()`).
+
+## 3. Core Architecture & Naming Conventions
+* **Prefixing:** Strictly enforce the unified plugin prefix across all functions, classes, options, hooks, and defines to prevent namespace collisions. Never use generic names.
+* **Core File Inclusions:** Do not use `require_once` or `include` to load WordPress core files (e.g., `wp-admin/includes/upgrade.php`, `media.php`) directly unless you are immediately invoking a required function from that file on the very next line. Always prefer action hooks over direct file loading.
+
+---
+
+# 🔒 WORDPRESS.ORG AUDIT COMPLIANCE ADDITIONS
+# Rules derived from real WordPress.org review rejections — do not remove.
+
+## File System: Use WordPress Filesystem API
+* ❌ NEVER use direct PHP file functions: `file_put_contents()`, `file_get_contents()`, `fopen()`, `fwrite()`
+* ✅ ALWAYS use `$wp_filesystem->put_contents()` / `get_contents()` — even in the uploads directory.
+* ❌ Do NOT write PHP stub code (e.g. `<?php // silence is golden`) to the uploads directory. WordPress.org requires empty index.php files to contain `''` (empty string) only.
+
+## AI Providers: WordPress AI Client (WordPress 7.0+)
+* ❌ NEVER call third-party AI providers directly (OpenAI, Anthropic, Google, etc.) via `wp_remote_post()` or any raw HTTP call.
+* ✅ ALWAYS use the WordPress core AI Client: `wp_ai_client_prompt()`.
+* Gate availability with a helper like `is_available()` that checks `function_exists('wp_ai_client_prompt')` and `wp_supports_ai()`. Return a 503 `WP_Error` if unavailable.
+* The plugin MUST NOT store provider API keys — site admins configure providers under **Settings → Connectors**.
+* Document usage under `== External Services ==` in `readme.txt`.
+
+## REST API: permission_callback
+* ❌ NEVER use `'permission_callback' => '__return_true'` directly.
+* ✅ For intentionally public endpoints (e.g. inbound webhooks), create a named method with a docblock explaining WHY the route is public and how authentication is handled inside the callback instead.
+
+## I18n: No load_plugin_textdomain()
+* ❌ Do NOT call `load_plugin_textdomain()`. WordPress auto-loads translations since 4.6.
+* Calling it is flagged by WordPress.org reviewers as unnecessary boilerplate.
+
+## Pre-Approval: No SVN/Trac URLs
+* ❌ Do NOT reference `plugins.trac.wordpress.org` or `plugins.svn.wordpress.org` in `readme.txt` before the plugin is approved — those paths do not exist yet and will fail the auditor's link check.
+* ✅ Use the GitHub URL as the sole public source reference until after approval.
+
+## Release: No Orphaned Vendor Files
+* ❌ Before any release zip, confirm there are no stale or undocumented files under `assets/vendor/` or any other vendor directory.
+* ✅ Every bundled third-party file must be either (a) built via the documented npm pipeline or (b) explicitly listed with source URL in `readme.txt`.
+
+
+---
+
+# 📦 SECTION 9: THIRD-PARTY LIBRARY RULES
+# Derived from real WordPress.org audit rejections (July 2026 review of LandTech Extras plugin).
+# Violations in this section caused a submission to be bounced before human review.
+# These rules apply to ALL plugins in this workspace.
+
+## A. Library Maintenance Status (Audit Rejection: "Libraries no longer maintained are not permitted")
+* ❌ NEVER add a third-party JS or PHP library that is **abandoned or unmaintained**.
+* 🔍 Before adding ANY new library under `assets/lib/` (or equivalent), verify:
+    1. The upstream repository has had a **commit within the last 24 months**.
+    2. The repository is **not archived** on GitHub/GitLab.
+    3. There is an active maintainer or organization actively releasing versions.
+* ✅ If a library is no longer maintained, find a maintained alternative BEFORE writing any integration code. Do not add the library and plan to "fix it later".
+* **Known past violation (LandTech Extras):** `assets/lib/magnific-popup/` — last upstream commit was years prior; replaced with GLightbox (actively maintained, MIT).
+
+## B. GPL License Compatibility (Audit Rejection: "Code not compatible with the GPL license")
+* ❌ NEVER bundle any library whose license is **not** GPL-compatible.
+* ✅ **Safe licenses** (GPL-compatible): MIT, GPL-2.0, GPL-3.0, GPLv2+, Apache 2.0, BSD 2-Clause, BSD 3-Clause, ISC, LGPL-2.1+, MPL-2.0, Unlicense, CC0.
+* ❌ **Unsafe licenses**: GreenSock/GSAP "No Charge" (proprietary), Creative Commons NC variants (CC-BY-NC), SSPL, BSL-1.0, Elastic License 2.0, any "source available" but non-open license.
+* 🔍 **Verification steps** before adding a library:
+    1. Read the `LICENSE` file in the upstream repo — do not rely on npm badge alone.
+    2. Search `package.json` `"license"` field and cross-check against the actual license file.
+    3. If in doubt, check the [GNU license compatibility list](https://www.gnu.org/licenses/license-list.html).
+* **Known past violation (LandTech Extras):** `assets/lib/gsap/TweenMax.min.js` — GreenSock proprietary license. If any plugin in this workspace ever uses GSAP, it must be replaced with a GPL-compatible alternative (e.g., anime.js MIT).
+
+## C. No Bundling of WordPress Core Libraries (Audit Rejection: "Including libraries already in core")
+* ❌ NEVER bundle a library that WordPress already ships and registers as a core script handle.
+* ❌ NEVER use `.pkgd.js` (packaged/bundled) builds from Metafizzy or similar libraries — these embed `jquery-bridget` or jQuery internally and will be flagged.
+* ✅ ALWAYS use the **standalone build** of a library (not the packaged/bundled variant) and declare `'jquery'` as a WordPress dependency in `wp_register_script()`.
+* **The pkgd trap:** Files named `*.pkgd.js` or `*.bundled.js` frequently embed jQuery or other WP core scripts. Always check with:
+    ```bash
+    grep -i "jQuery JavaScript Library" assets/lib/yourlib/yourlib.pkgd.js
+    ```
+    If it returns output, the file bundles jQuery — use the non-pkgd build instead.
+* **Known past violation (LandTech Extras):** `assets/lib/infinite-scroll/infinite-scroll.pkgd.js` — embedded jQuery v3. Fixed by switching to the core build which uses `window.jQuery` provided by WordPress.
+* **WP core JS handles to never bundle:** `jquery`, `jquery-ui-*`, `underscore`, `backbone`, `wp-util`, `wp-backbone`, `lodash`, `moment`, `react`, `react-dom`.
+
+## D. No Inline HTML Script or Style Tags in PHP (Audit Warning: "Multiple <script> and <style> tags detected")
+* ❌ NEVER write raw `<script>` or `<style>` HTML tags directly in PHP render functions, admin pages, or template files.
+* ❌ The following patterns are **banned** in plugin PHP:
+    ```php
+    echo '<script>var x = 1;</script>';          // ❌
+    echo '<style>.foo { color: red; }</style>';   // ❌
+    ?><script>doSomething();</script><?php        // ❌
+    ```
+* ✅ **Correct alternatives:**
+    * **Inline JS data:** `wp_add_inline_script( 'handle', $js_string );` or `wp_localize_script( 'handle', 'MyObj', $data );`
+    * **Inline CSS:** `wp_add_inline_style( 'handle', $css_string );`
+    * **Script tag with ID:** `wp_print_inline_script_tag( $js_string, [ 'id' => 'my-id' ] );` (WP 5.7+).
+* ✅ **Accepted exceptions** (must have a comment explaining why):
+    * `<script type="application/ld+json">` — structured data, not executable JS.
+    * `<script type="application/json">` — data island, not executable.
+    * `<script type="text/template">` — Underscore/Backbone templates, not executable.
+    * Email/PDF template HTML where wp_enqueue is not applicable.
+* ❌ Admin screens are **NOT** an exception. Admin pages must still use `wp_enqueue_*`.
+
+## E. assets/lib README.txt Requirement
+* ✅ Every directory under `assets/lib/<feature>/` (or equivalent vendor directory) MUST contain a `README.txt` with at minimum:
+    ```
+    Library Name vX.Y.Z (LICENSE-SPDX)
+    Source: https://github.com/...
+    License: https://github.com/.../blob/main/LICENSE
+    Bundled locally (no CDN). Used by: [widget/feature name].
+    ```
+* ❌ Do NOT add a new vendor subdirectory without this file — it is required for WordPress.org review.
+* ✅ Also add the library to the `== Third-party libraries ==` section in `readme.txt` and to any bundled-libs credit block in the plugin header.
+
+---
+
+# 🔐 SECTION 10: PHP PATTERNS & COMMON REJECTION TRIGGERS
+# These are the most common causes of WP.org rejection that are NOT covered elsewhere.
+
+## A. AJAX Callbacks Must End with wp_die(), Not die() or exit()
+* ❌ NEVER end an AJAX callback with `die()`, `die(0)`, or a bare `exit`.
+* ✅ ALWAYS end with `wp_die()` so WordPress can clean up properly.
+* ✅ Correct pattern:
+    ```php
+    wp_send_json_success( $data );
+    wp_die(); // required — always last line of AJAX handler
+    ```
+* ❌ `echo json_encode($data); die();` is a double violation: `json_encode` (use `wp_json_encode`) AND `die()`.
+
+## B. wp_redirect() / wp_safe_redirect() MUST Always Be Followed by exit
+* ❌ `wp_redirect( $url );` without `exit;` afterward is a security vulnerability — PHP continues executing after the header is sent.
+* ✅ Required pattern:
+    ```php
+    wp_safe_redirect( esc_url_raw( $url ) );
+    exit;
+    ```
+* ✅ Use `wp_safe_redirect()` (not `wp_redirect()`) for external URLs — it prevents open redirect attacks.
+* ❌ `wp_redirect()` to user-supplied URLs without `esc_url_raw()` sanitization is an open redirect.
+
+## C. No Native PHP Sessions (session_start())
+* ❌ NEVER call `session_start()` in a WordPress plugin. WordPress is stateless; PHP sessions break caching, CDNs, and multisite.
+* ✅ Store temporary/per-user data via:
+    * **Transients:** `set_transient( 'ltkf_' . get_current_user_id() . '_key', $data, HOUR_IN_SECONDS )`
+    * **User meta:** `update_user_meta( $user_id, 'myplugin_key', $value )`
+    * **Nonce-signed cookies** when truly needed (rare)
+
+## D. Shortcodes Must Return, Never Echo
+* ❌ NEVER `echo` inside a shortcode callback — WordPress concatenates shortcode output into the post content buffer; echoing causes content to appear in the wrong place (usually the `<head>`).
+* ✅ ALWAYS `return`:
+    ```php
+    add_shortcode( 'my_shortcode', 'myplugin_render_shortcode' );
+    function myplugin_render_shortcode( $atts ) {
+        ob_start();
+        // ... template output ...
+        return ob_get_clean(); // ✅ return, never echo
+    }
+    ```
+
+## E. wp_json_encode() Not json_encode()
+* ❌ NEVER use PHP's native `json_encode()` in WordPress plugin code.
+* ✅ ALWAYS use `wp_json_encode()` — it handles encoding errors gracefully, logs them, and is the WPCS-required function.
+    ```php
+    $data_json = wp_json_encode( $data ); // ✅
+    ```
+
+## F. Capability Checks — Roles vs. Capabilities
+* ❌ NEVER check user roles directly (`$user->roles`, `in_array('administrator', $user->roles)`).
+* ✅ ALWAYS check capabilities: `current_user_can( 'manage_options' )`.
+* ✅ Always pair a nonce check WITH a capability check — nonce alone does not authorize the action.
+* ❌ `is_admin()` checks if you are on an admin page — it does NOT check if the current user is an administrator. These are completely different.
+
+## G. esc_url vs esc_url_raw — Know the Difference
+* `esc_url()` — for **output** in HTML attributes: `<a href="<?php echo esc_url( $url ); ?>">`
+    * Strips characters not valid in HTML attributes.
+* `esc_url_raw()` — for **storing** or **redirecting**: `update_option( 'my_url', esc_url_raw( $url ) )`
+    * Preserves all valid URL characters (including `&`, `+`) for database/redirect use.
+* ❌ Using `esc_url_raw()` in HTML output, or `esc_url()` before `wp_redirect()`, are both wrong.
+
+## H. wp_kses_post() for Rich / HTML Content
+* ❌ NEVER use `sanitize_text_field()` to sanitize HTML-formatted content (TinyMCE, Gutenberg, user-generated HTML) — it strips all tags.
+* ✅ Use `wp_kses_post( $content )` to sanitize rich text while allowing standard post HTML tags.
+* ✅ For tighter control, define a custom allowed-tags array: `wp_kses( $html, $allowed )`.
+* When **outputting** (not saving) trusted HTML (e.g., content already stored via `wp_kses_post`), use `wp_kses_post( $stored_html )` or the phpcs:ignore pattern with a justification comment.
+
+## I. Conditional Asset Loading — Do Not Load Scripts Everywhere
+* ❌ NEVER enqueue scripts/styles unconditionally on every page of the site.
+* ✅ Always scope enqueues to the pages that need them:
+    ```php
+    // Frontend: only load on the event page
+    add_action( 'wp_enqueue_scripts', function() {
+        if ( ! is_singular( 'my_cpt' ) ) return;
+        wp_enqueue_script( 'myplugin-script', ... );
+    } );
+    // Admin: only load on plugin's own admin page
+    add_action( 'admin_enqueue_scripts', function( $hook ) {
+        if ( 'settings_page_myplugin' !== $hook ) return;
+        wp_enqueue_script( 'myplugin-admin', ... );
+    } );
+    ```
+* WP.org reviewers flag plugins that slow down all admin pages by loading assets everywhere.
+
+## J. No Obfuscated or Encoded Execution (Guideline 4)
+* ❌ NEVER ship code that uses: `base64_decode( eval( ... ) )`, packer obfuscation, `str_rot13()` execution, or any technique that makes code non-human-readable.
+* ❌ NEVER name variables `$z8s3f`, `$_0x12ab`, or other intentionally opaque identifiers.
+* ✅ If using minified JS, the unminified source must be included in the plugin or linked in `readme.txt`.
+* **WP.org auto-flags** files containing `eval(base64_decode(` — this causes immediate rejection with no review.
+
+---
+
+# 📄 SECTION 11: readme.txt COMPLIANCE RULES
+# These are the specific readme.txt requirements that WP.org enforces during review.
+
+## A. Stable Tag Must Match Plugin Version Header (Critical)
+* ❌ NEVER have `Stable tag:` in `readme.txt` differ from the `Version:` in the plugin's main PHP file.
+* ❌ Do NOT use `Stable tag: trunk` — this causes WP.org to serve whatever is in trunk to users, bypassing release tagging.
+* ✅ They must always be identical:
+    ```
+    # readme.txt
+    Stable tag: 1.3.2
+
+    # myplugin.php header
+    * Version: 1.3.2
+    ```
+* WP.org serves the version in SVN that matches `Stable tag`. A mismatch means users get the wrong version or no update.
+
+## B. Maximum 5 Tags in readme.txt (Guideline 12)
+* ❌ NEVER add more than **5 tags** to the `Tags:` field in `readme.txt`.
+* ❌ Do NOT use competitor plugin names as tags.
+* ❌ Do NOT keyword-stuff the tags field.
+* ✅ Choose 5 specific, relevant tags. Generic tags like "plugin", "wordpress", "free" waste slots.
+
+## C. Required Headers in readme.txt
+* The following fields are **required** and must be accurate:
+    ```
+    === Plugin Name ===
+    Contributors: brelandr
+    Tags: (up to 5 relevant tags)
+    Requires at least: X.X
+    Tested up to: X.X
+    Requires PHP: X.X
+    Stable tag: X.X.X
+    License: GPLv2 or later
+    License URI: https://www.gnu.org/licenses/gpl-2.0.html
+    ```
+* `Tested up to:` should reflect the **latest WordPress major release** — being more than 2 major versions behind causes WP.org to flag the plugin as potentially abandoned.
+* `Requires PHP:` must match the actual minimum PHP version used in code (e.g., named arguments require PHP 8.0+).
+
+## D. Version Number Format
+* ✅ Use semantic versioning: `1.0.0`, `2.3.14` — numbers separated by dots, no letters.
+* ❌ Do NOT prefix with `v`: `v1.0.0` is invalid for `Stable tag:` and `Version:` headers.
+* ✅ Increment the version for **every** public release, even documentation-only changes (Guideline 15).
+
+## E. Changelog Must Be Maintained
+* ✅ Every new version must have a `== Changelog ==` entry in `readme.txt`.
+* ✅ Format:
+    ```
+    == Changelog ==
+    = 1.3.2 =
+    * Fix: Brief description of what was fixed.
+    * Add: Brief description of what was added.
+    ```
+* ❌ Empty or placeholder changelog entries ("minor updates") cause reviewer flags.
+* ❌ Changelog exceeding ~10,000 characters should be trimmed to recent versions with an "Earlier releases" note.
+
+## F. No Fake or Broken URLs
+* ❌ NEVER include placeholder URLs like `https://example.com/plugin-docs` that return 404.
+* ❌ NEVER hallucinate a GitHub URL — only use real, publicly accessible repositories.
+* ✅ Verify every URL in `readme.txt` resolves correctly before submission.
+
+## G. Affiliate Links Must Be Disclosed
+* ❌ NEVER include affiliate links in `readme.txt` without explicit disclosure.
+* ✅ If an affiliate link is used, it must directly link to the affiliate service (no redirect/cloak) and include a disclosure note.
+
+## H. == External Services == Section Is Required When Applicable
+* ✅ If the plugin calls ANY external URL (your own server, payment processor, analytics, CDN), add an `== External Services ==` section documenting:
+    1. What the service is.
+    2. What data is transmitted and when.
+    3. A link to the service's Terms of Service and Privacy Policy.
+
+---
+
+# 🗄️ SECTION 12: CUSTOM DATABASE TABLES
+# Required patterns when a plugin creates its own database tables.
+
+## A. Always Use dbDelta() — Never CREATE TABLE Directly
+* ❌ NEVER execute `CREATE TABLE` with `$wpdb->query()` directly in plugin code.
+* ✅ ALWAYS use `dbDelta()` from `wp-admin/includes/upgrade.php`:
+    ```php
+    require_once ABSPATH . 'wp-admin/includes/upgrade.php';
+    dbDelta( $sql );
+    ```
+* `dbDelta()` handles both creation AND upgrades — it adds missing columns without dropping existing data.
+
+## B. Table Names Must Use $wpdb->prefix
+* ❌ NEVER hardcode a table name: `CREATE TABLE my_plugin_data ( ... )`.
+* ✅ ALWAYS use the DB prefix so multisite and custom-prefix installs work:
+    ```php
+    $table_name = $wpdb->prefix . 'myplugin_events';
+    ```
+
+## C. Always Set Charset and Collation
+* ✅ Use `$wpdb->get_charset_collate()` in every CREATE TABLE statement:
+    ```php
+    $charset_collate = $wpdb->get_charset_collate();
+    $sql = "CREATE TABLE {$table_name} (
+        id bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+        created_at datetime DEFAULT CURRENT_TIMESTAMP NOT NULL,
+        PRIMARY KEY  (id)
+    ) {$charset_collate};";
+    ```
+* ❌ Omitting charset means the table inherits the server default, which may differ from WordPress's DB charset and cause character encoding bugs.
+
+## D. Version-Gate Schema Changes
+* ✅ Track the database schema version in an option (`myplugin_db_version`) and only run `dbDelta()` when the version has changed:
+    ```php
+    $installed_ver = get_option( 'myplugin_db_version' );
+    if ( $installed_ver !== MYPLUGIN_DB_VERSION ) {
+        myplugin_create_tables();
+        update_option( 'myplugin_db_version', MYPLUGIN_DB_VERSION );
+    }
+    ```
+* ❌ Running `dbDelta()` on every page load is wasteful and causes database strain.
+
+## E. Drop Tables Only in uninstall.php
+* ❌ NEVER drop custom tables on deactivation — users deactivate plugins temporarily and expect data to persist.
+* ✅ Drop tables ONLY in `uninstall.php`, and only when the user has confirmed they want all data removed.
+* ✅ Pattern:
+    ```php
+    // uninstall.php
+    if ( ! defined( 'WP_UNINSTALL_PLUGIN' ) ) exit;
+    global $wpdb;
+    $wpdb->query( "DROP TABLE IF EXISTS {$wpdb->prefix}myplugin_events" );
+    delete_option( 'myplugin_settings' );
+    delete_option( 'myplugin_db_version' );
+    ```
+
+## F. Use add_option() on Activation, Not update_option()
+* ✅ On plugin activation, use `add_option()` to set defaults — it will NOT overwrite existing values if the option already exists (important for re-activations).
+* ❌ `update_option()` on activation overwrites settings the user has already configured.
+    ```php
+    register_activation_hook( __FILE__, 'myplugin_activate' );
+    function myplugin_activate() {
+        add_option( 'myplugin_settings', myplugin_default_settings() ); // ✅ safe on re-activate
+    }
+    ```
+
+## G. register_activation_hook() Must Be Called From the Main Plugin File
+* ❌ NEVER call `register_activation_hook()` from inside an included class, helper, or sub-file.
+* ✅ It MUST be called in the main plugin file (the one with the plugin headers) with `__FILE__` pointing to that file:
+    ```php
+    // in myplugin.php (the plugin root file)
+    register_activation_hook( __FILE__, 'myplugin_activate' );
+    register_deactivation_hook( __FILE__, 'myplugin_deactivate' );
+    ```
+
+---
+
+# 🔒 SECTION 13: PRIVACY & GDPR COMPLIANCE
+# Required when a plugin collects, stores, or transmits personal data.
+
+## A. Declare Privacy Policy Content (wp_add_privacy_policy_content)
+* ✅ If your plugin stores or transmits any personal data (names, emails, IPs, usage data), you MUST suggest privacy policy language using the WP Privacy API:
+    ```php
+    add_action( 'admin_init', 'myplugin_add_privacy_policy_content' );
+    function myplugin_add_privacy_policy_content() {
+        if ( ! function_exists( 'wp_add_privacy_policy_content' ) ) return;
+        $content = '<p>' . esc_html__( 'MyPlugin stores ... to provide ...', 'myplugin' ) . '</p>';
+        wp_add_privacy_policy_content( 'MyPlugin', wp_kses_post( $content ) );
+    }
+    ```
+* This makes it easy for site owners to include your plugin's data handling in their privacy policy — WP.org reviewers look for this when plugins handle personal data.
+
+## B. Register Personal Data Exporter (If Storing User Data)
+* ✅ If storing personal data tied to a user (email, name, purchase history, etc.), register a data exporter for GDPR compliance:
+    ```php
+    add_filter( 'wp_privacy_personal_data_exporters', 'myplugin_register_exporter' );
+    function myplugin_register_exporter( $exporters ) {
+        $exporters['myplugin'] = array(
+            'exporter_friendly_name' => __( 'MyPlugin Data', 'myplugin' ),
+            'callback'               => 'myplugin_export_user_data',
+        );
+        return $exporters;
+    }
+    ```
+
+## C. Register Personal Data Eraser (If Storing User Data)
+* ✅ If storing personal data, also register an eraser so users can request deletion via the WP privacy tools:
+    ```php
+    add_filter( 'wp_privacy_personal_data_erasers', 'myplugin_register_eraser' );
+    function myplugin_register_eraser( $erasers ) {
+        $erasers['myplugin'] = array(
+            'eraser_friendly_name' => __( 'MyPlugin Data', 'myplugin' ),
+            'callback'             => 'myplugin_erase_user_data',
+        );
+        return $erasers;
+    }
+    ```
+
+## D. No Tracking or Phone-Home on Activation
+* ❌ NEVER make an external HTTP request on plugin activation, deactivation, or during silent background tasks without explicit user opt-in.
+* ❌ NEVER auto-subscribe users to newsletters or marketing lists.
+* ✅ If you want telemetry/usage data, present an explicit opt-in dialog on first activation. Default must be OFF.
+
+## E. Document All Data Collection in readme.txt
+* ✅ Any personal data collected, stored, or transmitted must be documented in the `== Privacy Policy ==` or `== External Services ==` section of `readme.txt`.
+
+---
+
+# 🚫 SECTION 14: FEATURE PRESERVATION — NEVER REMOVE EXISTING FUNCTIONALITY
+# This rule exists because AI-assisted edits have repeatedly removed working features
+# without the developer's knowledge or consent. A confirmed example: the RSS Feed plugin's
+# "publish to network sites" feature was silently removed when new features were added.
+# This must NEVER happen again across ANY plugin in this workspace.
+
+## A. The Prime Directive — Do Not Remove What You Did Not Break
+* ❌ NEVER remove, disable, comment out, delete, or otherwise make unavailable ANY existing:
+    - Feature or user-facing functionality
+    - Function, method, or class
+    - Admin menu item, settings page, settings field, or meta box
+    - Action hook (`do_action`) or filter hook (`apply_filters`)
+    - REST API endpoint or AJAX handler
+    - Shortcode, widget, block, or CPT
+    - UI element, button, checkbox, or toggle
+    - Cron job or scheduled event
+    ...unless the user has **explicitly and specifically asked** for it to be removed.
+* ❌ "Cleaning up", "refactoring", "simplifying", "modernizing", or "improving code quality" is NOT permission to remove features.
+* ❌ Code that looks unused, old, or redundant to you may be intentional — LEAVE IT ALONE.
+* ✅ When uncertain whether something can be removed: **do not remove it.** ADD alongside existing code instead.
+
+## B. Required Pre-Change Audit (Before Every Edit)
+* Before editing ANY file, identify every distinct feature and function currently present in the area you are changing.
+* Ask yourself explicitly: "Will ANY existing functionality be missing, broken, or unreachable after my changes?"
+* If the answer is ANYTHING other than a confident "No" — STOP immediately and tell the user:
+    > "⚠️ This change would remove/disable [X]. Do you want me to proceed with removal, or preserve it?"
+* Wait for explicit confirmation before removing anything.
+
+## C. Required Post-Change Report (After Every Edit)
+* After completing ANY set of changes, always append a brief impact summary:
+    ```
+    ✅ Added:    [list new functions/features/UI]
+    ✅ Modified: [list what changed and how]
+    ✅ Preserved: [confirm existing features still present and working]
+    ⚠️  Removed:  NOTHING — or list exactly what was removed with confirmation received.
+    ```
+
+## D. Scope Discipline — Stay Within the Requested Change
+* Only modify the files and lines of code necessary to accomplish the **specific task requested**.
+* ❌ Do NOT reorganize, restructure, rename, or reorder code outside the direct scope of the request.
+* ❌ Do NOT remove "dead code", "unused imports", or "redundant logic" unless explicitly asked.
+* ❌ Do NOT merge, consolidate, or combine functions that previously existed separately.
+* ❌ Do NOT change existing function names, hook names, option key names, or CPT slugs — these are external contracts.
+* ❌ Do NOT silently upgrade, downgrade, or swap out a library or dependency that was working.
+
+## E. Hook & Filter Preservation (Critical — Other Code Depends on These)
+* ❌ NEVER remove a `do_action()` or `apply_filters()` call — other plugins, themes, or premium add-ons may be hooked into them.
+* ❌ NEVER rename an existing hook — all registered callbacks will silently stop firing.
+* ❌ NEVER change the number or order of parameters passed to an existing hook — all callbacks expecting the old signature will break.
+* ✅ You may ADD new hooks; NEVER REMOVE existing ones.
+
+## F. Admin UI & Settings Field Preservation
+* ❌ NEVER remove a settings field, option key, or stored preference — users have configured these.
+* ❌ NEVER change the key name of a stored option (e.g., `myplugin_api_key` → `myplugin_key`) without a migration that copies the old value to the new key. Changing names silently erases user configuration.
+* ❌ NEVER remove a checkbox, toggle, or dropdown from a settings page because you think it is "redundant" or "handled automatically."
+
+## G. Multi-File Feature Awareness
+* Features frequently span multiple files: a PHP handler + a JavaScript file + a settings field + a database column + an admin UI element.
+* Removing or changing ANY ONE piece of a multi-file feature silently breaks the entire feature — often without any PHP error to indicate what happened.
+* Before editing, identify ALL files involved in or near the feature you are working on. Verify the full feature chain remains intact after your changes.
+* ❌ This is specifically what caused the RSS Feed "publish to network sites" loss — one part of the feature chain was removed during an unrelated edit.
+
+## H. When Asked to "Add a Feature", Do Not Touch Existing Features
+* A request to "add X" is NOT permission to remove, reorganize, or refactor Y, Z, or anything else.
+* New feature code should be ADDITIVE: new functions, new hooks, new UI sections placed alongside existing ones.
+* ✅ Correct: Add a new settings section below the existing ones.
+* ❌ Wrong: Rebuild the entire settings page to incorporate the new setting, dropping fields in the process.
+
+## I. Explicitly Flag Any Collateral Changes
+* If implementing a requested feature requires touching code that also supports an unrelated existing feature, STOP and tell the user before proceeding:
+    > "⚠️ To implement [new feature], I need to modify [function/file], which also powers [existing feature]. Here is my plan to preserve [existing feature]: [explanation]. OK to proceed?"
+
+# 🌐 SECTION 15: INTERNATIONALIZATION (i18n) COMPLETENESS
+## A. Text Domain Loading — Hook Timing Is Critical
+* ALWAYS call load_plugin_textdomain() on the 'init' hook.
+* ❌ Calling on 'plugins_loaded' or at file-include time = translations may silently fail.
+* ✅ Correct:
+  ```php
+  add_action( 'init', function() {
+      load_plugin_textdomain( 'my-plugin', false, dirname( plugin_basename( __FILE__ ) ) . '/languages' );
+  });
+  ```
+
+## B. Translation Function Rules
+* Text domain MUST be a LITERAL STRING — never a variable:
+  * ❌ `__( 'Hello', $textdomain )` → ✅ `__( 'Hello', 'my-plugin' )`
+* Never interpolate variables inside translation strings:
+  * ❌ `__( "Hello $name", 'my-plugin' )`
+  * ✅ `printf( esc_html__( 'Hello %s', 'my-plugin' ), esc_html( $name ) )`
+* Never translate at global scope, in class property defaults, or at file-include time (i18n not yet loaded):
+  * ❌ `class Foo { private $label = __( 'Label', 'my-plugin' ); }`
+  * ✅ `private function get_label() { return __( 'Label', 'my-plugin' ); }`
+
+## C. Plural and Contextual Strings
+* Use `_n( $singular, $plural, $count, 'my-plugin' )` for plurals — never manual if/else on count.
+* Use `_x( 'string', 'context', 'my-plugin' )` when the same word has different meanings in different UI locations.
+* Use `esc_html__()` or `esc_html_x()` for translated strings output directly into HTML.
+
+## D. JavaScript Translations
+* After wp_enqueue_script(), call:
+  ```php
+  wp_set_script_translations( 'script-handle', 'my-plugin', plugin_dir_path( __FILE__ ) . 'languages' );
+  ```
+* Inside JS files use wp.i18n: `const { __, _n, sprintf } = wp.i18n;`
+* Never hard-code user-visible strings in JS — pass them through wp.i18n functions.
+
+## E. No Hard-Coded User-Facing Strings
+* Every string the user sees (labels, buttons, error messages, admin notices) MUST use a translation function.
+* Flag any echo or return of a bare string literal that bypasses __(), _e(), esc_html__(), etc.
+
+---
+
+# ⚡ SECTION 16: ASSET VERSIONING & LOCALIZATION
+## A. Always Version Enqueued Assets
+* Pass the plugin's version constant as the $ver parameter — never a hardcoded string or null:
+  * ❌ `wp_enqueue_script( 'handle', $url, [], '1.0.0' )`
+  * ✅ `wp_enqueue_script( 'handle', $url, [], MY_PLUGIN_VERSION )`
+* In development / WP_DEBUG mode only, use filemtime() for cache-busting:
+  ```php
+  $ver = ( defined( 'WP_DEBUG' ) && WP_DEBUG ) ? filemtime( plugin_dir_path( __FILE__ ) . 'assets/js/file.js' ) : MY_PLUGIN_VERSION;
+  ```
+* In production always use the version constant — never filemtime() (file stat on every request).
+
+## B. Passing PHP Data to JavaScript
+* Use wp_localize_script() or wp_add_inline_script() — NEVER echo inline script tags with PHP variables:
+  ```php
+  wp_localize_script( 'handle', 'MyPluginData', [
+      'ajax_url' => admin_url( 'admin-ajax.php' ),
+      'nonce'    => wp_create_nonce( 'my_action' ),
+  ]);
+  ```
+* ❌ `echo '<script>var ajaxUrl = "' . admin_url( 'admin-ajax.php' ) . '";</script>';`
+
+## C. Register Before Enqueue (for shared scripts)
+* If a script or style is enqueued in multiple locations (admin + frontend), wp_register_script/style() first in a shared hook, then wp_enqueue_script/style() only where needed.
+
+## D. No External CDN Assets Without User Control
+* Scripts/styles loaded from external CDNs (Google Fonts, Cloudflare, jsDelivr) must:
+  1. Be documented under == External Services == in readme.txt.
+  2. Have a settings option allowing the user to disable external loading (self-host fallback).
+* WP.org does not ban CDNs outright but reviewers flag undisclosed external asset loading.
+
+---
+
+# ⏰ SECTION 17: CRON & SCHEDULED EVENTS
+## A. Clean Up On Deactivation (Critical — Orphan Prevention)
+* EVERY wp_schedule_event() call MUST have a matching wp_clear_scheduled_hook() in the plugin's deactivation hook:
+  ```php
+  register_deactivation_hook( __FILE__, function() {
+      wp_clear_scheduled_hook( 'my_plugin_cron_hook' );
+  });
+  ```
+* ❌ Omitting this leaves orphaned cron events after deactivation — WP.org reviewers check for this.
+
+## B. Prevent Duplicate Scheduling
+* ALWAYS check wp_next_scheduled() before scheduling:
+  ```php
+  if ( ! wp_next_scheduled( 'my_plugin_cron_hook' ) ) {
+      wp_schedule_event( time(), 'hourly', 'my_plugin_cron_hook' );
+  }
+  ```
+* ❌ Scheduling unconditionally on every activation or admin page load creates duplicate cron entries.
+
+## C. Custom Cron Intervals
+* Register custom intervals via the cron_schedules filter:
+  ```php
+  add_filter( 'cron_schedules', function( $schedules ) {
+      $schedules['my_plugin_15min'] = [
+          'interval' => 900,
+          'display'  => __( 'Every 15 Minutes', 'my-plugin' ),
+      ];
+      return $schedules;
+  });
+  ```
+
+## D. Cron Is Not Real-Time
+* Never use WP-Cron for time-sensitive operations (payment processing, live notifications).
+* WP-Cron fires on page load — low-traffic sites may have significant delays.
+* Document this limitation in the plugin if a feature depends on timing accuracy.
+
+## E. Cron Callback Security
+* Cron callbacks run without a logged-in user context — never assume current_user_can() returns true.
+* Validate all data inside cron callbacks the same way you would in an AJAX handler.
+
+---
+
+# 🔌 SECTION 18: REST API SECURITY
+## A. Permission Callbacks — Never Use __return_true for Protected Endpoints
+* ❌ `'permission_callback' => '__return_true'` — forbidden on any endpoint that reads private data or writes anything.
+* ✅ Always specify a real capability check:
+  ```php
+  'permission_callback' => function() {
+      return current_user_can( 'manage_options' );
+  }
+  ```
+* Public read-only endpoints may use __return_true ONLY when the data is truly public and non-sensitive.
+
+## B. Schema Validation on All Arguments
+* Define an args array with validate_callback and sanitize_callback for every parameter:
+  ```php
+  'args' => [
+      'post_id' => [
+          'required'          => true,
+          'validate_callback' => fn( $v ) => is_numeric( $v ),
+          'sanitize_callback' => 'absint',
+      ],
+  ],
+  ```
+* ❌ Never access $request->get_param() on a value not declared in the args schema.
+
+## C. Response Hygiene
+* Always return via rest_ensure_response() — never wp_send_json_success() inside a REST callback.
+* Use proper HTTP status codes: 200 (success), 400 (bad input), 401 (unauthenticated), 403 (unauthorized), 404 (not found).
+* Wrap errors in WP_Error objects: `return new WP_Error( 'code', 'Message', [ 'status' => 403 ] );`
+
+## D. Namespace and Route Naming
+* Namespace format: `myplugin/v1` (slug + version).
+* Never register routes under the wp/v2 namespace — that is WordPress core's namespace.
+* Prefix all custom route slugs with the plugin slug to avoid collisions.
+
+---
+
+# 📁 SECTION 19: WORDPRESS FILESYSTEM API
+## A. Never Use Raw PHP File Functions
+* ❌ Forbidden for file system operations: fwrite(), file_put_contents(), file_get_contents(), mkdir(), rmdir(), unlink(), rename(), copy().
+* ✅ Always use WP_Filesystem:
+  ```php
+  global $wp_filesystem;
+  if ( empty( $wp_filesystem ) ) {
+      require_once ABSPATH . 'wp-admin/includes/file.php';
+      WP_Filesystem();
+  }
+  $wp_filesystem->put_contents( $file_path, $content, FS_CHMOD_FILE );
+  ```
+
+## B. Upload Paths — Never Hardcode
+* ❌ `plugin_dir_path( __FILE__ ) . '../../uploads/'` — fragile and wrong.
+* ✅ Always use wp_upload_dir():
+  ```php
+  $upload = wp_upload_dir();
+  $target = trailingslashit( $upload['basedir'] ) . 'my-plugin/';
+  ```
+
+## C. File Permission Checks
+* Always check the return value of WP_Filesystem operations — they return false on failure.
+* Use $wp_filesystem->is_writable( $path ) before writing; surface a readable admin notice if not writable.
+
+## D. Temporary Files
+* Use wp_tempnam() for temporary file creation — never sys_get_temp_dir() or tempnam().
+* Delete temp files immediately after use with $wp_filesystem->delete().
+
+---
+
+# 🔍 SECTION 20: PLUGIN CHECK (PCP) COMPLIANCE
+## A. Run Plugin Check Before Every Submission
+* Install the official WordPress Plugin Check plugin and run it before submitting or updating on WP.org:
+  ```
+  wp plugin check <plugin-slug>
+  ```
+* ❌ Zero ERRORS allowed in a WP.org submission — all must be resolved before submission.
+* ⚠️ WARNINGs should be reviewed and addressed where feasible.
+
+## B. Common PCP Errors Cursor Must Never Generate
+* Direct superglobal access without sanitization: $_POST['key'] without sanitize_text_field( wp_unslash( ... ) ).
+* wp_redirect() or wp_safe_redirect() without an immediately following exit.
+* Non-prefixed functions, classes, or global variables.
+* Scripts/styles enqueued on every admin page instead of conditionally.
+* __return_true as a REST API permission callback on a protected endpoint.
+* Use of date() instead of gmdate() or wp_date().
+* Hard-coded strings that should use translation functions.
+
+## C. PCP Performance Checks
+* Avoid direct database queries in hooks that fire on every page load (init, wp_head).
+* Never call get_posts() or WP_Query with posts_per_page = -1 without a hard upper limit in production code.
+* Avoid autoloading large option values (see Section 21).
+
+## D. Pre-Submission Smart Command
+* Smart command: @PreSubmit — when invoked, Cursor must:
+  1. Scan all PHP files for Section 1C Rejection Blacklist items.
+  2. Check all wp_redirect() calls for trailing exit.
+  3. Verify all functions and classes are properly prefixed.
+  4. Confirm readme.txt stable tag matches plugin header version.
+  5. Check that no error_log() / var_dump() / print_r() calls remain.
+  6. Confirm all user-facing strings use translation functions.
+  7. Report: PASS or list of issues found with file and line number.
+
+---
+
+# 🗄️ SECTION 21: AUTOLOADED OPTIONS MANAGEMENT
+## A. The Autoload Problem
+* By default, add_option() and update_option() set autoload = yes, meaning the value is loaded into memory on EVERY WordPress page request via a single bulk DB query.
+* Large autoloaded data (serialized arrays, JSON blobs, base64 images) bloat this query and slow every page on the site.
+* WP.org reviewers and the WordPress Performance Team flag plugins with excessive autoloaded data.
+
+## B. Autoload Rules
+* Large data structures MUST use autoload = no:
+  * ❌ `add_option( 'myplugin_big_data', $array )`
+  * ✅ `add_option( 'myplugin_big_data', $array, '', 'no' )`
+* Threshold: any option likely to exceed ~1KB should be autoload = no.
+* Settings needed only on specific admin pages: autoload = no.
+* Settings needed on every frontend request (e.g. a license status flag, feature toggle): autoload = yes (default) is acceptable.
+
+## C. update_option() and Autoload (WordPress 6.4+)
+* update_option() in WordPress 6.4+ accepts a 4th $autoload parameter — use it:
+  * ✅ `update_option( 'myplugin_big_data', $value, false )` (false = no autoload)
+* For options created before WP 6.4 without the parameter, migrate the autoload value:
+  ```php
+  $wpdb->update( $wpdb->options, [ 'autoload' => 'no' ], [ 'option_name' => 'myplugin_big_data' ] );
+  ```
+
+## D. Transients vs. Options
+* For data that expires or is regenerated: use transients (set_transient() / get_transient()), not options.
+* Transients are NOT autoloaded (when an object cache is active they bypass the options table entirely).
+* ❌ Never store cache or temp data in wp_options using update_option().
+
+---
+
+# 🌐 SECTION 22: MULTISITE COMPATIBILITY
+## A. Multisite Awareness
+* If the plugin may be network-activated or used on a Multisite install, gate network-specific behavior with is_multisite().
+* Network admin pages: register via network_admin_menu hook, not admin_menu.
+* Prefix options stored per-site vs. per-network clearly in naming to avoid confusion.
+
+## B. Activation on Multisite
+* register_activation_hook() does NOT fire when a plugin is network-activated — only on per-site activation.
+* For network activation handling, hook into activate_plugin:
+  ```php
+  add_action( 'activate_plugin', function( $plugin ) {
+      if ( is_network_admin() && plugin_basename( __FILE__ ) === $plugin ) {
+          // Handle network activation
+      }
+  });
+  ```
+* If the plugin creates DB tables, iterate all sites on network activation:
+  ```php
+  foreach ( get_sites() as $site ) {
+      switch_to_blog( $site->blog_id );
+      // create table / add options
+      restore_current_blog();
+  }
+  ```
+
+## C. Per-Site vs. Network Options
+* get_option() / update_option() = per-site options.
+* get_site_option() / update_site_option() = network-wide options.
+* Never use get_option() when you intend a network-wide setting and vice versa.
+
+## D. switch_to_blog() Safety
+* ALWAYS call restore_current_blog() after every switch_to_blog() — even inside try/catch or early returns.
+* Prefer iterating with get_sites( [ 'number' => 500 ] ) rather than wp_get_sites() (deprecated).
+
+---
+
+# ✅ SECTION 23: WP.ORG SUBMISSION FINAL CHECKLIST
+## A. Plugin Identity Rules
+* Plugin name must NOT start with "WordPress" — WP.org rejects names like "WordPress SEO Helper".
+* Plugin slug must be unique on WP.org — verify at https://wordpress.org/plugins/your-slug/ before submission.
+* Do not include trademarked terms (Elementor, WooCommerce, Gutenberg) in the plugin name without an explicit declared relationship.
+* Plugin name in the main file header MUST match the plugin name in readme.txt exactly.
+
+## B. readme.txt Final Checks
+* Stable tag in readme.txt MUST match the Version: header in the main plugin PHP file — mismatch = auto-rejection.
+* Tested up to MUST be the current WordPress major version or no more than one major version behind.
+* All URLs in readme.txt (demo, support, documentation) must be live and reachable — no 404s or parked domains.
+* Screenshots listed in readme.txt (screenshot-1.png, etc.) MUST have matching image files in the /assets/ folder of the SVN repo (not the plugin zip).
+* Maximum 5 tags in the Tags: header.
+
+## C. Code Cleanliness Before Submission
+* ❌ Zero debug code: error_log(), var_dump(), print_r(), console.log() must all be removed.
+* ❌ No TODO, FIXME, or HACK comments in submitted code — these signal incomplete work to reviewers.
+* ❌ No .DS_Store, Thumbs.db, node_modules/, or .git/ in the plugin zip.
+* ❌ No compiled source maps (*.map files) unless the uncompiled source is also included.
+
+## D. Licensing
+* Main plugin file header MUST include:
+  * `License: GPL-2.0-or-later`
+  * `License URI: https://www.gnu.org/licenses/gpl-2.0.html`
+* All bundled third-party libraries must be GPL-compatible (see Section 9B).
+* No code that calls home to a proprietary license server in the free WP.org version (see Section 5).
+
+## E. External Services & Data
+* If ANY external HTTP call is made (API, CDN, analytics, fonts), the == External Services == section in readme.txt is MANDATORY — missing this is one of the most common rejection reasons.
+* No tracking, analytics, or telemetry that fires without explicit opt-in from the site admin.
+* No phone-home on activation, deactivation, or update checks pointing to a non-WP.org server in the free version.
+
+## F. @PreSubmit Smart Command — Full Checklist
+When @PreSubmit is invoked, audit and report PASS / FAIL for each item:
+1.  Stable tag matches plugin version header.
+2.  No error_log() / var_dump() / print_r() remaining.
+3.  All functions, classes, and globals are prefixed.
+4.  All wp_redirect() / wp_safe_redirect() calls followed by exit.
+5.  No direct superglobal access without sanitization.
+6.  External Services section in readme.txt present (if applicable).
+7.  License header (GPL-2.0-or-later) present in main plugin file.
+8.  No debug-only files in the zip (node_modules, .git, .DS_Store).
+9.  Tested up to reflects current WordPress major version.
+10. All translation strings use a literal text domain string — no variables.
+11. All wp_schedule_event() calls have matching wp_clear_scheduled_hook() in deactivation hook.
+12. All REST API write endpoints have a real permission_callback (not __return_true).
+13. No raw PHP file functions (fwrite, file_put_contents, mkdir, unlink) — use WP_Filesystem.
+14. All large option values use autoload = no.
+15. Plugin name does not start with "WordPress" and contains no unearned trademarks.
+
+# 🔎 SECTION 24: ADDITIONAL SECURITY RULES & PRE-SUBMISSION WORKFLOW
+## A. esc_textarea() — The Most Commonly Missed Escape Function
+* ❌ Using esc_html() or esc_attr() inside a <textarea> is WRONG:
+  ```php
+  <textarea><?php echo esc_html( $value ); ?></textarea>  // WRONG
+  ```
+* ✅ Always use esc_textarea() for any <textarea> displaying user data:
+  ```php
+  <textarea><?php echo esc_textarea( $value ); ?></textarea>  // CORRECT
+  ```
+* Reason: esc_textarea() properly handles newlines, quotes, and HTML entities in the textarea context. esc_html() does not encode quotes the same way and can cause data corruption or XSS in textarea fields.
+
+## B. wp_add_inline_script() Escaping Trap
+* ❌ Never concatenate raw PHP variables into a wp_add_inline_script() string:
+  ```php
+  wp_add_inline_script( 'handle', 'var url = "' . $url . '";' );          // VULNERABLE
+  wp_add_inline_script( 'handle', 'var label = "' . $label . '";' );      // VULNERABLE
+  ```
+* ✅ Every PHP variable passed into a JS string must be individually escaped:
+  ```php
+  wp_add_inline_script( 'handle', 'var url = "' . esc_js( esc_url( $url ) ) . '";' );
+  wp_add_inline_script( 'handle', 'var label = "' . esc_js( $label ) . '";' );
+  wp_add_inline_script( 'handle', 'var id = ' . absint( $id ) . ';' );
+  ```
+* Best practice: prefer wp_localize_script() over wp_add_inline_script() for passing multiple values — it handles encoding automatically.
+
+## C. check_ajax_referer() Must Be the First Executable Line
+* WP.org reviewers specifically look for this. check_ajax_referer() must be the ABSOLUTE FIRST executable line in every wp_ajax_ and wp_ajax_nopriv_ callback — no variable assignments, no conditionals, no early returns may appear before it:
+  * ❌ Wrong order:
+    ```php
+    add_action( 'wp_ajax_my_action', function() {
+        $data = $_POST['data'];  // accessing superglobal BEFORE nonce check
+        check_ajax_referer( 'my_action', 'nonce' );
+    });
+    ```
+  * ✅ Correct order:
+    ```php
+    add_action( 'wp_ajax_my_action', function() {
+        check_ajax_referer( 'my_action', 'nonce' );
+        if ( ! current_user_can( 'manage_options' ) ) {
+            wp_send_json_error( 'Unauthorized', 403 );
+        }
+        $data = sanitize_text_field( wp_unslash( $_POST['data'] ?? '' ) );
+        // ... rest of handler
+    });
+    ```
+
+## D. Plugin Path Constants — Never Use dirname(__DIR__)
+* ❌ Hardcoded path separators and dirname(__DIR__) are a WP.org rejection trigger:
+  ```php
+  define( 'MY_PLUGIN_PATH', dirname(__DIR__, 2) . '/my-plugin/' );  // WRONG
+  define( 'MY_PLUGIN_PATH', __DIR__ . '/../../my-plugin/' );        // WRONG
+  ```
+* ✅ Always use WordPress path functions:
+  ```php
+  define( 'MY_PLUGIN_PATH', plugin_dir_path( __FILE__ ) );
+  define( 'MY_PLUGIN_URL',  plugins_url( '/', __FILE__ ) );
+  // For upload paths:
+  $upload = wp_upload_dir();
+  $path   = trailingslashit( $upload['basedir'] ) . 'my-plugin/';
+  ```
+
+## E. Rejection Report First — Fix Second (Workflow Rule)
+* Cursor must NEVER run a combined audit-and-fix pass on security issues in a single step.
+* The correct workflow for any security audit request is:
+  1. AUDIT PASS: Scan all files, generate a report listing every violation by file and line number, grouped by category. Do not change any code.
+  2. USER REVIEWS: Present the report for approval before making any changes.
+  3. FIX PASS: Apply fixes only to the violations listed in the approved report.
+* When the user types "@Audit" — produce the report only.
+* When the user types "@Refactor" — apply fixes to the items listed in the preceding @Audit report.
+* This two-pass approach prevents Cursor from silently "fixing" code that was intentional or that requires manual judgment.
+
+## F. PHPCBF / PHPCS — Required Before Submission
+* Run automated code standards fixing before any manual security audit:
+  ```bash
+  # Auto-fix mechanical issues first
+  ./vendor/bin/phpcbf --standard=phpcs.xml
+
+  # Then review remaining issues
+  ./vendor/bin/phpcs --standard=phpcs.xml
+  ```
+* Zero ERRORS must remain in phpcs output before a WP.org submission.
+* Cursor must recommend this step whenever generating or refactoring PHP files.
+* If phpcs/phpcbf is not configured in the workspace, remind the user to run:
+  ```bash
+  composer require --dev squizlabs/php_codesniffer wp-coding-standards/wpcs
+  ./vendor/bin/phpcs --config-set installed_paths vendor/wp-coding-standards/wpcs
+  ```
+
+## G. Pre-Submission Workflow Reference
+* The full phased pre-submission workflow (Phase 0 through @PreSubmit final checklist)
+  is documented in: WP_Plugin_PreSubmit_Workflow.md at the root of /Users/randy/wordpress-plugins/
+* When the user asks to prepare a plugin for submission, reference that document and
+  walk through each phase in order rather than attempting everything in one pass.
+
+# 🔑 SECTION 25: NONCE ACTION NAME SPECIFICITY
+## Rule: Nonce Action Names Must Be Specific, Prefixed, and Unique Per Operation
+* Generic nonce action names are a WP.org rejection trigger. Reviewers specifically check for vague nonces that could be reused or guessed.
+* ❌ Forbidden — generic action names:
+  ```php
+  wp_create_nonce( 'nonce' )
+  wp_create_nonce( 'security' )
+  wp_create_nonce( 'action' )
+  wp_create_nonce( 'save' )
+  ```
+* ✅ Required — specific, plugin-prefixed, operation-scoped action names:
+  ```php
+  wp_create_nonce( 'myplugin_save_settings' )
+  wp_create_nonce( 'myplugin_delete_record_' . $post_id )
+  wp_create_nonce( 'myplugin_ajax_search' )
+  wp_create_nonce( 'myplugin_export_data' )
+  ```
+* Naming convention: `{plugin-prefix}_{operation}[_{object_id}]`
+  * Prefix must match the plugin's function prefix (e.g., `kennelflow_`, `wpr_pro_`, `landtech_extras_`).
+  * Operation must describe exactly what this nonce authorizes (save, delete, export, import, send, etc.).
+  * Append `_` + a record ID when the nonce should be scoped to a specific record.
+
+## Nonce Bypass Prevention
+* The nonce check MUST start with an `isset()` guard — if the nonce field is simply absent from the request, `wp_verify_nonce()` must fail, not silently pass:
+  ```php
+  // CORRECT — missing nonce = failure
+  if ( ! isset( $_POST['myplugin_nonce'] ) ||
+       ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['myplugin_nonce'] ) ), 'myplugin_save_settings' ) ) {
+      wp_die( 'Security check failed.' );
+  }
+
+  // WRONG — if nonce key is absent, wp_verify_nonce receives empty string and may behave unexpectedly
+  if ( ! wp_verify_nonce( $_POST['myplugin_nonce'], 'myplugin_save_settings' ) ) {
+      wp_die();
+  }
+  ```
+
+## One Nonce Per Form / Per Action
+* Each distinct form or AJAX operation must have its own unique action name.
+* ❌ Do not reuse the same nonce action across multiple unrelated forms — a compromised nonce for one action should not authorize another.
+* ✅ Each settings page, meta box, AJAX endpoint, and bulk action gets its own dedicated nonce action string.
+
+# 🚫 SECTION 26: SUPERGLOBAL SCOPE RESTRICTION
+## Rule: $_POST, $_GET, and $_REQUEST Must Never Be Accessed at Global Scope
+* Accessing superglobals outside of a function — at the top level of a PHP file — is a WP.org rejection trigger.
+* At global scope, no nonce check or capability check can be performed first, making the access inherently insecure.
+* ❌ Forbidden — superglobal access at file/global scope:
+  ```php
+  // Top level of plugin file or included file — NOT inside any function
+  $setting = sanitize_text_field( $_POST['setting'] );  // WRONG — no nonce check possible here
+  $id      = absint( $_GET['id'] );                      // WRONG — runs on every load
+  ```
+* ✅ Required — superglobals only ever accessed inside functions, after nonce + capability checks:
+  ```php
+  add_action( 'admin_post_my_action', 'myplugin_handle_form' );
+  function myplugin_handle_form() {
+      // Nonce first, capability second, then access superglobals
+      if ( ! isset( $_POST['myplugin_nonce'] ) ||
+           ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['myplugin_nonce'] ) ), 'myplugin_save_settings' ) ) {
+          wp_die( 'Security check failed.' );
+      }
+      if ( ! current_user_can( 'manage_options' ) ) {
+          wp_die( 'Unauthorized.' );
+      }
+      $value = sanitize_text_field( wp_unslash( $_POST['setting'] ) );
+      // ... process $value
+  }
+  ```
+* Cursor must flag any superglobal access found outside a function body as a critical violation, regardless of whether sanitization is present.
+
+# 🏥 SECTION 27: WP.ORG REJECTION PREVENTION — SPECIFIC PATTERNS
+## (Derived from actual landtech-extras-for-elementor rejection emails)
+
+## A. wp-admin Core File Loading — Strict Guard + Immediate Use Pattern
+WP.org explicitly rejects plugins that load core admin files without immediately using a function from that file.
+
+* ❌ WRONG — bare include without guard, or guard without function use:
+  ```php
+  require_once ABSPATH . 'wp-admin/includes/plugin.php';  // No guard, and plugin.php function never called
+  include_once( ABSPATH . 'wp-admin/includes/plugin.php' ); // include_once without guard
+  ```
+* ✅ ONLY acceptable pattern:
+  ```php
+  if ( ! function_exists( 'is_plugin_active' ) ) {
+      require_once ABSPATH . 'wp-admin/includes/plugin.php';
+  }
+  return is_plugin_active( 'some-plugin/some-plugin.php' ); // Must call a plugin.php function IMMEDIATELY
+  ```
+* Three strict rules that must ALL be met:
+  1. Guard with `if ( ! function_exists( 'is_plugin_active' ) )` — ALWAYS, no exceptions.
+  2. Use `require_once` — never `include_once` for core admin files.
+  3. A `plugin.php`-specific function (`is_plugin_active()`, `get_plugins()`, `deactivate_plugins()`) MUST be the next executable line after the require. If no plugin.php function is called afterward, remove the require entirely — it is not needed.
+* Cursor must flag any `require_once ABSPATH . 'wp-admin/'` or `include_once( ABSPATH . 'wp-admin/' )` that does not follow this exact 3-rule pattern as a critical violation.
+
+## B. No Trialware — Zero Feature Gating in Free Plugin (Guideline 5)
+WP.org Guideline 5 strictly prohibits features that are disabled/limited in the free plugin but unlocked by a premium upgrade.
+
+* ❌ FORBIDDEN patterns — any feature gate that defaults to disabled in free plugin code:
+  ```php
+  landtech_extras_feature_enabled( 'my_feature', false )  // false default = gated = Guideline 5 violation
+  if ( $this->is_premium() ) { /* enable feature */ }     // premium check gates built-in feature
+  if ( defined( 'MY_LICENSE_KEY' ) ) { /* show feature */ } // license gate on built-in feature
+  ```
+* ✅ ALLOWED patterns — dependency checks and opt-out defaults:
+  ```php
+  landtech_extras_feature_enabled( 'my_feature', true )   // true default = enabled by default = compliant
+  function_exists( 'get_field' )                          // ACF dependency check = compliant
+  class_exists( 'WooCommerce' )                           // WooCommerce dependency check = compliant
+  ```
+* Rules:
+  1. Any feature fully implemented in the free plugin codebase MUST default to enabled (`true`).
+  2. Premium addons may ADD new features (via filters/hooks from a separate plugin); they may NEVER unlock/enable features that are present but disabled in the free plugin.
+  3. `false` as a feature gate default = trialware = automatic rejection.
+  4. Extension API or feature flag descriptions must NOT use language like "entitlement", "unlock", "premium gate", or "upgrade to enable" for features in the free codebase. Use "dependency check" or "conditional on [PluginName] being active" instead.
+  5. Dependency checks (ACF active, WooCommerce active) are NOT trialware — they are acceptable.
+
+## C. No Bundled jQuery in Third-Party JS Libraries
+WP.org scanners detect jQuery bundled inside library files even when it appears only in comments or as a version string.
+
+* ❌ FORBIDDEN:
+  - Any `.pkgd.js` or `.bundled.js` file — these bundle dependencies including jQuery.
+  - Any JS file that embeds the jQuery source or contains "jQuery JavaScript Library", "jQuery v3", or "jQuery Foundation, Inc." strings in its content.
+  - Initializing a jQuery-dependent library without declaring `jquery` as a wp_enqueue_script dependency.
+* ✅ REQUIRED:
+  - Use the standalone/core build of any library that has jQuery as a dependency.
+  - Declare `array( 'jquery' )` as the deps array in `wp_enqueue_script()`.
+  - Use WordPress noConflict-safe initialization: `( function( $ ) { /* ... */ }( jQuery ) );`
+  - The library file itself must NOT contain any embedded jQuery code or version strings.
+* Before adding any new JS library, grep the file for "jQuery" strings: a library containing "jQuery v" or "jQuery JavaScript Library" will trigger a WP.org scanner rejection.
+
+## D. Third-Party Library Version Freshness — Verify Before Every Submission
+WP.org automated tools compare the version string embedded in JS/CSS files against current known versions. A library that is more than one minor version behind will trigger a rejection email.
+
+* Before every submission, verify the current stable release of EVERY library in assets/lib/ on its GitHub page.
+* Upgrade any library that is more than one minor version behind — do not wait until the next rejection.
+* The version string inside the file (e.g., `var _version = '3.3.1'`) must match the latest stable release.
+* Both the minified and unminified versions of each library must be updated together — never update only one.
+* Update the version number in `assets/lib/README.txt` to match after every upgrade.
+* Do NOT use beta, release candidate, or pre-release versions of any library.
+
+## E. PHP Syntax Validation — Required Before Every Submission
+A PHP syntax error in any file will cause an immediate automated rejection.
+
+* Before submission, run PHP lint on the entire plugin:
+  ```bash
+  find . -name "*.php" -not -path "*/vendor/*" | xargs php -l 2>&1 | grep -v "No syntax errors"
+  ```
+  Any output from this command = syntax error = do not submit.
+* Zero PHP parse errors are allowed in a submission. Even errors in files that "seem unused" will trigger rejection.
+* Common causes Cursor must watch for:
+  - Unclosed class braces or method bodies
+  - PHP 8.x-only syntax (match expressions, named arguments, union types) in plugins declaring `Requires PHP: 7.4`
+  - Malformed heredoc/nowdoc strings
+  - Missing semicolons after class property declarations
+  - Docblock comments that are syntactically misplaced (outside class body, before namespace declaration)
+* Add `php -l` to every pre-commit and pre-submission check.
+
+## F. @PreSubmit Additional Checks (Supplement to Section 23.F)
+Add these items to every @PreSubmit run:
+
+16. No bare `require_once ABSPATH . 'wp-admin/includes/'` without an `if ( ! function_exists(...) )` guard.
+17. Every `require_once ABSPATH . 'wp-admin/includes/plugin.php'` is immediately followed by a call to a function from that file (is_plugin_active, get_plugins, etc.). If not — remove the require.
+18. No feature in the free plugin uses `false` as the default value in any feature gate function.
+19. No `.pkgd.js` or `.bundled.js` files exist in assets/lib/.
+20. All libraries in assets/lib/ are at their current stable version (check GitHub before submission).
+21. PHP lint passes with zero errors: `find . -name "*.php" -not -path "*/vendor/*" | xargs php -l`
+
+# 🔐 SECTION 28: CALLBACK OUTPUT ESCAPING & PREFIX LENGTH REQUIREMENTS
+# Derived from real WordPress.org audit rejections (July 2026 review of Hidden Word Bible Lessons
+# plugin, Review ID: R hidden-word-bible-lessons/brelandr/14Jul26/T2 17Jul26/4.1). These rules
+# apply to ALL plugins in this workspace.
+
+## A. Shortcode / Filter Callback Return Values Must Be Escaped — Not Just Returned Instead of Echoed
+(Audit Rejection: "Callback calls to a function/method whose return values are output must be properly escaped")
+
+* Section 10.D ("Shortcodes Must Return, Never Echo") is necessary but **not sufficient**. WordPress
+  itself echoes the return value of shortcode callbacks (`add_shortcode()`) and filter callbacks like
+  `the_content`, `the_title`, widget `widget()` output, and block `render_callback`. Returning instead
+  of echoing only relocates the output point — it does not make the string safe.
+* ❌ **Actual violation found:**
+    ```php
+    add_shortcode( 'hwbl_verse_of_week', array( $this, 'render_verse_of_week' ) );
+
+    public function render_verse_of_week( $atts ) {
+        $html  = '<div class="hwbl-verse-of-week">';
+        $html .= '<blockquote>' . esc_html( $verse_text ) . '</blockquote>';
+        $html .= $trans_svc->render_copyright( $translation ); // ❌ concatenated raw, unescaped
+        $html .= '</div>';
+        return $html;
+    }
+    ```
+* ✅ **Fix:**
+    ```php
+    $html .= wp_kses_post( $trans_svc->render_copyright( $translation ) );
+    ```
+* **Rule:** Every piece concatenated or interpolated into a shortcode/filter callback's return string must
+  be individually escaped with the correct `esc_*()`/`wp_kses_post()`/`wp_kses()` function *before* it is
+  added to the string being returned. A "trusted" internal helper method is not exempt — if it returns
+  content that passes through `apply_filters()` anywhere in its implementation, treat its return value as
+  untrusted at every call site, not just the first one you happen to notice.
+
+## B. Escape Late — Including Method and Filter Return Values, Not Just Raw Request Data
+(Audit Rejection: "Variables and options must be escaped when echo'd")
+
+* Escape **at the point of output**, every time — regardless of what happened upstream (sanitized on
+  save, escaped inside the method that produced it, previously validated elsewhere). Sanitizing and
+  escaping are different jobs; doing one is never a substitute for the other, and doing either once
+  upstream does not exempt the final `echo`.
+* ❌ **Actual violation found:**
+    ```php
+    <?php echo $trans_svc->render_copyright( $translation ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+    ```
+* ✅ **Fix:**
+    ```php
+    <?php echo wp_kses_post( $trans_svc->render_copyright( $translation ) ); ?>
+    ```
+* **`// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped` is a red flag, not a fix.** Cursor
+  must never add this comment to silence the escaping linter rule instead of actually escaping the output.
+  The only legitimate use is when a human has confirmed the full assembled string is already composed
+  entirely of pre-escaped fragments (e.g. the whole thing is wrapped in `wp_kses_post()` one level up) and
+  documents *why* in the comment.
+* **Filterable values are permanently untrusted.** If a method's return value passes through
+  `apply_filters( 'your_plugin_some_filter', $value )`, any other active plugin or theme can inject
+  arbitrary HTML/JS into that value going forward — even if nothing in your own codebase ever puts unsafe
+  data into it today. Escape every call site, not just the ones handling obviously "risky" data.
+* **`esc_html()` is not an HTML escaper — it strips HTML.** Use it only for content that must render as
+  plain text. For content that legitimately contains HTML markup (links, formatting, rich text), use
+  `wp_kses_post()` (allows standard post-content HTML) or `wp_kses( $html, $allowed_tags )` (custom
+  allow-list). Reaching for `esc_html()` on HTML-bearing content is a common mistake that breaks markup
+  and is not actually the correct escaping function for that context.
+* **Checklist for every `echo` / `printf` / `print` / template partial `<?php echo $x; ?>`:** is `$x`
+  guaranteed to be plain text (`esc_html`), an HTML attribute value (`esc_attr`), a URL (`esc_url`), a
+  `<textarea>` value (`esc_textarea`), or genuinely trusted/allow-listed HTML (`wp_kses_post` / `wp_kses`)?
+  Never leave a variable, option, or method return value unescaped because "it's already safe" — prove it
+  with an escaping function at the print site.
+
+## C. Function / Class / Constant / Namespace / Option Prefix Length & Reserved Prefixes
+(Audit Rejection: "Generic function/class/define/namespace/option names")
+
+* Every plugin-owned identifier needs a prefix that is **at least 4 characters long** and distinctive to
+  the plugin (not a generic word).
+* ❌ **Actual violation found** — a 3-character prefix used alongside the plugin's real prefix:
+    ```php
+    add_shortcode( 'thw_lesson', array( $this, 'render_lesson' ) );
+    define( 'THW_VERSION', HWBL_VERSION );
+    define( 'THW_PLUGIN_DIR', HWBL_PLUGIN_DIR );
+    ```
+* ✅ **Fix** — consolidate on the registered 4+ character prefix (`hwbl_` / `HWBL_`); do not introduce a
+  second, shorter prefix for "convenience" aliases, legacy shortcodes, or quick helpers.
+* **Applies to:** function names, class names, defines/constants, namespaces, global variable names,
+  option/transient/post-meta keys, shortcode tags, hook names (actions & filters), AJAX action suffixes
+  (`wp_ajax_{prefix}_...`), REST namespaces, script/style handles, nonce action names, and CPT/taxonomy
+  slugs.
+* **Reserved — never use as your plugin's own standalone prefix:** `wp_`, a single leading underscore
+  (`_`), or a bare double underscore (`__`). These are reserved for WordPress core. (It's fine to use an
+  underscore internally as a private-method or internal-array-key convention *inside* an already-prefixed
+  class — the restriction is on standalone global-scope identifiers.)
+* **Before adding ANY new function, class, define, hook, shortcode, or option key, confirm it starts with
+  the plugin's registered prefix** — including ones added later as "quick helpers," debug code, or legacy
+  compatibility shims. A second short prefix creeping in during a rename/rebrand (as happened here) is the
+  most common way this rule gets violated.
+* **Legacy/back-compat exception:** when renaming a prefix, it is fine — expected, even — for the *old*
+  short prefix to still appear in one-time migration code (reading old option/transient keys on upgrade,
+  `uninstall.php` cleanup of legacy data, a legacy CPT slug included in a delete array for cleanup). Do
+  not delete this migration logic to "fully remove" the old prefix; the goal is that no *new* declarations
+  use the old prefix, not that historical strings disappear from migration paths.
+* ❌ **Anti-pattern — wrapping the plugin's own declarations:**
+    ```php
+    if ( ! function_exists( 'myplugin_save_post' ) ) {
+        function myplugin_save_post() { /* ... */ }
+    }
+    if ( ! class_exists( 'MyPlugin_Admin' ) ) {
+        class MyPlugin_Admin { /* ... */ }
+    }
+    ```
+* **Why this is dangerous:** reserve `function_exists()` / `class_exists()` guards for genuinely shared
+  libraries (a vendored SDK meant to be `require`'d by multiple plugins) — never for a plugin's own
+  original declarations. If another codebase on the same site happens to declare a same-named
+  function/class first and loads earlier, this plugin's version silently never loads: no error, no
+  warning, just missing functionality. A unique 4+ character prefix makes that collision astronomically
+  unlikely, which is exactly why the guard is unnecessary (and actively harmful) once you have one.
+* ✅ **Correct uses of `function_exists()` / `class_exists()`:** checking for a WordPress core function
+  that may not be loaded yet in the current context (`get_current_screen`, `is_plugin_active`), or checking
+  whether a genuinely separate, optional dependency plugin is active (`class_exists( 'WooCommerce' )`,
+  `class_exists( 'THW_Premium_License' )` from a companion premium plugin).
+
+## D. @PreSubmit Additional Checks (Supplement to Sections 23.F / 27.F)
+Add these items to every `@PreSubmit` run:
+
+22. Every shortcode callback's return value, and every value returned from a `the_content` / `the_title` /
+    widget / block `render_callback`, is escaped (`esc_html` / `esc_attr` / `esc_url` / `wp_kses_post` /
+    `wp_kses`) at the point it is composed into the return string — not just "returned instead of echoed."
+23. No `echo` / `printf` / `print` of a method or function return value without an escaping function
+    wrapped around it at the print site, including values from internal helper methods whose
+    implementation passes through `apply_filters()`.
+24. No `// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped` comments added to suppress an
+    escaping warning instead of fixing it.
+25. Every function, class, define/constant, namespace, global, option/transient/meta key, shortcode,
+    hook, AJAX action, REST namespace, script/style handle, and nonce action name uses the plugin's
+    registered 4+ character prefix — including newly added "quick helper" or legacy-alias code.
+26. No new code introduces `wp_`, a bare `_`, or `__` as a plugin's own standalone function/hook/option
+    prefix.
+27. No `if ( ! function_exists( 'plugin_own_function' ) )` / `if ( ! class_exists( 'Plugin_Own_Class' ) )`
+    wrapping around the plugin's OWN declarations — reserved for genuine third-party dependency checks and
+    shared libraries only.

@@ -87,11 +87,30 @@ if ( ! class_exists( 'WGRSVP_Deadline_Nudges' ) ) {
 			if ( ! is_string( $base ) || '' === trim( $base ) ) {
 				$base = home_url( '/' );
 			}
-			$url = add_query_arg( 'party_id', rawurlencode( (string) $party_id ), $base );
+			$args = array(
+				'party_id' => rawurlencode( (string) $party_id ),
+			);
+			$segment = isset( $settings['deadline_nudge_segment'] )
+				? sanitize_key( (string) $settings['deadline_nudge_segment'] )
+				: 'pending';
+			if ( 'missing_address' === $segment ) {
+				// Shared query args with Pro address campaign focus script.
+				$args['wpr_details'] = '1';
+				$args['wpr_focus']   = 'address';
+			}
+			$url = add_query_arg( $args, $base );
 			if ( class_exists( 'WGRSVP_Magic_Link' ) ) {
 				$url = WGRSVP_Magic_Link::sign_url( $url, (string) $party_id );
 			}
-			return $url;
+			/**
+			 * Filter the RSVP deep link used in deadline nudge emails/SMS.
+			 *
+			 * @since 7.3.40
+			 * @param string $url      URL.
+			 * @param string $party_id Party ID.
+			 * @param array  $settings General settings.
+			 */
+			return (string) apply_filters( 'wgrsvp_deadline_nudge_rsvp_url', $url, (string) $party_id, $settings );
 		}
 
 		/**
@@ -176,8 +195,18 @@ if ( ! class_exists( 'WGRSVP_Deadline_Nudges' ) ) {
 			global $wpdb;
 			$table = $wpdb->prefix . 'wedding_rsvps';
 
+			$segment = isset( $settings['deadline_nudge_segment'] )
+				? sanitize_key( (string) $settings['deadline_nudge_segment'] )
+				: 'pending';
+			$allowed = array( 'pending', 'missing_meal', 'missing_address', 'missing_phone', 'accepted_missing_meal', 'accepted_sub_event_pending' );
+			if ( ! in_array( $segment, $allowed, true ) ) {
+				$segment = 'pending';
+			}
+
 			$status_in = array( 'Pending' );
-			if ( ! empty( $settings['deadline_nudge_include_declined'] ) ) {
+			if ( in_array( $segment, array( 'accepted_missing_meal', 'accepted_sub_event_pending' ), true ) ) {
+				$status_in = array( 'Accepted' );
+			} elseif ( ! empty( $settings['deadline_nudge_include_declined'] ) ) {
 				$status_in[] = 'Declined';
 			}
 
@@ -195,6 +224,18 @@ if ( ! class_exists( 'WGRSVP_Deadline_Nudges' ) ) {
 				return array();
 			}
 
+			$filtered = array();
+			foreach ( $rows as $guest ) {
+				if ( ! is_object( $guest ) ) {
+					continue;
+				}
+				if ( ! self::guest_matches_segment( $guest, $segment ) ) {
+					continue;
+				}
+				$filtered[] = $guest;
+			}
+			$rows = $filtered;
+
 			/**
 			 * Guest rows selected for deadline nudge emails (modify or replace).
 			 *
@@ -206,6 +247,71 @@ if ( ! class_exists( 'WGRSVP_Deadline_Nudges' ) ) {
 			$rows = apply_filters( 'wgrsvp_deadline_nudge_recipients', $rows, $deadline, $settings );
 
 			return ( is_array( $rows ) && ! empty( $rows ) ) ? $rows : array();
+		}
+
+		/**
+		 * Whether a guest matches the configured nudge segment.
+		 *
+		 * @param object $guest   Guest row.
+		 * @param string $segment Segment key.
+		 * @return bool
+		 */
+		private static function guest_matches_segment( $guest, $segment ) {
+			$meal    = isset( $guest->menu_choice ) ? trim( (string) $guest->menu_choice ) : '';
+			$child   = isset( $guest->child_menu_choice ) ? trim( (string) $guest->child_menu_choice ) : '';
+			$address = isset( $guest->address ) ? trim( (string) $guest->address ) : '';
+			$phone   = isset( $guest->phone ) ? trim( (string) $guest->phone ) : '';
+			$has_meal = ( '' !== $meal || '' !== $child );
+
+			switch ( $segment ) {
+				case 'missing_meal':
+				case 'accepted_missing_meal':
+					return ! $has_meal;
+				case 'missing_address':
+					return '' === $address;
+				case 'missing_phone':
+					return '' === $phone;
+				case 'accepted_sub_event_pending':
+					/**
+					 * Whether an Accepted guest still has an unanswered invited sub-event.
+					 * Pro hooks this when sub-events are active.
+					 *
+					 * @since 7.3.24
+					 * @param bool   $has_pending Default false.
+					 * @param object $guest       Guest row.
+					 */
+					return (bool) apply_filters( 'wgrsvp_guest_has_unanswered_sub_event', false, $guest );
+				case 'pending':
+				default:
+					return true;
+			}
+		}
+
+		/**
+		 * Append a lightweight audit row (no PII beyond guest id / party).
+		 *
+		 * @param string $context cron|manual.
+		 * @param int    $sent_n  Emails sent.
+		 * @param string $segment Segment key.
+		 * @param int    $offset  Days offset.
+		 * @return void
+		 */
+		private static function append_audit( $context, $sent_n, $segment, $offset ) {
+			$log = get_option( 'wgrsvp_deadline_nudge_audit', array() );
+			if ( ! is_array( $log ) ) {
+				$log = array();
+			}
+			$log[] = array(
+				'at'      => gmdate( 'c' ),
+				'context' => sanitize_key( (string) $context ),
+				'sent'    => absint( $sent_n ),
+				'segment' => sanitize_key( (string) $segment ),
+				'offset'  => absint( $offset ),
+			);
+			if ( count( $log ) > 40 ) {
+				$log = array_slice( $log, -40 );
+			}
+			update_option( 'wgrsvp_deadline_nudge_audit', $log, false );
 		}
 
 		/**
@@ -327,7 +433,74 @@ if ( ! class_exists( 'WGRSVP_Deadline_Nudges' ) ) {
 				}
 			}
 
+			$segment = isset( $settings['deadline_nudge_segment'] ) ? (string) $settings['deadline_nudge_segment'] : 'pending';
+			if ( ! empty( $settings['deadline_nudge_audit'] ) ) {
+				self::append_audit( $context, $sent_n, $segment, $offset );
+			}
+
 			return $sent_n;
+		}
+
+		/**
+		 * Quiet-hours gate for cron (site timezone). Manual sends always allowed.
+		 *
+		 * @param array $settings Settings.
+		 * @return bool True when sending is allowed.
+		 */
+		private static function within_send_window( $settings ) {
+			if ( ! isset( $settings['deadline_nudge_quiet_start'], $settings['deadline_nudge_quiet_end'] ) ) {
+				return true;
+			}
+			$start = (int) $settings['deadline_nudge_quiet_start'];
+			$end   = (int) $settings['deadline_nudge_quiet_end'];
+			if ( $start < 0 || $end < 0 || $start > 23 || $end > 23 || $start === $end ) {
+				return true;
+			}
+			$hour = absint( wp_date( 'G' ) );
+			// Quiet when inside [start, end); overnight when start > end (e.g. 21 → 8).
+			$in_quiet = ( $start < $end )
+				? ( $hour >= $start && $hour < $end )
+				: ( $hour >= $start || $hour < $end );
+			return ! $in_quiet;
+		}
+
+		/**
+		 * Public: guests matching a reminder segment (for drip enrollment).
+		 *
+		 * @param string $segment          Segment key.
+		 * @param bool   $include_declined Include Declined for pending-family segments.
+		 * @return object[]
+		 */
+		public static function get_segment_guest_rows( $segment, $include_declined = false ) {
+			$settings                                   = self::get_settings();
+			$settings['deadline_nudge_segment']          = sanitize_key( (string) $segment );
+			$settings['deadline_nudge_include_declined'] = $include_declined ? 1 : 0;
+			$ctx                                        = self::get_deadline_context( $settings );
+			$deadline                                   = null !== $ctx ? $ctx['deadline'] : '';
+			return self::fetch_recipients( $settings, $deadline );
+		}
+
+		/**
+		 * Public: whether cron is inside the quiet-hours window (false = quiet).
+		 *
+		 * @param array|null $settings Optional settings; defaults to general settings.
+		 * @return bool True when sending is allowed.
+		 */
+		public static function is_within_send_window( $settings = null ) {
+			if ( ! is_array( $settings ) ) {
+				$settings = self::get_settings();
+			}
+			return self::within_send_window( $settings );
+		}
+
+		/**
+		 * Public: RSVP URL for a party (shared with drip templates).
+		 *
+		 * @param string $party_id Party ID.
+		 * @return string
+		 */
+		public static function build_rsvp_url_for_party( $party_id ) {
+			return self::rsvp_url_for_party( self::get_settings(), (string) $party_id );
 		}
 
 		/**
@@ -338,6 +511,13 @@ if ( ! class_exists( 'WGRSVP_Deadline_Nudges' ) ) {
 		public static function run_cron() {
 			$settings = self::get_settings();
 			if ( empty( $settings['deadline_nudges_enabled'] ) ) {
+				return;
+			}
+			// Multi-step drip supersedes legacy deadline cron when a drip journey is enabled.
+			if ( class_exists( 'WGRSVP_Drip', false ) && WGRSVP_Drip::journey_supersedes_deadline_cron() ) {
+				return;
+			}
+			if ( ! self::within_send_window( $settings ) ) {
 				return;
 			}
 			$ctx = self::get_deadline_context( $settings );

@@ -50,8 +50,25 @@ wp-config.php
 # Security - Credentials
 SVN-CREDENTIALS.md
 
+# Security - local notes that contain the real WP.org SVN password (never commit)
+SVN-CONFIRMATION.md
+SVN-TROUBLESHOOTING.md
+UPDATE-SVN-CREDENTIALS.md
+PUBLISH-ASSETS.md
+
+# OS / editor
+.DS_Store
+.vscode/
+
+# Composer dev tooling (phpcs etc. — run `composer install` locally)
+/vendor/
+
 # Local WordPress.org SVN checkout (keep out of repo & release zips)
 svn-checkout/
+
+# Local SVN working copy for WP.org listing assets (contains .svn internals
+# and an accidental recursive self-copy) — publish via publish-assets.sh
+wedding-party-assets/
 
 # Distribution zips (create-plugin-zip.sh / create-both-plugin-zips.sh)
 Dist/

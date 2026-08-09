@@ -243,6 +243,7 @@ if ( ! class_exists( 'WGRSVP_Ops_Center' ) ) {
 			</div>
 
 			<?php self::render_nudge_now_box(); ?>
+			<?php self::render_drip_summary_box(); ?>
 
 			<h2><?php esc_html_e( 'Parties with mixed replies', 'wedding-party-rsvp' ); ?></h2>
 			<p class="description"><?php esc_html_e( 'Someone in the party accepted and someone is still pending—open the grouped list filtered to that Party ID.', 'wedding-party-rsvp' ); ?></p>
@@ -402,6 +403,46 @@ if ( ! class_exists( 'WGRSVP_Ops_Center' ) ) {
 						</button>
 					</form>
 				<?php endif; ?>
+			</div>
+			<?php
+		}
+
+		/**
+		 * Multi-step drip status + link to Logistics settings.
+		 *
+		 * @return void
+		 */
+		private static function render_drip_summary_box() {
+			if ( ! current_user_can( 'manage_options' ) || ! class_exists( 'WGRSVP_Drip', false ) ) {
+				return;
+			}
+			$summary = WGRSVP_Drip::get_status_summary();
+			$settings_url = admin_url( 'admin.php?page=wedding-rsvp-settings#wgrsvp-logistics-heading' );
+			?>
+			<div style="background:#fff; border:1px solid #c3c4c7; border-radius:4px; padding:14px 16px; margin-bottom:20px;">
+				<h2 style="margin-top:0;"><?php esc_html_e( 'Multi-step drip', 'wedding-party-rsvp' ); ?></h2>
+				<?php if ( empty( $summary['enabled'] ) ) : ?>
+					<p class="description"><?php esc_html_e( 'Drip journey is off. Configure steps under Settings → Logistics.', 'wedding-party-rsvp' ); ?></p>
+				<?php else : ?>
+					<p>
+						<?php
+						printf(
+							/* translators: 1: journey name, 2: due count, 3: active enrollments, 4: step count */
+							esc_html__( '%1$s — %2$d due now, %3$d active enrollments, %4$d steps.', 'wedding-party-rsvp' ),
+							esc_html( ! empty( $summary['name'] ) ? (string) $summary['name'] : __( 'Journey', 'wedding-party-rsvp' ) ),
+							(int) ( $summary['due'] ?? 0 ),
+							(int) ( $summary['active'] ?? 0 ),
+							(int) ( $summary['steps'] ?? 0 )
+						);
+						?>
+					</p>
+					<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" style="display:inline-block;margin-right:8px;">
+						<input type="hidden" name="action" value="wgrsvp_drip_run_now">
+						<?php wp_nonce_field( 'wgrsvp_drip_run_now', 'wgrsvp_drip_run_now_nonce' ); ?>
+						<button type="submit" class="button"><?php esc_html_e( 'Run due steps now', 'wedding-party-rsvp' ); ?></button>
+					</form>
+				<?php endif; ?>
+				<p><a href="<?php echo esc_url( $settings_url ); ?>"><?php esc_html_e( 'Open Logistics drip settings', 'wedding-party-rsvp' ); ?></a></p>
 			</div>
 			<?php
 		}

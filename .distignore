@@ -4,6 +4,9 @@
 # Never copy SVN metadata from local trees (e.g. assets/ checkouts) into deploy targets.
 .svn/
 svn-checkout/
+# Local build output (release zips, companion-app APKs) — never ship (see create-plugin-zip.sh).
+Dist/
+*.apk
 # Local nested SVN/utility tree; never ship (see create-plugin-zip.sh).
 wedding-party-assets/
 .git/

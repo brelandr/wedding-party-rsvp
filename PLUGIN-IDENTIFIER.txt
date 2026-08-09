@@ -1,0 +1,14 @@
+========================================
+  WEDDING PARTY RSVP - FREE VERSION
+========================================
+
+This directory contains the FREE version of the Wedding Party RSVP plugin.
+
+Main Plugin File: wedding-party-rsvp.php
+Text Domain: wedding-party-rsvp
+Version: 8.0.0
+
+⚠️ DO NOT CONFUSE WITH THE PREMIUM VERSION ⚠️
+
+The premium version is located at:
+/Users/randy/wordpress-plugins/wedding-party-rsvp-pro

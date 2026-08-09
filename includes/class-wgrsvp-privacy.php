@@ -57,6 +57,7 @@ if ( ! class_exists( 'WGRSVP_Privacy' ) ) {
 			$suggested .= '<p class="privacy-policy-tutorial">' . esc_html__( 'An optional administrator-only audit log (database table, typically wp_wgrsvp_guest_audit) may store timestamps, who made a change, and field-level before/after values for guest rows—including data guests submit on the public RSVP form. Erase Personal Data removes matching audit entries when guest rows are deleted for that email.', 'wedding-party-rsvp' ) . '</p>';
 			$suggested .= '<p class="privacy-policy-tutorial">' . esc_html__( 'The optional post-event thank-you checklist stores task titles you enter in a separate database table. It is not linked to guest email addresses; avoid storing guest personal details in task titles if you need to minimize personal data in that table.', 'wedding-party-rsvp' ) . '</p>';
 			$suggested .= '<p class="privacy-policy-tutorial">' . esc_html__( 'Erasing data for an email address removes all guest rows that use that email from the RSVP table. Confirm this matches your event’s obligations before completing erase requests.', 'wedding-party-rsvp' ) . '</p>';
+			$suggested .= '<p class="privacy-policy-tutorial">' . esc_html__( 'Optional multi-step drip tables store guest IDs and send timestamps for reminder journeys; those rows are removed when guest records for that email are erased, and drip tables are dropped when the plugin is deleted.', 'wedding-party-rsvp' ) . '</p>';
 			$suggested .= '</div>';
 
 			wp_add_privacy_policy_content(
@@ -204,6 +205,9 @@ if ( ! class_exists( 'WGRSVP_Privacy' ) ) {
 			}
 			if ( ! empty( $ids_to_erase ) && class_exists( 'WGRSVP_Audit_Trail', false ) ) {
 				WGRSVP_Audit_Trail::delete_for_guest_ids( $ids_to_erase );
+			}
+			if ( ! empty( $ids_to_erase ) && class_exists( 'WGRSVP_Drip', false ) ) {
+				WGRSVP_Drip::purge_guest_ids( $ids_to_erase );
 			}
 
 			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.NotPrepared -- Table via %i + $wpdb->prefix; email bound in nested prepare().

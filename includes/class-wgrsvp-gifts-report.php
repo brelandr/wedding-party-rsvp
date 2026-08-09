@@ -618,10 +618,17 @@ if ( ! class_exists( 'WGRSVP_Gifts_Report' ) ) {
 				<form method="post" action="<?php echo esc_url( admin_url( 'admin.php' ) ); ?>" id="wgrsvp_gifts_bulk_form" style="margin:0 0 16px;">
 					<input type="hidden" name="page" value="<?php echo esc_attr( self::PAGE_SLUG ); ?>" />
 					<?php wp_nonce_field( 'wgrsvp_gifts_bulk_mark_thankyou_sent', 'wgrsvp_gifts_bulk_mark_thankyou_sent_nonce' ); ?>
-					<input type="hidden" name="wgrsvp_gifts_bulk_mark_sent" value="1" />
 					<input type="hidden" name="wgrsvp_gifts_bulk_filter" value="<?php echo esc_attr( $filter ); ?>" />
 					<input type="hidden" name="wgrsvp_gifts_bulk_search" value="<?php echo esc_attr( $search ); ?>" />
-					<button type="submit" class="button"><?php esc_html_e( 'Mark selected thank-you cards as sent today', 'wedding-party-rsvp' ); ?></button>
+					<button type="submit" class="button" name="wgrsvp_gifts_bulk_mark_sent" value="1"><?php esc_html_e( 'Mark selected thank-you cards as sent today', 'wedding-party-rsvp' ); ?></button>
+					<?php
+					/**
+					 * Extra bulk controls on the gifts report (e.g. Pro digital thank-you send).
+					 *
+					 * @since 8.2.0
+					 */
+					do_action( 'wgrsvp_gifts_report_after_bulk_actions' );
+					?>
 				</form>
 				<?php endif; ?>
 
