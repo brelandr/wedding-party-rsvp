@@ -55,18 +55,7 @@ if ( ! class_exists( 'WGRSVP_Frontend_Cache' ) ) {
 				return;
 			}
 
-			if ( ! defined( 'DONOTCACHEPAGE' ) ) {
-				define( 'DONOTCACHEPAGE', true );
-			}
-
-			if ( defined( 'LSCWP_V' ) ) {
-				do_action( 'litespeed_control_set_nocache', 'wgrsvp-rsvp-form' );
-			}
-
-			global $wp_cache_not_logged_in;
-			if ( isset( $wp_cache_not_logged_in ) ) {
-				$wp_cache_not_logged_in = 2; // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited -- WPSC documented bypass.
-			}
+			self::flag_third_party_page_caches();
 		}
 
 		/**
@@ -110,18 +99,7 @@ if ( ! class_exists( 'WGRSVP_Frontend_Cache' ) ) {
 		 * @return void
 		 */
 		public static function send_nocache_headers() {
-			if ( ! defined( 'DONOTCACHEPAGE' ) ) {
-				define( 'DONOTCACHEPAGE', true );
-			}
-
-			if ( defined( 'LSCWP_V' ) ) {
-				do_action( 'litespeed_control_set_nocache', 'wgrsvp-rsvp-form' );
-			}
-
-			global $wp_cache_not_logged_in;
-			if ( isset( $wp_cache_not_logged_in ) ) {
-				$wp_cache_not_logged_in = 2; // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited -- WPSC documented bypass.
-			}
+			self::flag_third_party_page_caches();
 
 			if ( self::$http_nocache_sent || headers_sent() ) {
 				return;
@@ -132,6 +110,33 @@ if ( ! class_exists( 'WGRSVP_Frontend_Cache' ) ) {
 			header( 'Cloudflare-CDN-Cache-Control: no-store', true );
 			header( 'Surrogate-Control: no-store', true );
 			self::$http_nocache_sent = true;
+		}
+
+		/**
+		 * Opt out of full-page cache plugins using their documented, unprefixed APIs.
+		 *
+		 * Names must match upstream conventions (WP Super Cache / LiteSpeed); renaming
+		 * them would break cache bypass on hosts that rely on those integrations.
+		 *
+		 * @return void
+		 */
+		private static function flag_third_party_page_caches() {
+			if ( ! defined( 'DONOTCACHEPAGE' ) ) {
+				// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedConstantFound -- WP Super Cache / common page-cache convention; must be this exact name.
+				define( 'DONOTCACHEPAGE', true );
+			}
+
+			if ( defined( 'LSCWP_V' ) ) {
+				// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- LiteSpeed Cache official nocache API.
+				do_action( 'litespeed_control_set_nocache', 'wgrsvp-rsvp-form' );
+			}
+
+			// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound -- WP Super Cache global; required name.
+			global $wp_cache_not_logged_in;
+			if ( isset( $wp_cache_not_logged_in ) ) {
+				// phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited, WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound -- WPSC documented bypass.
+				$wp_cache_not_logged_in = 2;
+			}
 		}
 
 		/**

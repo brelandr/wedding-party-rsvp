@@ -4,7 +4,7 @@ Tags: wedding, rsvp, guest list, invitation, event management
 Requires at least: 6.2
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 8.2.10
+Stable tag: 8.2.11
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -14,20 +14,19 @@ RSVP guest list for WordPress: Party ID sign-in, meals, guest hub summary, CSV e
 
 **[Live preview: Wedding Party RSVP Pro (Premium demo on InstaWP)](https://app.instawp.io/launch?s=wedding-rsvp-pro-demo&d=v2)** — open a temporary site with the full premium plugin pre-installed; no purchase required.
 
-Stop chasing replies across group chats and reconciling half-finished spreadsheets the week before you walk down the aisle. Wedding Party RSVP gives planners and couples a single source of truth inside WordPress—every RSVP, headcount, and meal note lives in one guest list your whole team can trust from save-the-date to seating.
+Stop chasing replies across group chats and reconciling spreadsheets the week before the wedding. Wedding Party RSVP gives planners and couples a single guest list inside WordPress—every RSVP, headcount, and meal note in one place from save-the-date to seating.
 
-* **Less stress for your planning team** – Shared visibility in wp-admin replaces version chaos; everyone works off the same guest list instead of emailing fragile copies back and forth.
-* **Fewer "we thought they were coming" surprises** – Clear statuses and structured follow-up help you confirm attendance earlier, so catering and rentals are not guessing at the last minute.
-* **Confidence at the venue** – One accurate count for who is attending, what they are eating, and how many plus ones are included—aligned with how your invites are organized.
-* **Faster setup, fewer “who never replied?” gaps** – **Getting started** checklist on the Wedding Dashboard, **Next steps** when RSVPs are still pending, quick **straggler filters** (missing email, phone, or address), and links on the Plugins screen: **Live demo** (WordPress Playground, free plugin) and **Try Premium** (full Pro on a temporary InstaWP site).
+* **Less stress for your planning team** – Shared visibility in wp-admin replaces emailed spreadsheet copies.
+* **Fewer last-minute surprises** – Clear statuses and follow-up help you confirm attendance earlier for catering and rentals.
+* **Confidence at the venue** – One accurate count for who is attending, meals, and plus ones.
+* **Faster setup** – Getting started checklist, Next steps for pending RSVPs, straggler filters (missing email, phone, or address), plus **Live demo** (WordPress Playground) and **Try Premium** (InstaWP) links on the Plugins screen.
 
-**8.2.10** shares that the free **Wedding RSVP** companion app is available on the [Google Play Store](https://play.google.com/store/apps/details?id=pro.weddingrsvp.companion), with iOS on TestFlight and coming to the App Store soon. With **Wedding Party RSVP Pro**, guests can capture photos in the app and upload them to an event photo gallery on your WordPress site (for example a wedding, bridal shower, or rehearsal dinner). **8.2.9** confirmed WordPress 7.0.x compatibility and introduced the companion-app admin notice.
+**8.2.11** adds in-admin **Help** for free gift registry links (and Pro gift tools marked Available in Pro), plus WordPress.org compliance hardening. The free **Wedding RSVP** companion app is on [Google Play](https://play.google.com/store/apps/details?id=pro.weddingrsvp.companion); with **Pro**, guests can upload event photos from the app to your site gallery.
 
-Guests sign in with a simple **Party ID**, so households RSVP together while you manage plus ones like a built-in plus one manager tied to each invite code (not stray "+1" notes buried in email threads). The plugin works as a **meal choice collector** for adult entrées with dietary notes, supports **event capacity limits** when you need to cap attendance, and includes **wedding guest list export** when finance, catering, or your venue needs the latest numbers in one place.
+Guests sign in with a **Party ID** so households RSVP together. Collect adult entrée choices and dietary notes, set **event capacity limits**, and **export** the guest list when catering or your venue needs numbers.
 
-Built with modern WordPress patterns so multiple planners can collaborate in the dashboard at once—roles and permissions stay native while you update invitations, meals, and RSVP status together on desktop or mobile.
+**Gift registry links:** Under **Wedding RSVP → Settings → Frontend Display**, add registry URLs (Amazon, Zola, etc.). Guests see them on the public RSVP page after entering their Party ID.
 
-**Gift registry links:** Under **Wedding RSVP → Settings → Frontend Display**, add one or more registry URLs (Amazon, Zola, etc.). Guests see the links on the public RSVP page after entering their Party ID.
 
 == Try It Live - Preview This Plugin Instantly ==
 
@@ -78,6 +77,14 @@ Child Management: Track children and assign specific child meals.
 
 Full Menu Course: Add Appetizers, Hors d'oeuvres, and Desserts (Pro 2.2.4+) with customizable menu section labels on the public form.
 
+Registry Setup Wizard: Guided steps on **Registry hub** to pick stores (Amazon, Target, Walmart, Zola, and more), open each store’s registry-creation page, paste the links back, and show them on your RSVP page.
+
+On-site Wish List: Add individual gifts from any store (name/photo/price can auto-fill from the product page). Guests reserve or mark gifts purchased on the RSVP page so nobody double-gifts.
+
+Stripe Cash Fund: Suggested cash tiers with optional Contribute buttons via the couple’s own Stripe Checkout keys.
+
+Gift CSV Import: Record gifts bought elsewhere onto guest rows (with a dry-run preview).
+
 Guest Photo Gallery: Guests signed in with a Party ID in the free Wedding RSVP companion app can take or choose photos and upload them to your wedding (or other event) albums on your WordPress site. Moderators approve photos under **Wedding RSVP → Photo Gallery**; approved images can appear on the frontend with `[wpr_pro_guest_gallery]`.
 
 Companion Mobile Apps: Free iOS and Android apps connect coordinators and guests to your licensed Pro site via a short join code—no extra app subscription.
@@ -87,6 +94,8 @@ Admin Notes & Table Numbers: Organize your seating chart and keep private notes.
 Email & SMS Invites: Send invitations directly from the dashboard.
 
 Customization: Toggle visibility of fields and customize colors/fonts.
+
+In-admin help: **Wedding RSVP → Help** documents free gift registries and explains these Pro gift tools with clear “Available in Pro” notes (even before you upgrade).
 
 == How to Purchase Pro ==
 
@@ -115,7 +124,7 @@ Yes! While tailored for weddings, it works for any event requiring basic RSVP tr
 Go to Settings and scroll to the bottom danger zone. Click **Erase all data & reset plugin** (exports first if you need a backup).
 
 = Is there a Pro version? =
-Yes. [Wedding Party RSVP Pro](https://landtechwebdesigns.com/wedding-party-rsvp-wordpress-plugin/) adds child guests, full menu courses (appetizers, hors d'oeuvres, desserts), customizable menu labels, seating notes, batch email and SMS, deeper styling, and guest photo galleries via the free Wedding RSVP companion apps. The free plugin covers unlimited guests, adult entrées, dietary options, CSV import/export, guest hub summaries, and the public RSVP form.
+Yes. [Wedding Party RSVP Pro](https://landtechwebdesigns.com/wedding-party-rsvp-wordpress-plugin/) adds child guests, full menu courses (appetizers, hors d'oeuvres, desserts), customizable menu labels, seating notes, batch email and SMS, deeper styling, guest photo galleries via the free Wedding RSVP companion apps, a registry setup wizard, an on-site wish list guests can reserve, Stripe cash fund tiers, and gift CSV import. The free plugin covers unlimited guests, adult entrées, dietary options, CSV import/export, guest hub summaries, gift registry links (with optional Amazon Associates / Skimlinks), and the public RSVP form. Open **Wedding RSVP → Help** in wp-admin for free guides plus plain-English Pro gift feature notes.
 
 = Do guests need a WordPress account to RSVP? =
 No. Guests use a Party ID (invite code) you assign—no user registration required.
@@ -139,7 +148,13 @@ In wp-admin, use **Tools → Export Personal Data** and **Tools → Erase Person
 Yes. In **Settings → Logistics**, set event title, start time, and optional venue; when enabled, guests who complete RSVP can download an **.ics** file (“Add to calendar”).
 
 = How do I add gift registry links to the RSVP page? =
-In **Wedding RSVP → Settings** (free) use **Frontend Display**; with **Pro**, use **Settings → Frontend text**. Enter an optional heading and one or more link labels with full **https** URLs (for example Amazon or Zola). Guests see them after signing in with their Party ID.
+In **Wedding RSVP → Settings** (free) use **Frontend Display**; with **Pro**, use **Settings → Frontend text**. Enter an optional heading and one or more link labels with full **https** URLs (for example Amazon or Zola). Guests see them after signing in with their Party ID. For a step-by-step walkthrough (and notes on Pro tools), open **Wedding RSVP → Help**.
+
+= Does Pro help me set up Amazon, Target, Walmart, and other registries? =
+Yes — that is a **Pro** feature. Wedding Party RSVP Pro’s **Registry setup wizard** (on **Wedding RSVP → Registry hub**) walks you through picking stores, opening each store’s registry-creation page, pasting the share links back, and adding them to your RSVP page. The free plugin still lets you paste those links by hand under Settings. Read the wizard guide under **Wedding RSVP → Help** (marked Available in Pro), or the full manual under **Wedding RSVP → Documentation** when Pro is licensed.
+
+= Can guests reserve gifts so nobody buys the same thing twice? =
+That is a **Pro** feature called the **wish list** (on-site item registry). With Pro, you add individual gifts from any store on **Registry hub**; guests reserve or mark them purchased on the RSVP page. Free users can still list store registry links. See **Wedding RSVP → Help → Wish list** for the Pro guide (Available in Pro).
 
 = Can I use my Amazon Associates (affiliate) tag on Amazon registry links? =
 Yes, as an optional opt-in (off by default). Under the gift registry settings, check **Append my Amazon Associates tag** and enter your tracking ID (for example `yoursite-20`). Registry links that point to an Amazon site then get `?tag=your-id` appended so qualifying purchases credit your Associates account; links that already contain a `tag` parameter are left unchanged. **Affiliate disclosure:** whenever tagging is active, the plugin automatically displays “As an Amazon Associate I earn from qualifying purchases.” directly below the registry links, as required by the Amazon Associates Operating Agreement. **Your own ID is required on self-hosted sites:** if the checkbox is on but no tag is entered, tagging stays inactive (nothing is appended) and the settings screen shows a reminder with a sign-up link. Exception: on sites hosted on the plugin author’s **weddingrsvp.pro** network (sites the author owns and operates), the network’s Associates ID (`weddingrsvp-20`) is used automatically when the field is blank; this is stated next to the setting. The plugin itself contacts no Amazon API—the tag is only appended to outbound links you added.
@@ -172,6 +187,8 @@ This plugin does not call third-party APIs for core RSVP storage. Optional behav
 
 * **Multi-step drip journey emails (optional)** — When enabled under **Settings → Logistics**, an hourly scheduled task may send sequenced **wp_mail** follow-ups (up to a small fixed step count) to guests in a chosen segment. Delivery uses your WordPress email configuration; no separate third-party API is required for email. When the drip journey is enabled, it supersedes the legacy daily deadline reminder cron. SMS drip steps require **Wedding Party RSVP Pro** + Twilio (see Pro readme). Deleting the plugin drops drip tables/options; Erase Personal Data also removes drip rows for matching guest IDs.
 
+* **Amazon Associates (optional, off by default)** — When the site owner enables Amazon Associates under gift registry settings and provides their Associate tag, Amazon registry links are rewritten in the guest’s browser to include the `tag=` query parameter. Opening such a link sends the guest’s browser to **Amazon**; standard request data is processed by Amazon under its policies. The plugin makes **no server-to-server calls** to Amazon for this feature. An Amazon Associates disclosure is shown automatically below the registry links while the tag is active. See the [Amazon Associates Operating Agreement](https://affiliate-program.amazon.com/help/operating/agreement) and [Amazon Privacy Notice](https://www.amazon.com/gp/help/customer/display.html?nodeId=468496).
+
 * **Skimlinks affiliate links (optional, off by default)** — When the site owner enables the Skimlinks option under the gift registry settings and provides their Skimlinks publisher ID, non-Amazon registry links are rewritten to the documented Skimlinks redirect format (`https://go.skimresources.com/?id=…&url=…`). When a guest clicks such a link, their browser is sent to **Skimlinks** (Taboola), which records the click for commission attribution and redirects to the destination store; the destination URL and standard request data (such as IP address and user agent) are processed by Skimlinks at that time. The plugin makes **no server-to-server calls** to Skimlinks and loads **no Skimlinks JavaScript**. An affiliate disclosure is shown automatically below the registry links while the feature is active. See the [Skimlinks Publisher Terms](https://skimlinks.com/publisher-terms-and-conditions/) and [Skimlinks Privacy Policy](https://skimlinks.com/privacy-policies/).
 
 * **Caterer portal (optional magic link)** — **Wedding RSVP → Caterer portal** lets administrators generate a secret URL that shows a **read-only** meal summary by table on your own site. No off-site API is called; anyone with the link can view the summary until you revoke or regenerate the token.
@@ -183,6 +200,13 @@ This plugin does not call third-party APIs for core RSVP storage. Optional behav
 This plugin bundles **FPDF** (version 1.86, © Olivier Plathey) under `includes/lib/fpdf/` for optional **Export check-in PDF** in the guest list. FPDF is free software; see the header comment in `fpdf.php` for license terms.
 
 == Changelog ==
+= 8.2.11 =
+
+* **Help & Documentation** — New **Wedding RSVP → Help** admin page: guides for free gift registry links, Amazon Associates, and Skimlinks, plus plain-English docs for Pro gift tools (registry setup wizard, wish list, Stripe cash fund, gift CSV import) clearly marked **Available in Pro**. When Pro Documentation is present, Help links to the full Pro manuals.
+* **Settings** — Gift registry section links to Help and notes Pro wizard / wish list when Pro is not active.
+* **Address focus** — Deep-link query args scroll the mailing address field into view on the public RSVP form (when Pro address campaign is not handling the same args).
+* **Compliance** — Named REST permission callback for public party-preview; Interactivity / WP 7.0 AI helpers gated with `function_exists`; drip / uninstall / cache PHPCS hardening; External Services notes for affiliate registry options.
+* **Docs** — FAQ and Pro Features list updated for the registry wizard and wish list.
 
 = 8.2.10 =
 
@@ -246,244 +270,6 @@ This plugin bundles **FPDF** (version 1.86, © Olivier Plathey) under `includes/
 * **Block registration** — Centralized `WGRSVP_Blocks` registers RSVP form, guest hub, and thank-you checklist dynamic blocks (PHP `render.php` only).
 * **AI model preference** — Optional model slug on General Settings; passed to `using_model_preference()` when supported.
 
-= 8.0.8 =
+= Earlier releases =
 
-* **AI wording fix** — WordPress 7.0 `WP_AI_Client_Prompt_Builder` routes `generate_text()` through `__call`; removed incorrect `method_exists()` check that blocked AI with configured Connectors.
-* **Household RSVP progress** — Dashboard card uses neutral admin surface colors and explicit text variables for readable contrast on the Modern admin theme.
-* **Distribution** — `create-plugin-zip.sh` writes versioned zips to `Dist/` (internal folder name unchanged).
-
-= 8.0.7 =
-
-* **DataViews default** — When the admin bundle is built, the Wedding Dashboard opens the REST-driven **DataViews** guest table by default; per-user toggle switches to the classic table (user meta `wgrsvp_guest_list_view`).
-* **AI setup UX** — General Settings AI wording links administrators to **Settings → Connectors** when the WordPress AI Client is not configured (WP 7.0+).
-* **WordPress 7.0 admin** — Dashboard and settings layout CSS uses admin theme variables for better contrast on the Modern admin theme.
-
-= 8.0.6 =
-
-* **Compatibility headers** — `readme.txt` and plugin headers declare **`Requires PHP: 7.4`** alongside **Tested up to: WordPress 7.0**, matching WordPress 7 minimum PHP guidance and avoiding installs on obsolete PHP releases.
-
-= 8.0.5 =
-
-* **Playground blueprint** — `installPlugin` uses **`pluginData`** (current WordPress Playground schema); landing page opens the public **Wedding RSVP** demo (`/`); demo seed **merges** `wgrsvp_general_settings` instead of replacing the option; root `blueprint.json` stays in sync with `assets/blueprints/blueprint.json`.
-* **Distribution** — Release zip includes `assets/blueprints/blueprint.json` (excludes only the nested `assets/blueprints/trunk/` dev tree).
-
-= 8.0.4 =
-
-* **Redirect URL** — Helpers `wgrsvp_sanitize_redirect_url_setting()` and `wgrsvp_resolve_stored_redirect_url()` for full URLs and root-relative paths; General Settings save, Interactivity/AJAX success payload, and classic form POST all resolve the stored value before `wp_safe_redirect()` so guests reach your thank-you / custom page when Pro is inactive.
-* **Documentation** — External Services clarifies that the **WordPress AI Client** / AI wording assistant requires **WordPress 7.0 or later** (`wp_ai_client_prompt`).
-
-= 8.0.3 =
-
-* **Gift registries** — **Settings → Frontend Display**: optional heading plus multiple registry links (label + https URL). Shown on the public RSVP form after guests enter their **Party ID** (filter `wgrsvp_gift_registry_items`). **Wedding Party RSVP Pro**: same fields on **Settings → Frontend text**; front end uses the shared renderer when the free plugin is active.
-
-= 8.0.2 =
-
-* **Modular admin** — On **Wedding RSVP → Settings** (General Settings), the **Admin menu visibility** box lets administrators show or hide built-in tools: Paste Guest List, Menu Options, Gifts & thank-you, Thank-you checklist, Client summary, Vendor & venue packet, Follow-up & day-of, Caterer portal, and Audit log. Defaults stay **on**; the `wgrsvp_admin_module_enabled` filter still applies per module. When **Wedding Party RSVP Pro** is active with a valid license, use Pro’s Settings for the same module keys.
-* **Vendor & venue packet** — Seating snapshot queries (`SHOW COLUMNS` + seated guest count) are cached **24 hours** (`wgrsvp_vendor_packet_seating_snapshot`) and clear when guest data changes.
-* **Security / UX** — Clearer admin POST validation order where applicable, shared **wgrsvp-admin-ui.js** for destructive confirmations (e.g. factory reset), and RSVP success flash uses transient key `wgrsvp_rsvp_form_success_flash` after non-AJAX submit.
-* **i18n** — Additional translated admin strings (menus, guest list, actions).
-* **REST** — Expanded documentation for public `wgrsvp/v1/party-preview` and coordinator `wgrsvp/v1/guest-rows` routes (preview remains IP rate-limited).
-
-= 8.0.1 =
-
-* **Pro co-install** — When **Wedding Party RSVP Pro** is active with the merged admin hub, the free plugin no longer registers a duplicate **Settings** submenu, so **Wedding RSVP → Settings** consistently opens Pro’s **Settings & Licensing** screen (tabbed UI). If an older request hits the free settings callback, it redirects to the shared settings URL.
-* **i18n / Plugin Check** — Rely on WordPress automatic translation loading for plugins hosted on WordPress.org (removed manual `load_plugin_textdomain` on `init`); `Text Domain` and `Domain Path` in the plugin header unchanged.
-
-= 8.0.0 =
-
-* **Major version alignment** — Release series moves to 8.0.0; coordinates with Wedding Party RSVP Pro 2.0.0 and WeddingPartyRSVPData 2.0.0. No database migration beyond normal plugin load and existing upgrade paths.
-
-= 7.3.34 =
-
-* **Plugin Check / standards** — translators comments for placeholder strings; readme short description under 150 characters; REST guest-rows `prepare()` argument spread and allowlisted SELECT columns; deadline nudge SQL uses `%i` + bound IN list; audit log and vendor packet queries use `%i` where appropriate; PDF/CSV stream helpers use literal text domain `wedding-party-rsvp` with an ignored optional third argument so Pro call sites keep working; bundled FPDF files gain `ABSPATH` guards; PHPCS excludes `includes/lib/fpdf`; misc PHPCS inline docs for nonce/token and DB calls.
-
-= 7.3.33 =
-
-* **Try Premium** (InstaWP) — launch link for a temporary Pro preview: wp-admin (activation notice, Getting started, Plugins list actions/meta, dashboard widget) plus readme **Try It Live** and **External Services** (InstaWP). Filter: `wgrsvp_pro_live_demo_url`. Shown when Pro is not active.
-
-= 7.3.32 =
-
-* **Planner roadmap** — Guest list health tiles (mixed households, meal gaps, pending without contact, allergy count, Pro sub-event stragglers); **Vendor & venue packet** printable admin page; DIY vs planner onboarding copy on Getting started; plainer “danger zone” reset wording; invitation-code labels in guest list; free Email/SMS screens explain copy-link workflow; coordinator/mobile-friendly tweaks for health tiles and Follow-up & day-of.
-
-= 7.3.31 =
-
-* **Guest audit log** — additional Pro integration sources (`pro_bulk_guest_list`, `pro_import_csv`, `pro_ai_guest_tags`, `pro_rest_seating`) and tracked columns `table_id`, `wpr_pro_ai_note_tags`; QR check-in tokens are no longer included in diff payloads.
-
-= 7.3.30 =
-
-* **Guest audit log** — new table `wgrsvp_guest_audit` (dbDelta on activate/upgrade) records insert/update/delete on guest rows with source (public form, admin, imports, day-of desk, setup wizard, Pro edit/REST/check-in where applicable), actor, and JSON field diffs. **Wedding RSVP → Audit log** (administrators) lists and filters entries. **Erase Personal Data** deletes audit rows for erased guest IDs; factory reset truncates the audit table. Filters: `wgrsvp_audit_trail_should_log`, `wgrsvp_audit_trail_changes`, `wgrsvp_audit_trail_tracked_fields`; action: `wgrsvp_guest_audit_logged`.
-
-= 7.3.29 =
-
-* **Follow-up & day-of** — new **Wedding RSVP → Follow-up & day-of** screen: follow-up counts and links, parties with mixed Accepted/Pending, a pending-guest table (200 rows), and a **Day-of desk** with large search (attending-only or all statuses). Administrators can **Mark arrived** / **Undo** (stores `wgrsvp_arrived_at` on the guest row; Pro QR check-ins still show as “Checked in (Pro)”). Coordinators can open the screen for lookup; arrival buttons remain admin-only. Schema: `wgrsvp_arrived_at` on `wedding_rsvps` (dbDelta).
-* Coordinators may access `wedding-rsvp-ops` without redirect (same capability as the guest dashboard).
-
-= 7.3.28 =
-
-* **Household RSVP progress** on the Wedding Dashboard (distinct parties fully replied vs total), with a shortcut to Pending guests grouped by party.
-* **Saved filter shortcuts** — administrators can save the current guest-list filters under a label (per-user meta); one-click return and remove.
-* **Client summary** — **Wedding RSVP → Client summary**: optional magic-link page with high-level counts and household progress (no guest names); option `wgrsvp_client_summary_portal_state`; cleared on factory reset.
-* Aggregated stats cache now includes `households_total` and `households_fully_replied`; filter `wgrsvp_aggregated_rsvp_stats`.
-
-= 7.3.27 =
-
-* Fix fatal error on Wedding Dashboard: `get_aggregated_rsvp_stats()` is now **public** so `WGRSVP_Growth_Checklist` can call it (was private).
-
-= 7.3.26 =
-
-* **Getting started** panel on the Wedding Dashboard (RSVP URL, menu entrées, guests) with links to the setup wizard and Playground; dismissible option `wgrsvp_getting_started_panel_dismissed` (cleared on factory reset).
-* **Next steps: pending RSVPs** notice with links to pending list, Logistics reminders, comms, and Gifts & thank-you; per-user dismiss meta `wgrsvp_next_steps_notice_dismissed`.
-* **Straggler filters** (`wgrsvp_gap`): no email, no phone, no mailing address, pending with no email/phone; honored by CSV / check-in / caterer exports via `export_wgrsvp_gap`.
-* **Plugins list:** **Live demo** action and row meta linking to the official Playground blueprint.
-* **Settings → Logistics:** `id="wgrsvp-logistics-heading"` for in-admin deep links.
-
-= 7.3.25 =
-
-* Guest Hub (Interactivity + thank-you path): show **child meal**, **appetizer**, and **hors d'oeuvres** when present; **event start** uses the site timezone for display when logistics include a parseable start time. Filter: `wgrsvp_guest_hub_payload`.
-* **Gifts & thank-you**: filter **thank-you not sent** (any guest); **bulk** “mark thank-you sent today” with row checkboxes; **Print mailing sheet** (names, addresses, gift reference) for the current filter; CSV/PDF exports honor the new filter.
-
-= 7.3.24 =
-
-NEW: **Gifts & thank-you** — **Wedding RSVP → Gifts & thank-you** lists guests with optional **gift received** and **thank-you card sent** date on each row; filter pending thank-yous; **Export CSV** / **Export PDF** (administrators). Schema: `gift_received`, `thankyou_card_sent_on` on `wedding_rsvps`.
-
-= 7.3.23 =
-
-NEW: **Deadline reminder emails** — optional WP-Cron daily nudges before the RSVP deadline (`wgrsvp_rsvp_deadline_nudge`); settings under **General Settings → Logistics**; filters `wgrsvp_deadline_nudge_recipients`, `wgrsvp_deadline_nudge_skip_guest`, action `wgrsvp_deadline_nudge_sent_email` (Pro may attach Twilio SMS).
-
-NEW: **Caterer portal** — magic-link read-only meal summary (**Wedding RSVP → Caterer portal**); Pro maps `table_id` labels when seating tables exist.
-
-= 7.3.22 =
-
-NEW: **Guest Hub** — post-RSVP summary (meals, dietary, event details) via AJAX payload, thank-you page, shortcode `[wgrsvp_guest_hub]`, and block; optional **Open in Google Maps** from Logistics venue (documented under External Services).
-
-= 7.3.18 =
-
-IMPROVED: When **Wedding Party RSVP Pro** is active and licensed, the **main Wedding RSVP** guest list again includes **per-guest email** (and **SMS** when the row has a phone) action buttons—same templates as bulk invite, for reminders or guests added later. Administrators only.
-
-= 7.3.17 =
-
-IMPROVED: **DataViews (admin)** — when **Wedding Party RSVP Pro** is active with a valid license, the read-only table adds **Check-in** column filter, **Checked in at** and **Planner tags** columns, optional **Planner tag (slug)** text filter (REST `wpr_planner_tag`), and passes `wpr_attended` from the UI. Free-only installs see a short note that those options require Pro.
-
-NEW: Guest-rows REST accepts `wpr_planner_tag` (slug); Pro extends `wgrsvp_guest_rows_rest_order_by_map` for `wpr_pro_attended_at` and `wpr_pro_planner_tags` sorting.
-
-= 7.3.16 =
-
-NEW: **Thank-you checklist** — optional post-event task list in its own database table (name like `wp_wgrsvp_thankyou_tasks`): **Wedding RSVP → Thank-you checklist** (Administrators), shortcode `[wgrsvp_thankyou_tracker]`, block **Thank-you checklist**, and optional `public="1"` for visibility on planner-only pages (avoid on fully public pages).
-
-NEW: **Household prompt** — after a successful Interactivity API RSVP save (no redirect), guests may see a short notice when their party still has pending members, with scroll-to-next-pending.
-
-IMPROVED: Privacy Policy suggested text mentions the checklist table.
-
-= 7.3.15 =
-
-NEW: **Wedding RSVP Form** block (`wedding-party-rsvp/rsvp-form`) — dynamic block matching `[wedding_rsvp_form]`; `block.json` enables `__experimentalVisibility` where the editor supports viewport visibility.
-
-NEW: **DataViews (admin)** — optional read-only guest table on **Wedding Dashboard** (`?wgrsvp_dataview=1`) uses `@wordpress/dataviews` when `build/` is present (run `npm run build` in the plugin directory), with `GET wgrsvp/v1/guest-rows` for pagination, search, RSVP filter, and sorting. Falls back to a small vanilla script if the bundle is missing.
-
-NEW: **Caterer summary export** — on the Wedding Dashboard guest list, export a **Caterer summary** (PDF or CSV) that aggregates accepted guests by table with meal counts and dietary/allergy notes (optional checkbox to include non-accepted rows). **DataViews** can filter by meal choice, text in dietary/allergies, and “has table assignment” via REST query args (`menu_choice`, `dietary_contains`, `allergy_contains`, `has_table`); all processing stays on your server.
-
-= 7.3.14 =
-
-NEW: **AI wording assistant** on General Settings (welcome title, closed-RSVP message, and copy-paste snippets for save-the-date / deadline reminder) when `wp_ai_client_prompt` is available. Filter: `wgrsvp_ai_wording_prompt`.
-
-IMPROVED: **Interactivity API** — optional entrée follow-up field when guests choose Vegetarian/Vegan; debounced email format hint on the RSVP form; `watch()` syncs a busy state class when WordPress exposes it (7.0+).
-
-= 7.3.12 =
-
-NEW: Optional **Add to calendar** (.ics) after RSVP when event details are set in General Settings; thank-you state uses a secure redirect with query args.
-
-NEW: **Export check-in PDF** on the guest dashboard (same filters as CSV), using bundled FPDF.
-
-= 7.3.11 =
-
-IMPROVED: License / Support field on General Settings masks a stored key when the site is effectively licensed (including the same trusted showcase hostname rules as Pro); saving with a blank field keeps the existing key.
-
-IMPROVED: Email/SMS admin placeholders and Pro communication redirects use effective license state (not only the raw option), matching Pro behavior for licensed co-installations.
-
-= 7.3.10 =
-
-Fix: When Wedding Party RSVP Pro is active with a valid license, the free plugin no longer runs its classic RSVP POST handler on `init` with the wrong nonce, so guests submitting the public RSVP form no longer see “Security check failed.” (Pro owns the shortcode and nonce in that configuration.)
-
-Compatibility: Confirmed “Tested up to” WordPress 6.9.x for this release.
-
-= 7.3.9 =
-
-Maintenance: Coordinated release with Wedding Party RSVP Pro; version and metadata alignment for the directory.
-
-= 7.3.8 =
-
-NEW: Suggested privacy policy text in **Settings → Privacy** (via WordPress privacy policy guide) describing stored guest data, export, and erase behavior.
-
-NEW: Personal data **eraser** (Erase Personal Data) for guest rows matched by email; dashboard stats cache refreshes after a successful erase.
-
-IMPROVED: Readme FAQ for data storage and export/erase; directory tag **event** added.
-
-= 7.3.7 =
-
-NEW: Optional block pattern to insert the RSVP shortcode from the block inserter.
-
-NEW: Plugins screen link to Pro; dismissible post-activation setup checklist; optional dashboard widget for RSVP counts (filterable).
-
-NEW: Optional milestone notice after the first guest RSVP (dismissible).
-
-NEW: CSV export can match the current guest list search and filters; “Copy RSVP link” for Party ID on the guest list; optional custom message when the RSVP deadline has passed; optional grouped-by-party view; optional privacy exporter for guest data; optional one-time sample guest seed for empty sites.
-
-IMPROVED: Works alongside Wedding Party RSVP Pro with both plugins active (merged admin menu when licensed; Pro owns the public shortcode when the license is active).
-
-= 7.3.6 =
-
-NEW: Optional frontend RSVP flow using the WordPress Interactivity API (6.5+): `data-wp-interactive`, `data-wp-context`, `data-wp-on--submit`, and live feedback via `data-wp-text` (no full page reload when the interactivity module loads). Classic POST submission remains for older WordPress or when script modules are unavailable.
-
-= 7.3.5 =
-
-Maintenance: Release version bump for coordinated directory update (aligns with Pro licensing documentation release).
-
-= 7.3.4 =
-
-Hardening: Addressed WordPress.org checker warnings around nested guest POST handling and custom-table database operations.
-
-Maintenance: Updated tested-up-to metadata formatting for directory compliance.
-
-= 7.3.3 =
-
-Maintenance: Release version bump and metadata normalization for directory checks.
-
-Compatibility: Updated 'Tested up to' formatting to WordPress.org-compliant major.minor (6.9).
-
-Hardening: Improved frontend guest POST handling and clarified custom-table DB operations for Plugin Check compliance.
-
-= 7.3.2 =
-
-Compatibility: Tested up to WordPress 6.9.
-
-= 7.3.1 =
-
-New: Review request notice after 7 days (Enjoying Wedding Party RSVP?) with Yes / No (Support) / Dismiss. AJAX dismissal, nonce-secured, shown only on plugin admin pages.
-
-= 7.3 =
-
-Security Update: Implemented late escaping for inline styles and rigorous variable escaping for output.
-
-Cleanup: Removed unused external service references to comply with directory guidelines.
-
-= 7.2 =
-
-Security: Updated prefixes, nonce sanitization, and SQL preparation.
-
-Architecture: Moved form processing to init hook for safer redirects.
-
-= 7.1 =
-
-Security Update: Fixed escaping and sanitization issues.
-
-Mobile Responsiveness: Updated Admin Dashboard with "Card View".
-
-Performance: Implemented Object Caching.
-
-= 7.0 =
-
-Major update with new UI.
-
-= 1.0 =
-
-Initial Release.
+See previous plugin tags (SVN/GitHub) for changelog entries before 8.1.0.

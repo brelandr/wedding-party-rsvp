@@ -6,7 +6,7 @@
  *
  * Plugin Name: Wedding Party RSVP – Guest List, Invitation & Event Manager
  * Description: Simple and secure RSVP system. Manage guest lists and adult meal choices.
- * Version: 8.2.10
+ * Version: 8.2.11
  * Author: Land Tech Web Designs, Corp
  * Author URI: https://landtechwebdesigns.com
  * Plugin URI: https://landtechwebdesigns.com/wedding-party-rsvp-wordpress-plugin/
@@ -283,7 +283,11 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 			require_once plugin_dir_path( __FILE__ ) . 'includes/class-wgrsvp-vendor-packet.php';
 			require_once plugin_dir_path( __FILE__ ) . 'includes/class-wgrsvp-frontend-cache.php';
 			require_once plugin_dir_path( __FILE__ ) . 'includes/class-wgrsvp-frontend-nonce-refresh.php';
+			require_once plugin_dir_path( __FILE__ ) . 'includes/class-wgrsvp-documentation.php';
 			WGRSVP_ICS::init_hooks();
+			if ( class_exists( 'WGRSVP_Documentation', false ) ) {
+				WGRSVP_Documentation::init();
+			}
 			WGRSVP_ThankYou_Tracker::register_hooks();
 			WGRSVP_Gifts_Report::register_hooks();
 			if ( class_exists( 'WGRSVP_Deadline_Nudges', false ) ) {
@@ -424,6 +428,10 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 			if ( ! $this->interactivity_module_available() ) {
 				return false;
 			}
+			// Call-site guard: Plugin Check wp_functions_compatibility recognizes function_exists() string literals.
+			if ( ! function_exists( 'wp_enqueue_script_module' ) ) {
+				return false;
+			}
 
 			wp_enqueue_script_module(
 				'wgrsvp-rsvp-interactivity',
@@ -443,6 +451,9 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 		 */
 		private function enqueue_party_lookup_interactivity_module() {
 			if ( ! $this->interactivity_module_available() ) {
+				return false;
+			}
+			if ( ! function_exists( 'wp_enqueue_script_module' ) ) {
 				return false;
 			}
 
@@ -492,16 +503,47 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 				array(
 					'methods'             => WP_REST_Server::READABLE,
 					'callback'            => array( $this, 'rest_serve_party_preview' ),
-					'permission_callback' => '__return_true',
+					'permission_callback' => array( $this, 'rest_permission_party_preview' ),
 					'args'                => array(
 						'party_id' => array(
 							'required'          => true,
 							'type'              => 'string',
 							'sanitize_callback' => 'sanitize_text_field',
+							'validate_callback' => array( $this, 'rest_validate_party_preview_party_id' ),
 						),
 					),
 				)
 			);
+		}
+
+		/**
+		 * Permission for GET /wgrsvp/v1/party-preview.
+		 *
+		 * Intentionally public: guests look up a Party ID before signing in.
+		 * Auth is not cookie-based; rest_serve_party_preview() rate-limits by IP
+		 * and returns only a limited preview (count + first names), never email/phone.
+		 *
+		 * @return true
+		 */
+		public function rest_permission_party_preview() {
+			return true;
+		}
+
+		/**
+		 * Validate party_id for the public party-preview REST route.
+		 *
+		 * @param mixed           $value   Raw value.
+		 * @param WP_REST_Request $request Request.
+		 * @param string          $param   Param name.
+		 * @return bool
+		 */
+		public function rest_validate_party_preview_party_id( $value, $request, $param ) {
+			unset( $request, $param );
+			$value = is_string( $value ) ? trim( $value ) : '';
+			if ( strlen( $value ) < 2 || strlen( $value ) > 50 ) {
+				return false;
+			}
+			return (bool) preg_match( '/^[A-Za-z0-9][A-Za-z0-9\-_]{0,49}$/', $value );
 		}
 
 		/**
@@ -647,8 +689,15 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 			if ( ! is_array( $order_map ) ) {
 				$order_map = $this->wgrsvp_get_admin_guest_list_order_by_map();
 			}
-			$order_column = isset( $order_map[ $orderby_key ] ) ? $order_map[ $orderby_key ] : 'id';
-			$order_dir    = ( 'desc' === strtolower( $order_low ) ) ? 'DESC' : 'ASC';
+			$order_column = 'id';
+			if ( isset( $order_map[ $orderby_key ] ) && is_string( $order_map[ $orderby_key ] ) ) {
+				$candidate = (string) $order_map[ $orderby_key ];
+				// Re-allowlist after filters: only simple SQL identifiers (blocks injection).
+				if ( preg_match( '/^[a-zA-Z_][a-zA-Z0-9_]*$/', $candidate ) ) {
+					$order_column = $candidate;
+				}
+			}
+			$order_dir = ( 'desc' === strtolower( $order_low ) ) ? 'DESC' : 'ASC';
 
 			$offset = ( $page - 1 ) * $per;
 			$table  = $this->table_name;
@@ -708,7 +757,21 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 			 */
 			$query_parts = apply_filters( 'wgrsvp_guest_rows_rest_query_parts', $query_parts, $request );
 			if ( is_array( $query_parts ) && isset( $query_parts['where'], $query_parts['args'] ) && is_array( $query_parts['where'] ) && is_array( $query_parts['args'] ) ) {
-				$sql_where = $query_parts['where'];
+				$safe_where = array();
+				foreach ( $query_parts['where'] as $fragment ) {
+					if ( ! is_string( $fragment ) || '' === $fragment ) {
+						continue;
+					}
+					// Reject stacked statements / comments from filter-supplied fragments.
+					if ( preg_match( '/;|--|\/\*|\*\//', $fragment ) ) {
+						continue;
+					}
+					if ( ! preg_match( '/^[a-zA-Z0-9_\s\%\(\)\=\<\>\!\,\.\']+$/', $fragment ) ) {
+						continue;
+					}
+					$safe_where[] = $fragment;
+				}
+				$sql_where = $safe_where;
 				$sql_args  = $query_parts['args'];
 			}
 			$where_sql = '';
@@ -1312,7 +1375,7 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 				$ty_non = sanitize_text_field( wp_unslash( (string) $_GET['wgrsvp_thanks_nonce'] ) );
 				$ty_ok  = sanitize_text_field( wp_unslash( (string) $_GET['wgrsvp_thanks'] ) );
 				if ( '1' === $ty_ok && WGRSVP_ICS::verify_thanks_nonce( $ty_pid, $ty_non ) ) {
-					$po_notes = class_exists( 'WPR_Pro_Frontend', false ) ? WPR_Pro_Frontend::flush_plus_one_notices_html( $ty_pid ) : '';
+					$po_notes = class_exists( 'WPR_Pro_Frontend', false ) ? wp_kses_post( WPR_Pro_Frontend::flush_plus_one_notices_html( $ty_pid ) ) : '';
 					$markup   = $this->wgrsvp_render_guest_hub_markup( $ty_pid );
 					if ( '' !== $markup ) {
 						return $po_notes . $markup;
@@ -3090,18 +3153,29 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 			if ( class_exists( 'WPR_Pro_Address_Campaign', false ) ) {
 				return;
 			}
-			// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only UX hint from nudge URL.
-			$focus = isset( $_GET['wpr_focus'] ) ? sanitize_key( wp_unslash( (string) $_GET['wpr_focus'] ) ) : '';
-			// phpcs:ignore WordPress.Security.NonceVerification.Recommended
+			// phpcs:disable WordPress.Security.NonceVerification.Recommended -- Read-only UX hints from nudge URL; no state change.
+			$focus   = isset( $_GET['wpr_focus'] ) ? sanitize_key( wp_unslash( (string) $_GET['wpr_focus'] ) ) : '';
 			$details = isset( $_GET['wpr_details'] ) ? sanitize_text_field( wp_unslash( (string) $_GET['wpr_details'] ) ) : '';
+			// phpcs:enable WordPress.Security.NonceVerification.Recommended
 			if ( 'address' !== $focus && '1' !== $details ) {
 				return;
 			}
-			$banner = wp_json_encode( __( 'Please confirm your mailing address below.', 'wedding-party-rsvp' ) );
-			$js     = '(function(){var tries=0;function run(){var form=document.querySelector(".wpr-wrapper form,form.wpr-rsvp-form,form");var el=document.querySelector(".wgrsvp-mailing-address,textarea[name*=\'[address]\'],input[name*=\'[address]\']");if(!el){if(tries++<40){window.setTimeout(run,150);}return;}if(form&&!document.querySelector(".wgrsvp-details-banner")){var b=document.createElement("div");b.className="wgrsvp-details-banner";b.setAttribute("role","status");b.style.cssText="margin:0 0 12px;padding:10px 12px;border-left:4px solid #2271b1;background:#f0f6fc;";b.textContent=' . $banner . ';form.insertBefore(b,form.firstChild);}el.scrollIntoView({behavior:"smooth",block:"center"});try{el.focus();}catch(e){}el.style.outline="2px solid #2271b1";el.style.outlineOffset="2px";}if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",run);}else{run();}})();';
-			if ( function_exists( 'wp_print_inline_script_tag' ) ) {
-				wp_print_inline_script_tag( $js, array( 'id' => 'wgrsvp-address-focus' ) );
-			}
+			wp_register_script(
+				'wgrsvp-address-focus',
+				plugins_url( 'assets/js/wgrsvp-address-focus.js', __FILE__ ),
+				array(),
+				'8.2.11',
+				true
+			);
+			wp_localize_script(
+				'wgrsvp-address-focus',
+				'wgrsvpAddressFocus',
+				array(
+					'banner' => __( 'Please confirm your mailing address below.', 'wedding-party-rsvp' ),
+				)
+			);
+			wp_enqueue_script( 'wgrsvp-address-focus' );
+			wp_print_scripts( array( 'wgrsvp-address-focus' ) );
 		}
 
 		/**
@@ -4504,6 +4578,25 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 					if ( ! is_array( $prev ) ) {
 						$prev = array();
 					}
+
+					$quiet_start_raw = isset( $_POST['deadline_nudge_quiet_start'] ) ? sanitize_text_field( wp_unslash( (string) $_POST['deadline_nudge_quiet_start'] ) ) : '';
+					$quiet_end_raw   = isset( $_POST['deadline_nudge_quiet_end'] ) ? sanitize_text_field( wp_unslash( (string) $_POST['deadline_nudge_quiet_end'] ) ) : '';
+					$deadline_nudge_quiet_start = '' !== $quiet_start_raw ? min( 23, max( 0, absint( $quiet_start_raw ) ) ) : -1;
+					$deadline_nudge_quiet_end   = '' !== $quiet_end_raw ? min( 23, max( 0, absint( $quiet_end_raw ) ) ) : -1;
+
+					$amazon_affiliate_tag = '';
+					if ( isset( $_POST['amazon_affiliate_tag'] ) && class_exists( 'WGRSVP_Gift_Registries', false ) ) {
+						$amazon_affiliate_tag = WGRSVP_Gift_Registries::sanitize_amazon_tag(
+							sanitize_text_field( wp_unslash( (string) $_POST['amazon_affiliate_tag'] ) )
+						);
+					}
+					$skimlinks_publisher_id = '';
+					if ( isset( $_POST['skimlinks_publisher_id'] ) && class_exists( 'WGRSVP_Gift_Registries', false ) ) {
+						$skimlinks_publisher_id = WGRSVP_Gift_Registries::sanitize_skimlinks_id(
+							sanitize_text_field( wp_unslash( (string) $_POST['skimlinks_publisher_id'] ) )
+						);
+					}
+
 					$settings = array_merge(
 						$prev,
 						array(
@@ -4533,20 +4626,16 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 							'deadline_nudge_include_declined' => isset( $_POST['deadline_nudge_include_declined'] ) ? 1 : 0,
 							'deadline_nudge_segment'  => isset( $_POST['deadline_nudge_segment'] ) ? sanitize_key( wp_unslash( (string) $_POST['deadline_nudge_segment'] ) ) : 'pending',
 							'deadline_nudge_audit'    => isset( $_POST['deadline_nudge_audit'] ) ? 1 : 0,
-							'deadline_nudge_quiet_start' => isset( $_POST['deadline_nudge_quiet_start'] ) && '' !== (string) $_POST['deadline_nudge_quiet_start'] ? min( 23, max( 0, absint( wp_unslash( $_POST['deadline_nudge_quiet_start'] ) ) ) ) : -1,
-							'deadline_nudge_quiet_end'   => isset( $_POST['deadline_nudge_quiet_end'] ) && '' !== (string) $_POST['deadline_nudge_quiet_end'] ? min( 23, max( 0, absint( wp_unslash( $_POST['deadline_nudge_quiet_end'] ) ) ) ) : -1,
+							'deadline_nudge_quiet_start' => $deadline_nudge_quiet_start,
+							'deadline_nudge_quiet_end'   => $deadline_nudge_quiet_end,
 							'gift_registries'         => class_exists( 'WGRSVP_Gift_Registries', false )
 								? WGRSVP_Gift_Registries::sanitize_from_request( (array) wp_unslash( $_POST ) )
 								: array(),
 							'gift_registry_heading'   => isset( $_POST['gift_registry_heading'] ) ? sanitize_text_field( wp_unslash( (string) $_POST['gift_registry_heading'] ) ) : '',
 							'amazon_affiliate_enabled' => isset( $_POST['amazon_affiliate_enabled'] ) ? 1 : 0,
-							'amazon_affiliate_tag'    => isset( $_POST['amazon_affiliate_tag'] ) && class_exists( 'WGRSVP_Gift_Registries', false )
-								? WGRSVP_Gift_Registries::sanitize_amazon_tag( wp_unslash( (string) $_POST['amazon_affiliate_tag'] ) )
-								: '',
+							'amazon_affiliate_tag'    => $amazon_affiliate_tag,
 							'skimlinks_enabled'       => isset( $_POST['skimlinks_enabled'] ) ? 1 : 0,
-							'skimlinks_publisher_id'  => isset( $_POST['skimlinks_publisher_id'] ) && class_exists( 'WGRSVP_Gift_Registries', false )
-								? WGRSVP_Gift_Registries::sanitize_skimlinks_id( wp_unslash( (string) $_POST['skimlinks_publisher_id'] ) )
-								: '',
+							'skimlinks_publisher_id'  => $skimlinks_publisher_id,
 						)
 					);
 					update_option( $this->opt_settings, $settings );
@@ -4665,6 +4754,19 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 						<br><small class="description"><?php esc_html_e( 'Shown above registry links on the RSVP page when at least one URL is set. Leave blank for the default label.', 'wedding-party-rsvp' ); ?></small></p>
 						<p><strong><?php esc_html_e( 'Gift registry links', 'wedding-party-rsvp' ); ?></strong></p>
 						<p class="description"><?php esc_html_e( 'Guests see these links on the invitation RSVP page (after they enter their Party ID). Use full https URLs in any row below (up to 15). Unused blank rows are ignored when you save.', 'wedding-party-rsvp' ); ?></p>
+						<p class="description">
+							<?php esc_html_e( 'Need a walkthrough?', 'wedding-party-rsvp' ); ?>
+							<a href="<?php echo esc_url( admin_url( 'admin.php?page=wedding-rsvp-help' ) ); ?>"><?php esc_html_e( 'Wedding RSVP → Help', 'wedding-party-rsvp' ); ?></a>
+							<?php esc_html_e( 'covers gift registry help, Amazon/Skimlinks notes, and Pro tools (setup wizard, wish list, cash fund).', 'wedding-party-rsvp' ); ?>
+						</p>
+						<?php if ( ! class_exists( 'WPR_Pro_Registry_Wizard', false ) ) : ?>
+						<p class="description" style="padding:8px 10px;background:#f0f6fc;border-left:3px solid #2271b1;">
+							<?php esc_html_e( 'Wedding Party RSVP Pro adds a guided registry setup wizard and an on-site wish list guests can reserve.', 'wedding-party-rsvp' ); ?>
+							<a href="<?php echo esc_url( admin_url( 'admin.php?page=wedding-rsvp-help#wgrsvp-help-pro-wizard' ) ); ?>"><?php esc_html_e( 'Read in Help', 'wedding-party-rsvp' ); ?></a>
+							<?php esc_html_e( 'or', 'wedding-party-rsvp' ); ?>
+							<a href="<?php echo esc_url( $this->get_pro_marketing_url() ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'learn about Pro', 'wedding-party-rsvp' ); ?></a>.
+						</p>
+						<?php endif; ?>
 						<table class="widefat striped" style="max-width:720px;" role="presentation">
 							<thead><tr><th scope="col"><?php esc_html_e( 'Link label', 'wedding-party-rsvp' ); ?></th><th scope="col"><?php esc_html_e( 'URL', 'wedding-party-rsvp' ); ?></th></tr></thead>
 							<tbody>
@@ -5616,7 +5718,7 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 				$ty_pid  = sanitize_text_field( wp_unslash( (string) $_GET['party_id'] ) );
 				$ty_non  = sanitize_text_field( wp_unslash( (string) $_GET['wgrsvp_thanks_nonce'] ) );
 				if ( '1' === $ty_flag && WGRSVP_ICS::verify_thanks_nonce( $ty_pid, $ty_non ) ) {
-					$po_notes = class_exists( 'WPR_Pro_Frontend', false ) ? WPR_Pro_Frontend::flush_plus_one_notices_html( $ty_pid ) : '';
+					$po_notes = class_exists( 'WPR_Pro_Frontend', false ) ? wp_kses_post( WPR_Pro_Frontend::flush_plus_one_notices_html( $ty_pid ) ) : '';
 					$out      = '<div class="wpr-wrapper">' . $po_notes . '<div class="wpr-guest-card" style="color:green;border:1px solid green;padding:15px;margin-bottom:20px;background:#eaffea;">';
 					$out     .= esc_html__( 'Thank you! Your RSVP has been updated.', 'wedding-party-rsvp' );
 					$out     .= '</div>';
@@ -5718,6 +5820,7 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 				$output .= '<h2>' . esc_html( $welcome_title ) . '</h2>';
 				$output .= '<input type="text" name="wpr_honey" class="wpr-honey" autocomplete="off" tabindex="-1">';
 				if ( class_exists( 'WGRSVP_Gift_Registries', false ) ) {
+					// render() already late-escapes via kses_gift_area_html().
 					$output .= WGRSVP_Gift_Registries::render( $settings );
 				}
 

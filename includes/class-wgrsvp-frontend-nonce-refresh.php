@@ -120,10 +120,11 @@ if ( ! class_exists( 'WGRSVP_Frontend_Nonce_Refresh' ) ) {
 			}
 
 			$party_id = '';
-			// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Public refresh endpoint; party_id is optional context for chat nonce only.
+			// phpcs:disable WordPress.Security.NonceVerification.Recommended -- Public refresh endpoint; returns fresh nonces only (no state change).
 			if ( isset( $_REQUEST['party_id'] ) ) {
 				$party_id = sanitize_text_field( wp_unslash( (string) $_REQUEST['party_id'] ) );
 			}
+			// phpcs:enable WordPress.Security.NonceVerification.Recommended
 
 			$nonces = self::build_frontend_nonces( $party_id );
 

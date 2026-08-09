@@ -60,6 +60,9 @@ if ( ! class_exists( 'WGRSVP_Abilities_Registry' ) ) {
 		 * @return void
 		 */
 		public static function register() {
+			if ( ! function_exists( 'wp_register_ability' ) ) {
+				return;
+			}
 			wp_register_ability(
 				self::CATEGORY . '/ai-wording',
 				array(

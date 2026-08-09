@@ -14,13 +14,13 @@ if ( ! defined( 'WP_UNINSTALL_PLUGIN' ) ) {
 
 global $wpdb;
 
-$state = $wpdb->prefix . 'wgrsvp_drip_state';
-$sends = $wpdb->prefix . 'wgrsvp_drip_sends';
+$wgrsvp_drip_state_table = $wpdb->prefix . 'wgrsvp_drip_state';
+$wgrsvp_drip_sends_table = $wpdb->prefix . 'wgrsvp_drip_sends';
 
-// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.SchemaChange, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Uninstall DROP; prefix from $wpdb.
-$wpdb->query( "DROP TABLE IF EXISTS `{$state}`" );
-// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.SchemaChange, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
-$wpdb->query( "DROP TABLE IF EXISTS `{$sends}`" );
+// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.SchemaChange, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter -- Uninstall DROP; table from trusted $wpdb->prefix + fixed slug.
+$wpdb->query( "DROP TABLE IF EXISTS `{$wgrsvp_drip_state_table}`" );
+// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.SchemaChange, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter -- Uninstall DROP; table from trusted $wpdb->prefix + fixed slug.
+$wpdb->query( "DROP TABLE IF EXISTS `{$wgrsvp_drip_sends_table}`" );
 
 delete_option( 'wgrsvp_drip_journey' );
 delete_option( 'wgrsvp_drip_db_version' );

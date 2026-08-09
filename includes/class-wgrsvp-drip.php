@@ -75,11 +75,14 @@ if ( ! class_exists( 'WGRSVP_Drip' ) ) {
 			if ( empty( $ids ) ) {
 				return;
 			}
-			$placeholders = implode( ',', array_fill( 0, count( $ids ), '%d' ) );
-			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare, PluginCheck.Security.DirectDB.UnescapedDBParameter -- Placeholders built from count(ids).
-			$wpdb->query( $wpdb->prepare( 'DELETE FROM %i WHERE guest_id IN (' . $placeholders . ')', array_merge( array( self::state_table() ), $ids ) ) );
-			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare, PluginCheck.Security.DirectDB.UnescapedDBParameter
-			$wpdb->query( $wpdb->prepare( 'DELETE FROM %i WHERE guest_id IN (' . $placeholders . ')', array_merge( array( self::sends_table() ), $ids ) ) );
+			$state_table = self::state_table();
+			$sends_table = self::sends_table();
+			foreach ( $ids as $guest_id ) {
+				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Privacy erase; per-ID delete avoids dynamic IN placeholder interpolation.
+				$wpdb->delete( $state_table, array( 'guest_id' => $guest_id ), array( '%d' ) );
+				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+				$wpdb->delete( $sends_table, array( 'guest_id' => $guest_id ), array( '%d' ) );
+			}
 		}
 
 		/**
@@ -787,13 +790,16 @@ if ( ! class_exists( 'WGRSVP_Drip' ) ) {
 				}
 			}
 
+			$quiet_start_raw = isset( $_POST['wgrsvp_drip_quiet_start'] ) ? sanitize_text_field( wp_unslash( (string) $_POST['wgrsvp_drip_quiet_start'] ) ) : '';
+			$quiet_end_raw   = isset( $_POST['wgrsvp_drip_quiet_end'] ) ? sanitize_text_field( wp_unslash( (string) $_POST['wgrsvp_drip_quiet_end'] ) ) : '';
+
 			$raw = array(
 				'enabled'          => isset( $_POST['wgrsvp_drip_enabled'] ) ? 1 : 0,
 				'name'             => isset( $_POST['wgrsvp_drip_name'] ) ? sanitize_text_field( wp_unslash( $_POST['wgrsvp_drip_name'] ) ) : '',
 				'segment'          => isset( $_POST['wgrsvp_drip_segment'] ) ? sanitize_key( wp_unslash( (string) $_POST['wgrsvp_drip_segment'] ) ) : 'pending',
 				'include_declined' => isset( $_POST['wgrsvp_drip_include_declined'] ) ? 1 : 0,
-				'quiet_start'      => isset( $_POST['wgrsvp_drip_quiet_start'] ) && '' !== (string) $_POST['wgrsvp_drip_quiet_start'] ? (int) wp_unslash( $_POST['wgrsvp_drip_quiet_start'] ) : -1,
-				'quiet_end'        => isset( $_POST['wgrsvp_drip_quiet_end'] ) && '' !== (string) $_POST['wgrsvp_drip_quiet_end'] ? (int) wp_unslash( $_POST['wgrsvp_drip_quiet_end'] ) : -1,
+				'quiet_start'      => '' !== $quiet_start_raw ? (int) $quiet_start_raw : -1,
+				'quiet_end'        => '' !== $quiet_end_raw ? (int) $quiet_end_raw : -1,
 				'mode'             => isset( $_POST['wgrsvp_drip_mode'] ) ? sanitize_key( wp_unslash( (string) $_POST['wgrsvp_drip_mode'] ) ) : 'relative',
 				'steps'            => $steps_raw,
 			);
@@ -1396,7 +1402,7 @@ if ( ! class_exists( 'WGRSVP_Drip' ) ) {
 		private static function insert_send_log( $guest_id, $step_id, $channel, $success ) {
 			global $wpdb;
 
-			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Audit write; caching not applicable.
 			$wpdb->replace(
 				self::sends_table(),
 				array(

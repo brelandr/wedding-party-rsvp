@@ -35,7 +35,7 @@ if ( '' === $wgrsvp_rsvp_block_shortcode_tag ) {
  */
 do_action( 'wgrsvp_before_rsvp_block_render' );
 
-// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Shortcode output is already escaped by the plugin renderer.
+// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Shortcode returns a full form; escaped fragment-by-fragment in the shortcode renderer (wp_kses_post would strip form controls).
 echo do_shortcode( '[' . $wgrsvp_rsvp_block_shortcode_tag . ']' );
 
 /**

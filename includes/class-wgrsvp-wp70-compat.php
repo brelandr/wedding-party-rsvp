@@ -24,6 +24,9 @@ if ( ! function_exists( 'wgrsvp_wp70_ai_available' ) ) {
 			return $text_supported;
 		}
 		$text_supported = false;
+		if ( ! function_exists( 'wp_ai_client_prompt' ) ) {
+			return false;
+		}
 		try {
 			$builder = wp_ai_client_prompt();
 			if ( is_object( $builder ) ) {

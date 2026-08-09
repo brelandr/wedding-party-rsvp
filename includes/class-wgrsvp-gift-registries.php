@@ -434,12 +434,113 @@ class WGRSVP_Gift_Registries {
 		}
 
 		/**
-		 * Filter gift-area HTML after registries (Pro may append cash-tier labels).
+		 * Filter gift-area HTML after registries (Pro may append cash-tier labels / wish list).
 		 *
 		 * @since 8.0.9
 		 * @param string               $html     Registries block (may be empty).
 		 * @param array<string, mixed> $settings General settings.
 		 */
-		return (string) apply_filters( 'wgrsvp_after_gift_registries_html', $html, $settings );
+		return self::kses_gift_area_html( (string) apply_filters( 'wgrsvp_after_gift_registries_html', $html, $settings ) );
+	}
+
+	/**
+	 * Allowed tags for gift-area HTML (registries + Pro wish list / cash fund).
+	 *
+	 * Broader than wp_kses_post so Pro can append buttons, inputs, and data-* hooks.
+	 *
+	 * @return array<string, array<string, bool>>
+	 */
+	public static function get_gift_area_allowed_html() {
+		$allowed = array(
+			'div'    => array(
+				'class'              => true,
+				'id'                 => true,
+				'style'              => true,
+				'role'               => true,
+				'aria-live'          => true,
+				'aria-hidden'        => true,
+				'data-wpr-pro-items' => true,
+				'data-guest-id'      => true,
+			),
+			'ul'     => array(
+				'class' => true,
+			),
+			'li'     => array(
+				'class'        => true,
+				'data-item-id' => true,
+				'data-status'  => true,
+			),
+			'a'      => array(
+				'href'   => true,
+				'class'  => true,
+				'target' => true,
+				'rel'    => true,
+			),
+			'h3'     => array(
+				'class' => true,
+			),
+			'p'      => array(
+				'class'       => true,
+				'style'       => true,
+				'role'        => true,
+				'aria-live'   => true,
+				'aria-hidden' => true,
+			),
+			'span'   => array(
+				'class' => true,
+			),
+			'label'  => array(
+				'for'   => true,
+				'class' => true,
+			),
+			'input'  => array(
+				'type'         => true,
+				'name'         => true,
+				'id'           => true,
+				'class'        => true,
+				'value'        => true,
+				'min'          => true,
+				'step'         => true,
+				'inputmode'    => true,
+				'tabindex'     => true,
+				'autocomplete' => true,
+			),
+			'img'    => array(
+				'src'     => true,
+				'alt'     => true,
+				'class'   => true,
+				'loading' => true,
+				'width'   => true,
+				'height'  => true,
+			),
+			'button' => array(
+				'type'              => true,
+				'class'             => true,
+				'data-amount-cents' => true,
+				'data-tier-label'   => true,
+				'data-tier-index'   => true,
+				'data-custom'       => true,
+			),
+		);
+
+		/**
+		 * Filter allowed tags for gift-area HTML after the registries filter.
+		 *
+		 * @since 8.2.12
+		 * @param array<string, array<string, bool>> $allowed Allowed tags.
+		 */
+		$allowed = apply_filters( 'wgrsvp_gift_area_kses_allowed_html', $allowed );
+
+		return is_array( $allowed ) ? $allowed : array();
+	}
+
+	/**
+	 * Late-escape gift-area HTML with the gift-area allow-list.
+	 *
+	 * @param string $html HTML.
+	 * @return string
+	 */
+	public static function kses_gift_area_html( $html ) {
+		return wp_kses( (string) $html, self::get_gift_area_allowed_html() );
 	}
 }

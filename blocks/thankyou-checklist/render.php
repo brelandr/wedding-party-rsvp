@@ -17,5 +17,5 @@ $attributes = isset( $attributes ) && is_array( $attributes ) ? $attributes : ar
 $public     = ! empty( $attributes['public'] ) ? '1' : '0';
 // phpcs:enable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound
 
-// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Shortcode output is escaped by the renderer.
+// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Checklist markup is escaped in the shortcode renderer.
 echo do_shortcode( '[wgrsvp_thankyou_tracker public="' . esc_attr( $public ) . '"]' );
