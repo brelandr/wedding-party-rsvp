@@ -144,7 +144,7 @@ class WGRSVP_Setup_Guide {
 		.wgrsvp-setup-guide__badge--pro { background: #f0f6fc; color: #135e96; }
 		.wgrsvp-setup-guide__badge--optional { background: #f6f7f7; color: #646970; }
 		';
-		$ver = '8.2.12';
+		$ver = '8.2.13';
 		if ( defined( 'WGRSVP_PLUGIN_FILE' ) && function_exists( 'get_file_data' ) ) {
 			$hdr = get_file_data( WGRSVP_PLUGIN_FILE, array( 'Version' => 'Version' ), 'plugin' );
 			if ( ! empty( $hdr['Version'] ) ) {
