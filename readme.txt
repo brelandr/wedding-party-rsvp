@@ -4,7 +4,7 @@ Tags: wedding, rsvp, guest list, invitation, event management
 Requires at least: 6.2
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 8.2.13
+Stable tag: 8.2.14
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -21,7 +21,7 @@ Stop chasing replies across group chats and reconciling spreadsheets the week be
 * **Confidence at the venue** – One accurate count for who is attending, meals, and plus ones.
 * **Faster setup** – Getting started checklist, Next steps for pending RSVPs, straggler filters (missing email, phone, or address), plus **Live demo** (WordPress Playground) and **Try Premium** (InstaWP) links on the Plugins screen.
 
-**8.2.13** pairs with **Wedding Party RSVP Pro 2.4.0** (registry setup wizard + on-site wish list) and keeps Settings save UX for gift registries and automatic guest reminders. The free **Wedding RSVP** companion app is on [Google Play](https://play.google.com/store/apps/details?id=pro.weddingrsvp.companion); with **Pro**, guests can upload event photos from the app to your site gallery.
+**8.2.14** adds a Song requests report, fixes Guest list health deep links, and pairs with **Wedding Party RSVP Pro 2.4.1**. The free **Wedding RSVP** companion app is on [Google Play](https://play.google.com/store/apps/details?id=pro.weddingrsvp.companion); with **Pro**, guests can upload event photos from the app to your site gallery.
 
 Guests sign in with a **Party ID** so households RSVP together. Collect adult entrée choices and dietary notes, set **event capacity limits**, and **export** the guest list when catering or your venue needs numbers.
 
@@ -202,6 +202,13 @@ This plugin does not call third-party APIs for core RSVP storage. Optional behav
 This plugin bundles **FPDF** (version 1.86, © Olivier Plathey) under `includes/lib/fpdf/` for optional **Export check-in PDF** in the guest list. FPDF is free software; see the header comment in `fpdf.php` for license terms.
 
 == Changelog ==
+= 8.2.14 =
+
+* **Fix: Mixed households** — Guest list health tile opens the guest list (grouped by party) instead of Follow-up & day-of, so it works when that menu is hidden.
+* **Fix: Allergies health tile** — Counts and lists Accepted guests with notes in Allergies or Dietary restrictions.
+* **Add: Song requests** — New **Wedding RSVP → Song requests** report (search + CSV) for DJ/band playlists from RSVP form submissions.
+* **Compatibility** — Pairs with Wedding Party RSVP Pro **2.4.1** (dashboard cache bust + sub-event summary count fix).
+
 = 8.2.13 =
 
 * **Compatibility** — Documented pairing with Wedding Party RSVP Pro **2.4.0** (Registry setup wizard and on-site wish list on the Registry hub; Pro setup-guide steps and hub Order prints affiliate URLs).

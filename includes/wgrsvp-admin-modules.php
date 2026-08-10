@@ -25,6 +25,7 @@ if ( ! function_exists( 'wgrsvp_admin_module_keys' ) ) {
 			'paste_guests',
 			'menu_options',
 			'gifts_report',
+			'song_requests',
 			'thankyou_tracker',
 			'client_summary',
 			'vendor_packet',

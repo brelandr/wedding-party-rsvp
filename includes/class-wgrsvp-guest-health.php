@@ -93,12 +93,16 @@ if ( ! class_exists( 'WGRSVP_Guest_Health' ) ) {
 				)
 			);
 
-			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.NotPrepared
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.NotPrepared -- allergies OR dietary (guests often put notes in either field).
 			$accepted_with_allergies = (int) $wpdb->get_var(
 				$wpdb->prepare(
-					'SELECT COUNT(*) FROM %i WHERE rsvp_status = %s AND allergies IS NOT NULL AND TRIM(allergies) <> %s',
+					'SELECT COUNT(*) FROM %i WHERE rsvp_status = %s AND (
+						( allergies IS NOT NULL AND TRIM(allergies) <> %s )
+						OR ( dietary_restrictions IS NOT NULL AND TRIM(dietary_restrictions) <> %s )
+					)',
 					$t,
 					'Accepted',
+					'',
 					''
 				)
 			);
@@ -190,10 +194,12 @@ if ( ! class_exists( 'WGRSVP_Guest_Health' ) ) {
 			$m   = self::get_cached_metrics();
 			$any = ( $m['mixed_parties'] + $m['accepted_missing_meal'] + $m['pending_no_contact'] + $m['sub_event_pending'] ) > 0;
 
-			$ops_mixed           = add_query_arg(
+			// Always deep-link to the guest list (Ops Center may be hidden via Admin menu visibility).
+			$url_mixed           = add_query_arg(
 				array(
-					'page'           => WGRSVP_Ops_Center::PAGE_SLUG,
-					'wgrsvp_ops_tab' => 'followup',
+					'page'         => 'wedding-rsvp-main',
+					'wgrsvp_gap'   => 'mixed_household',
+					'wgrsvp_group' => '1',
 				),
 				admin_url( 'admin.php' )
 			);
@@ -221,7 +227,7 @@ if ( ! class_exists( 'WGRSVP_Guest_Health' ) ) {
 				<h2 class="wgrsvp-guest-health-heading"><?php esc_html_e( 'Guest list health', 'wedding-party-rsvp' ); ?></h2>
 				<p class="description wgrsvp-guest-health-intro"><?php esc_html_e( 'Quick checks so nothing slips through before you talk to catering or the venue.', 'wedding-party-rsvp' ); ?></p>
 				<div class="wgrsvp-guest-health-tiles">
-					<a class="<?php echo esc_attr( 'wgrsvp-health-tile ' . ( $m['mixed_parties'] > 0 ? 'wgrsvp-health-tile-warn' : 'wgrsvp-health-tile-ok' ) ); ?>" href="<?php echo esc_url( $ops_mixed ); ?>">
+					<a class="<?php echo esc_attr( 'wgrsvp-health-tile ' . ( $m['mixed_parties'] > 0 ? 'wgrsvp-health-tile-warn' : 'wgrsvp-health-tile-ok' ) ); ?>" href="<?php echo esc_url( $url_mixed ); ?>">
 						<span class="wgrsvp-health-tile-count"><?php echo esc_html( (string) (int) $m['mixed_parties'] ); ?></span>
 						<span class="wgrsvp-health-tile-label"><?php esc_html_e( 'Mixed households', 'wedding-party-rsvp' ); ?></span>
 						<span class="wgrsvp-health-tile-hint"><?php esc_html_e( 'Party has both Pending and answered guests', 'wedding-party-rsvp' ); ?></span>
@@ -239,7 +245,7 @@ if ( ! class_exists( 'WGRSVP_Guest_Health' ) ) {
 					<a class="wgrsvp-health-tile wgrsvp-health-tile-info" href="<?php echo esc_url( $url_allergies ); ?>">
 						<span class="wgrsvp-health-tile-count"><?php echo esc_html( (string) (int) $m['accepted_with_allergies'] ); ?></span>
 						<span class="wgrsvp-health-tile-label"><?php esc_html_e( 'Attending with allergies noted', 'wedding-party-rsvp' ); ?></span>
-						<span class="wgrsvp-health-tile-hint"><?php esc_html_e( 'Cross-check against the caterer packet', 'wedding-party-rsvp' ); ?></span>
+						<span class="wgrsvp-health-tile-hint"><?php esc_html_e( 'Allergies or dietary notes on Accepted guests — cross-check catering', 'wedding-party-rsvp' ); ?></span>
 					</a>
 					<?php if ( class_exists( 'WPR_Pro_Sub_Events', false ) ) : ?>
 					<a class="<?php echo esc_attr( 'wgrsvp-health-tile ' . ( $m['sub_event_pending'] > 0 ? 'wgrsvp-health-tile-warn' : 'wgrsvp-health-tile-ok' ) ); ?>" href="<?php echo esc_url( $sub_reports ); ?>">

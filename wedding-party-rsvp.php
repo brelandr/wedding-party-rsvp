@@ -6,7 +6,7 @@
  *
  * Plugin Name: Wedding Party RSVP – Guest List, Invitation & Event Manager
  * Description: Simple and secure RSVP system. Manage guest lists and adult meal choices.
- * Version: 8.2.13
+ * Version: 8.2.14
  * Author: Land Tech Web Designs, Corp
  * Author URI: https://landtechwebdesigns.com
  * Plugin URI: https://landtechwebdesigns.com/wedding-party-rsvp-wordpress-plugin/
@@ -273,6 +273,7 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 			require_once plugin_dir_path( __FILE__ ) . 'includes/class-wgrsvp-paste-import.php';
 			require_once plugin_dir_path( __FILE__ ) . 'includes/class-wgrsvp-thankyou-tracker.php';
 			require_once plugin_dir_path( __FILE__ ) . 'includes/class-wgrsvp-gifts-report.php';
+			require_once plugin_dir_path( __FILE__ ) . 'includes/class-wgrsvp-song-requests.php';
 			require_once plugin_dir_path( __FILE__ ) . 'includes/class-wgrsvp-magic-link.php';
 			require_once plugin_dir_path( __FILE__ ) . 'includes/class-wgrsvp-deadline-nudges.php';
 			require_once plugin_dir_path( __FILE__ ) . 'includes/class-wgrsvp-drip.php';
@@ -292,6 +293,7 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 			}
 			WGRSVP_ThankYou_Tracker::register_hooks();
 			WGRSVP_Gifts_Report::register_hooks();
+			WGRSVP_Song_Requests::register_hooks();
 			if ( class_exists( 'WGRSVP_Deadline_Nudges', false ) ) {
 				WGRSVP_Deadline_Nudges::register_hooks();
 			}
@@ -3338,7 +3340,7 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 				'wgrsvp-address-focus',
 				plugins_url( 'assets/js/wgrsvp-address-focus.js', __FILE__ ),
 				array(),
-				'8.2.13',
+				'8.2.14',
 				true
 			);
 			wp_localize_script(
@@ -3868,6 +3870,7 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 				'pending_no_contact',
 				'accepted_meal_not_set',
 				'accepted_with_allergies',
+				'mixed_household',
 			);
 			return in_array( $key, $allowed, true ) ? $key : '';
 		}
@@ -3897,7 +3900,14 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 					return "(((is_child IS NULL OR is_child = 0) AND (menu_choice IS NULL OR TRIM(COALESCE(menu_choice, '')) = '')) OR (is_child = 1 AND (child_menu_choice IS NULL OR TRIM(COALESCE(child_menu_choice, '')) = '')))";
 				case 'accepted_with_allergies':
 					// Must combine with filter_status=Accepted; matches WGRSVP_Guest_Health::compute_metrics().
-					return "(allergies IS NOT NULL AND TRIM(COALESCE(allergies, '')) <> '')";
+					return "((allergies IS NOT NULL AND TRIM(COALESCE(allergies, '')) <> '') OR (dietary_restrictions IS NOT NULL AND TRIM(COALESCE(dietary_restrictions, '')) <> ''))";
+				case 'mixed_household':
+					// Trusted table name from $wpdb->prefix; nested subquery avoids MySQL same-table restriction.
+					$t = preg_replace( '/[^a-zA-Z0-9_]/', '', (string) $this->table_name );
+					if ( '' === $t ) {
+						return '';
+					}
+					return "party_id IN (SELECT party_id FROM (SELECT party_id FROM `{$t}` GROUP BY party_id HAVING SUM(CASE WHEN rsvp_status = 'Pending' THEN 1 ELSE 0 END) > 0 AND SUM(CASE WHEN rsvp_status <> 'Pending' THEN 1 ELSE 0 END) > 0) AS wgrsvp_mixed_hh)";
 				default:
 					return '';
 			}
@@ -4404,6 +4414,7 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 							'pending_no_contact'      => __( 'Pending & no email/phone', 'wedding-party-rsvp' ),
 							'accepted_meal_not_set'   => __( 'Attending, meal not set', 'wedding-party-rsvp' ),
 							'accepted_with_allergies' => __( 'Attending with allergies noted', 'wedding-party-rsvp' ),
+							'mixed_household'         => __( 'Mixed households', 'wedding-party-rsvp' ),
 						);
 						foreach ( $gaps as $gk => $glabel ) {
 							if ( 'accepted_meal_not_set' === $gk || 'accepted_with_allergies' === $gk ) {
@@ -4978,6 +4989,7 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 												'paste_guests'      => __( 'Paste Guest List', 'wedding-party-rsvp' ),
 												'menu_options'      => __( 'Menu Options', 'wedding-party-rsvp' ),
 												'gifts_report'      => __( 'Gifts & thank-you', 'wedding-party-rsvp' ),
+												'song_requests'     => __( 'Song requests', 'wedding-party-rsvp' ),
 												'thankyou_tracker'  => __( 'Thank-you checklist', 'wedding-party-rsvp' ),
 												'client_summary'    => __( 'Client summary (admin + public link)', 'wedding-party-rsvp' ),
 												'vendor_packet'     => __( 'Vendor & venue packet', 'wedding-party-rsvp' ),
