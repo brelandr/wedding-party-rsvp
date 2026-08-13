@@ -32,6 +32,40 @@ class WGRSVP_Print_Partners {
 	 */
 	public static function init() {
 		add_action( 'wgrsvp_guest_list_after_title', array( __CLASS__, 'render_guest_list_panel' ), 12, 2 );
+		add_filter( 'wgrsvp_print_partner_urls', array( __CLASS__, 'filter_urls_with_affiliate_option_and_hop' ), 15 );
+	}
+
+	/**
+	 * Merge hub-synced affiliate destinations, then rewrite to platform-subdomain hop URLs.
+	 *
+	 * @param array<string, string> $urls Partner id => URL.
+	 * @return array<string, string>
+	 */
+	public static function filter_urls_with_affiliate_option_and_hop( $urls ) {
+		if ( ! is_array( $urls ) ) {
+			$urls = array();
+		}
+		$stored = get_option( 'wgrsvp_print_affiliate_urls', array() );
+		if ( is_string( $stored ) && '' !== $stored ) {
+			$decoded = json_decode( $stored, true );
+			$stored  = is_array( $decoded ) ? $decoded : array();
+		}
+		if ( is_array( $stored ) ) {
+			foreach ( $stored as $key => $url ) {
+				$key = sanitize_key( (string) $key );
+				$url = self::sanitize_partner_url( (string) $url );
+				if ( '' !== $key && '' !== $url ) {
+					$urls[ $key ] = $url;
+				}
+			}
+		}
+		foreach ( $urls as $key => $url ) {
+			$hop = wgrsvp_affiliate_hop_url( (string) $key );
+			if ( '' !== $hop ) {
+				$urls[ $key ] = $hop;
+			}
+		}
+		return $urls;
 	}
 
 	/**
@@ -105,6 +139,15 @@ class WGRSVP_Print_Partners {
 				'url'         => self::sanitize_partner_url( isset( $urls['gelato'] ) ? (string) $urls['gelato'] : $defaults['gelato'] ),
 			),
 		);
+		if ( ! empty( $urls['amazon'] ) ) {
+			$partners[] = array(
+				'id'          => 'amazon',
+				'label'       => __( 'Amazon', 'wedding-party-rsvp' ),
+				'description' => __( 'Shop wedding essentials and registry-friendly products.', 'wedding-party-rsvp' ),
+				'use_for'     => __( 'Decor, favors, day-of essentials', 'wedding-party-rsvp' ),
+				'url'         => self::sanitize_partner_url( (string) $urls['amazon'] ),
+			);
+		}
 
 		/**
 		 * Filter the full partner list (add/remove partners).

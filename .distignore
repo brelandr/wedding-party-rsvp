@@ -31,3 +31,6 @@ composer.json
 composer.lock
 package.json
 package-lock.json
+PLUGIN-IDENTIFIER.txt
+# Nested blueprint SVN/dev tree — must not ship (may contain .svn; see create-plugin-zip.sh).
+assets/blueprints/trunk/

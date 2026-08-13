@@ -1,0 +1,16 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "wedding-party-rsvp/guestbook",
+	"title": "Guestbook",
+	"category": "wgrsvp",
+	"editorScript": "wgrsvp-blocks-editor",
+	"icon": "book-alt",
+	"description": "Public digital guestbook (same as [wgrsvp_guestbook]).",
+	"textdomain": "wedding-party-rsvp",
+	"supports": {
+		"html": false,
+		"align": [ "wide", "full" ]
+	},
+	"render": "file:./render.php"
+}

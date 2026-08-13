@@ -27,6 +27,7 @@ if ( ! function_exists( 'wgrsvp_admin_module_keys' ) ) {
 			'gifts_report',
 			'song_requests',
 			'thankyou_tracker',
+			'guestbook',
 			'client_summary',
 			'vendor_packet',
 			'ops_center',

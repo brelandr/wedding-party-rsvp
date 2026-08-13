@@ -1,0 +1,16 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "wedding-party-rsvp/itinerary",
+	"title": "Guest itinerary",
+	"category": "wgrsvp",
+	"editorScript": "wgrsvp-blocks-editor",
+	"icon": "calendar-alt",
+	"description": "Public wedding schedule (same as [wgrsvp_itinerary]).",
+	"textdomain": "wedding-party-rsvp",
+	"supports": {
+		"html": false,
+		"align": [ "wide", "full" ]
+	},
+	"render": "file:./render.php"
+}

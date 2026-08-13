@@ -6,13 +6,13 @@
  *
  * Plugin Name: Wedding Party RSVP – Guest List, Invitation & Event Manager
  * Description: Simple and secure RSVP system. Manage guest lists and adult meal choices.
- * Version: 8.2.14
+ * Version: 8.3.7
  * Author: Land Tech Web Designs, Corp
  * Author URI: https://landtechwebdesigns.com
  * Plugin URI: https://landtechwebdesigns.com/wedding-party-rsvp-wordpress-plugin/
  * Requires at least: 6.2
  * Requires PHP: 7.4
- * Tested up to: 7.0
+ * Tested up to: 7.1
  * License: GPLv2 or later
  * License URI: http://www.gnu.org/licenses/gpl-2.0.html
  * Text Domain: wedding-party-rsvp
@@ -23,6 +23,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+if ( ! defined( 'WGRSVP_VERSION' ) ) {
+	define( 'WGRSVP_VERSION', '8.3.7' );
+}
 if ( ! defined( 'WGRSVP_PLUGIN_FILE' ) ) {
 	define( 'WGRSVP_PLUGIN_FILE', __FILE__ );
 }
@@ -67,6 +70,38 @@ if ( ! function_exists( 'wgrsvp_is_pro_plugin_active' ) ) {
 		}
 		$cached = is_plugin_active( 'wedding-party-rsvp-pro/wedding-party-rsvp-pro.php' );
 		return (bool) apply_filters( 'wgrsvp_is_pro_plugin_active', $cached );
+	}
+}
+
+if ( ! function_exists( 'wgrsvp_affiliate_hop_url' ) ) {
+	/**
+	 * Absolute affiliate hop URL on the immutable platform subdomain (never the custom domain).
+	 *
+	 * Prefers `wsb_platform_hostname` (set at provision). Falls back to empty when unset so
+	 * non-spoke installs keep direct partner URLs.
+	 *
+	 * @param string $vendor Vendor key (printful, canva, gelato, amazon, …).
+	 * @return string Absolute https hop URL or empty string.
+	 */
+	function wgrsvp_affiliate_hop_url( $vendor ) {
+		$vendor = strtolower( preg_replace( '/[^a-z0-9_-]/', '', (string) $vendor ) );
+		if ( '' === $vendor ) {
+			return '';
+		}
+		if ( function_exists( 'wsb_affiliate_hop_url' ) ) {
+			$hop = wsb_affiliate_hop_url( $vendor );
+			if ( is_string( $hop ) && '' !== $hop ) {
+				return esc_url_raw( $hop );
+			}
+		}
+		$host = (string) get_option( 'wsb_platform_hostname', '' );
+		$host = strtolower( trim( $host ) );
+		$host = preg_replace( '/^https?:\/\//', '', $host );
+		$host = rtrim( (string) $host, '/' );
+		if ( '' === $host ) {
+			return '';
+		}
+		return esc_url_raw( 'https://' . $host . '/wsb-aff/' . rawurlencode( $vendor ) );
 	}
 }
 
@@ -272,6 +307,9 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 			require_once plugin_dir_path( __FILE__ ) . 'includes/class-wgrsvp-ics.php';
 			require_once plugin_dir_path( __FILE__ ) . 'includes/class-wgrsvp-paste-import.php';
 			require_once plugin_dir_path( __FILE__ ) . 'includes/class-wgrsvp-thankyou-tracker.php';
+			require_once plugin_dir_path( __FILE__ ) . 'includes/class-wgrsvp-guestbook-captcha.php';
+			require_once plugin_dir_path( __FILE__ ) . 'includes/class-wgrsvp-guestbook.php';
+			require_once plugin_dir_path( __FILE__ ) . 'includes/class-wgrsvp-itinerary-travel.php';
 			require_once plugin_dir_path( __FILE__ ) . 'includes/class-wgrsvp-gifts-report.php';
 			require_once plugin_dir_path( __FILE__ ) . 'includes/class-wgrsvp-song-requests.php';
 			require_once plugin_dir_path( __FILE__ ) . 'includes/class-wgrsvp-magic-link.php';
@@ -287,11 +325,21 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 			require_once plugin_dir_path( __FILE__ ) . 'includes/class-wgrsvp-frontend-cache.php';
 			require_once plugin_dir_path( __FILE__ ) . 'includes/class-wgrsvp-frontend-nonce-refresh.php';
 			require_once plugin_dir_path( __FILE__ ) . 'includes/class-wgrsvp-documentation.php';
+			require_once plugin_dir_path( __FILE__ ) . 'includes/class-wgrsvp-admin-menu-groups.php';
+			require_once plugin_dir_path( __FILE__ ) . 'includes/class-wgrsvp-admin-menu-badges.php';
 			WGRSVP_ICS::init_hooks();
 			if ( class_exists( 'WGRSVP_Documentation', false ) ) {
 				WGRSVP_Documentation::init();
 			}
+			if ( class_exists( 'WGRSVP_Admin_Menu_Groups', false ) ) {
+				WGRSVP_Admin_Menu_Groups::register_hooks();
+			}
+			if ( class_exists( 'WGRSVP_Admin_Menu_Badges', false ) ) {
+				WGRSVP_Admin_Menu_Badges::register_hooks();
+			}
 			WGRSVP_ThankYou_Tracker::register_hooks();
+			WGRSVP_Guestbook::register_hooks();
+			WGRSVP_Itinerary_Travel::register_hooks();
 			WGRSVP_Gifts_Report::register_hooks();
 			WGRSVP_Song_Requests::register_hooks();
 			if ( class_exists( 'WGRSVP_Deadline_Nudges', false ) ) {
@@ -1787,6 +1835,9 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 			if ( class_exists( 'WGRSVP_ThankYou_Tracker' ) ) {
 				WGRSVP_ThankYou_Tracker::activate();
 			}
+			if ( class_exists( 'WGRSVP_Guestbook' ) ) {
+				WGRSVP_Guestbook::activate();
+			}
 
 			if ( class_exists( 'WGRSVP_Audit_Trail', false ) ) {
 				WGRSVP_Audit_Trail::activate();
@@ -2617,7 +2668,13 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 			if ( class_exists( 'WGRSVP_Magic_Link' ) ) {
 				$url = WGRSVP_Magic_Link::sign_url( $url, $party_id );
 			}
-			return $url;
+			/**
+			 * Filter the public party RSVP / invite link (Pro may rewrite to e-invite).
+			 *
+			 * @param string $url      URL.
+			 * @param string $party_id Party ID.
+			 */
+			return (string) apply_filters( 'wgrsvp_public_party_rsvp_url', $url, $party_id );
 		}
 
 		/**
@@ -4954,6 +5011,10 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 						update_option( $this->opt_license, $new_key );
 					}
 
+					if ( class_exists( 'WGRSVP_Guestbook_Captcha', false ) ) {
+						WGRSVP_Guestbook_Captcha::save_from_request();
+					}
+
 					echo '<div class="notice notice-success"><p>' . esc_html__( 'Settings Saved.', 'wedding-party-rsvp' ) . '</p></div>';
 				}
 			}
@@ -5164,6 +5225,12 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 							<span class="description" style="margin-left:8px;"><?php esc_html_e( 'Saves gift registries, Amazon/Skimlinks, dietary labels, and everything else on this settings page.', 'wedding-party-rsvp' ); ?></span>
 						</p>
 					</div>
+
+					<?php
+					if ( class_exists( 'WGRSVP_Guestbook_Captcha', false ) ) {
+						WGRSVP_Guestbook_Captcha::render_settings_section();
+					}
+					?>
 
 					<div style="background:#fff; padding:20px; border:1px solid #ddd; margin-bottom:20px;">
 						<h3 id="wgrsvp-logistics-heading"><?php esc_html_e( 'Logistics', 'wedding-party-rsvp' ); ?></h3>

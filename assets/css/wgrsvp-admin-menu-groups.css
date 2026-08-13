@@ -1,0 +1,79 @@
+/**
+ * Collapsible Wedding RSVP admin submenu groups.
+ */
+
+#toplevel_page_wedding-rsvp-main .wp-submenu li.wgrsvp-admin-menu-group {
+	margin: 0;
+	padding: 0;
+}
+
+#toplevel_page_wedding-rsvp-main .wp-submenu .wgrsvp-admin-menu-group__toggle {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	width: 100%;
+	box-sizing: border-box;
+	margin: 0;
+	padding: 6px 12px 6px 12px;
+	border: 0;
+	background: transparent;
+	color: inherit;
+	font-size: 12px;
+	font-weight: 600;
+	line-height: 1.3;
+	text-align: left;
+	text-transform: uppercase;
+	letter-spacing: 0.02em;
+	cursor: pointer;
+	opacity: 0.85;
+	gap: 6px;
+}
+
+#toplevel_page_wedding-rsvp-main .wp-submenu .wgrsvp-admin-menu-group__toggle .wgrsvp-admin-menu-group__label {
+	flex: 1 1 auto;
+	min-width: 0;
+}
+
+#toplevel_page_wedding-rsvp-main .wp-submenu .wgrsvp-admin-menu-group__toggle .awaiting-mod {
+	float: none;
+	display: inline-block;
+	margin: 0;
+	flex: 0 0 auto;
+}
+
+#toplevel_page_wedding-rsvp-main .wp-submenu .wgrsvp-admin-menu-group__toggle:hover,
+#toplevel_page_wedding-rsvp-main .wp-submenu .wgrsvp-admin-menu-group__toggle:focus {
+	opacity: 1;
+	color: #72aee6;
+	outline: none;
+	box-shadow: none;
+}
+
+#toplevel_page_wedding-rsvp-main .wp-submenu .wgrsvp-admin-menu-group__chevron {
+	display: inline-block;
+	margin-left: 6px;
+	font-size: 10px;
+	line-height: 1;
+	transition: transform 0.12s ease;
+}
+
+#toplevel_page_wedding-rsvp-main .wp-submenu .wgrsvp-admin-menu-group__toggle[aria-expanded="true"] .wgrsvp-admin-menu-group__chevron {
+	transform: rotate(90deg);
+}
+
+#toplevel_page_wedding-rsvp-main .wp-submenu li.wgrsvp-admin-menu-group__item > a {
+	padding-left: 22px;
+}
+
+#toplevel_page_wedding-rsvp-main .wp-submenu li.wgrsvp-admin-menu-group__item.is-collapsed {
+	display: none;
+}
+
+/* Keep folded flyout usable when the admin menu is collapsed. */
+.folded #toplevel_page_wedding-rsvp-main .wp-submenu li.wgrsvp-admin-menu-group__item.is-collapsed {
+	display: list-item;
+}
+
+.folded #toplevel_page_wedding-rsvp-main .wp-submenu .wgrsvp-admin-menu-group__toggle {
+	display: none;
+}

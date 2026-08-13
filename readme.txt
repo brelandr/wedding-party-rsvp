@@ -2,9 +2,9 @@
 Contributors: brelandr
 Tags: wedding, rsvp, guest list, invitation, event management
 Requires at least: 6.2
-Tested up to: 7.0
+Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 8.2.14
+Stable tag: 8.3.7
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -15,6 +15,8 @@ RSVP guest list for WordPress: Party ID sign-in, meals, guest hub summary, CSV e
 **[Live preview: Wedding Party RSVP Pro (Premium demo on InstaWP)](https://app.instawp.io/launch?s=wedding-rsvp-pro-demo&d=v2)** — open a temporary site with the full premium plugin pre-installed; no purchase required.
 
 Stop chasing replies across group chats and reconciling spreadsheets the week before the wedding. Wedding Party RSVP gives planners and couples a single guest list inside WordPress—every RSVP, headcount, and meal note in one place from save-the-date to seating.
+
+**Prefer a hosted wedding website?** The optional [Wedding RSVP site builder](https://weddingrsvp.pro) at weddingrsvp.pro provisions a branded subdomain with templates and this RSVP stack included. Self-hosted WordPress (this free plugin, with or without Pro) remains fully supported.
 
 * **Less stress for your planning team** – Shared visibility in wp-admin replaces emailed spreadsheet copies.
 * **Fewer last-minute surprises** – Clear statuses and follow-up help you confirm attendance earlier for catering and rentals.
@@ -133,7 +135,10 @@ No. Guests use a Party ID (invite code) you assign—no user registration requir
 Yes. Add a Shortcode block (or the classic block) and paste `[wedding_rsvp_form]`. A block pattern is also available in the editor when the plugin is active.
 
 = What PHP and WordPress versions do I need? =
-Requires **WordPress 6.2** or later, **PHP 7.4** or later (aligned with WordPress 7 dropping PHP 7.2–7.3), and the plugin readme lists **Tested up to WordPress 7.0**. Use **PHP 8.x** on your host where possible—WordPress recommends current PHP releases for performance and security.
+Requires **WordPress 6.2** or later, **PHP 7.4** or later (aligned with WordPress 7 dropping PHP 7.2–7.3), and the plugin readme lists **Tested up to WordPress 7.1**. Use **PHP 8.x** on your host where possible—WordPress recommends current PHP releases for performance and security.
+
+= Do you offer a hosted wedding website? =
+Yes. If you prefer not to host WordPress yourself, the [Wedding RSVP site builder](https://weddingrsvp.pro) at **weddingrsvp.pro** can create a wedding site on a subdomain with templates and the RSVP plugins included. Couples and planners who already have WordPress can keep using this free plugin (and optional Pro) on their own site—the hosted builder is optional, not required.
 
 = Can I use Wedding Party RSVP Pro together with the free plugin? =
 Yes. Keep both plugins active: the free plugin provides the core guest list and RSVP form; Pro extends it with premium features when your license is valid.
@@ -197,11 +202,54 @@ This plugin does not call third-party APIs for core RSVP storage. Optional behav
 
 * **Client summary link (optional magic link)** — **Wedding RSVP → Client summary** lets administrators generate a secret URL that shows **aggregate** RSVP and meal/dietary **counts** on your own site (no guest names). No off-site API is called; anyone with the link can view the summary until you revoke or regenerate the token.
 
+* **Google reCAPTCHA v3 (optional guestbook)** — When reCAPTCHA v3 site and secret keys are available (Guestbook settings override, or inherited from **WSB Hub → Connection** on the same site), the public guestbook loads Google’s script from `https://www.google.com/recaptcha/api.js?render=…` and verifies submissions via `https://www.google.com/recaptcha/api/siteverify` (score + action `wgrsvp_guestbook`). Google may receive the captcha token and visitor IP at verify time. See [Google reCAPTCHA Terms](https://policies.google.com/terms) and [Google Privacy Policy](https://policies.google.com/privacy).
+
+* **Cloudflare Turnstile (optional guestbook backup)** — When Turnstile site and secret keys are configured locally or on **WSB Hub → Connection** (used if Google is not set, or if reCAPTCHA fails to run), the guestbook loads `https://challenges.cloudflare.com/turnstile/v0/api.js` and verifies via `https://challenges.cloudflare.com/turnstile/v0/siteverify`. Cloudflare may receive the token and visitor IP at verify time. See [Cloudflare Terms](https://www.cloudflare.com/website-terms/) and [Cloudflare Privacy Policy](https://www.cloudflare.com/privacypolicy/).
+
 == Third-party libraries ==
 
 This plugin bundles **FPDF** (version 1.86, © Olivier Plathey) under `includes/lib/fpdf/` for optional **Export check-in PDF** in the guest list. FPDF is free software; see the header comment in `fpdf.php` for license terms.
 
 == Changelog ==
+= 8.3.7 =
+
+* **Compatibility** — Confirmed tested with WordPress 7.1 (readme `Tested up to: 7.1`).
+* **Docs** — FAQ + Description note about the optional hosted wedding site builder at [weddingrsvp.pro](https://weddingrsvp.pro).
+
+= 8.3.6 =
+
+* **Add: Travel book CTA + copyable group code** — `[wgrsvp_travel]` shows a Book hotel button when a hotel URL is set, and a Copy code control for the group code. Filter `wgrsvp_public_party_rsvp_url` lets Pro rewrite guest invite links (e-invite).
+
+= 8.3.5 =
+
+* **Fix: Guestbook captcha uses reCAPTCHA v3** — Matches WSB Hub keys; empty Guestbook fields inherit `wsb_hub_recaptcha_*` / Turnstile keys from **WSB Hub → Connection**. Invisible v3 execute on submit; Turnstile remains the backup.
+
+= 8.3.4 =
+
+* **Add: Guestbook captcha** — Optional Google reCAPTCHA (primary) with Cloudflare Turnstile backup under Settings → Guestbook spam protection. Existing honeypot, rate limit, and moderation remain.
+
+= 8.3.3 =
+
+* **Fix: Itinerary punctuation** — `[wgrsvp_itinerary]` inserts `, ` between the time and location so lines read “4:00 pm, The Rose Garden…”.
+
+= 8.3.2 =
+
+* **Add: Admin menu approval badges** — Red pending counts on Guestbook (and top-level Wedding RSVP). Filter `wgrsvp_admin_menu_badges` lets Pro add Photo Gallery and other queues; collapsed group headers show summed counts.
+
+= 8.3.1 =
+
+* **Add: Collapsible admin menu groups** — Under Wedding RSVP, secondary screens fold into Guests & seating, Planning, and Guest experience & reports so Free+Pro sidebars stay usable without zooming. Core items stay pinned; open state persists in the browser; filter `wgrsvp_admin_menu_groups` for Pro/custom membership.
+
+= 8.3.0 =
+
+* **Add: Digital guestbook** — `[wgrsvp_guestbook]` shortcode/block with moderated public messages, admin approve/spam/delete, rate limit, and Pro hooks.
+* **Add: Public itinerary & travel** — `[wgrsvp_itinerary]` and `[wgrsvp_travel]` shortcodes/blocks for marketing pages; Free travel settings; Pro can enrich via filters.
+* **Privacy** — Suggested policy text covers guestbook storage.
+
+= 8.2.15 =
+
+* **Add: Affiliate hop helper** — `wgrsvp_affiliate_hop_url()` and Order prints links prefer `https://{wsb_platform_hostname}/wsb-aff/{vendor}` so product affiliate attribution stays on the weddingrsvp.pro subdomain when a custom domain is attached. Optional Amazon partner row when synced from the hub.
+
 = 8.2.14 =
 
 * **Fix: Mixed households** — Guest list health tile opens the guest list (grouped by party) instead of Follow-up & day-of, so it works when that menu is hidden.

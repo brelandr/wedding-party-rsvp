@@ -1,0 +1,16 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "wedding-party-rsvp/travel",
+	"title": "Travel & lodging",
+	"category": "wgrsvp",
+	"editorScript": "wgrsvp-blocks-editor",
+	"icon": "location-alt",
+	"description": "Public travel and hotel block (same as [wgrsvp_travel]).",
+	"textdomain": "wedding-party-rsvp",
+	"supports": {
+		"html": false,
+		"align": [ "wide", "full" ]
+	},
+	"render": "file:./render.php"
+}

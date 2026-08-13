@@ -59,6 +59,39 @@
 				},
 			},
 		},
+		{
+			name: 'wedding-party-rsvp/guestbook',
+			title: __( 'Guestbook', 'wedding-party-rsvp' ),
+			category: 'wgrsvp',
+			icon: 'book-alt',
+			description: __(
+				'Public digital guestbook (same as [wgrsvp_guestbook]).',
+				'wedding-party-rsvp'
+			),
+			attributes: {},
+		},
+		{
+			name: 'wedding-party-rsvp/itinerary',
+			title: __( 'Guest itinerary', 'wedding-party-rsvp' ),
+			category: 'wgrsvp',
+			icon: 'calendar-alt',
+			description: __(
+				'Public wedding schedule (same as [wgrsvp_itinerary]).',
+				'wedding-party-rsvp'
+			),
+			attributes: {},
+		},
+		{
+			name: 'wedding-party-rsvp/travel',
+			title: __( 'Travel & lodging', 'wedding-party-rsvp' ),
+			category: 'wgrsvp',
+			icon: 'location-alt',
+			description: __(
+				'Public travel and hotel section (same as [wgrsvp_travel]).',
+				'wedding-party-rsvp'
+			),
+			attributes: {},
+		},
 	];
 
 	/**

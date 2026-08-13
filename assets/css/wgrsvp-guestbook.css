@@ -1,0 +1,63 @@
+.wgrsvp-guestbook {
+	max-width: 40rem;
+	margin: 1.5rem 0;
+}
+
+.wgrsvp-guestbook__wall {
+	display: grid;
+	gap: 1rem;
+	margin-bottom: 1.75rem;
+}
+
+.wgrsvp-guestbook__entry {
+	padding: 1rem 0;
+	border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.wgrsvp-guestbook__author {
+	font-weight: 600;
+	margin: 0 0 0.35rem;
+}
+
+.wgrsvp-guestbook__message {
+	margin: 0;
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+.wgrsvp-guestbook__meta {
+	margin: 0.5rem 0 0;
+	font-size: 0.875rem;
+	opacity: 0.7;
+}
+
+.wgrsvp-guestbook__form label {
+	display: block;
+	margin-bottom: 0.25rem;
+	font-weight: 600;
+}
+
+.wgrsvp-guestbook__form input[type='text'],
+.wgrsvp-guestbook__form textarea {
+	width: 100%;
+	max-width: 100%;
+	padding: 0.5rem 0.65rem;
+	box-sizing: border-box;
+}
+
+.wgrsvp-guestbook__captcha {
+	margin: 1rem 0 0.5rem;
+}
+
+.wgrsvp-guestbook__captcha-slot {
+	min-height: 0;
+}
+
+.wgrsvp-guestbook__submit {
+	cursor: pointer;
+	padding: 0.55rem 1rem;
+}
+
+.wgrsvp-guestbook__status {
+	margin-top: 0.75rem;
+}

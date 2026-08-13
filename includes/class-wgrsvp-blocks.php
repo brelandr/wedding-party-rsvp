@@ -72,6 +72,9 @@ if ( ! class_exists( 'WGRSVP_Blocks' ) ) {
 			self::register_from_metadata( 'rsvp' );
 			self::register_from_metadata( 'guest-hub' );
 			self::register_from_metadata( 'thankyou-checklist' );
+			self::register_from_metadata( 'guestbook' );
+			self::register_from_metadata( 'itinerary' );
+			self::register_from_metadata( 'travel' );
 		}
 
 		/**
