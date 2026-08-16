@@ -88,6 +88,7 @@ rsync -a \
 	--exclude='phpcs.xml' \
 	--exclude='phpcs.xml.dist' \
 	--exclude='*.md' \
+	--exclude='docs/' \
 	--exclude='composer.json' \
 	--exclude='composer.lock' \
 	--exclude='package.json' \
@@ -131,12 +132,17 @@ if echo "${ZIP_LISTING}" | grep -qF "${PLUGIN_SLUG}/assets/blueprints/trunk/"; t
 fi
 echo "OK: assets/blueprints/blueprint.json present; assets/blueprints/trunk excluded."
 
-if echo "${ZIP_LISTING}" | grep -qE '(\.cursorrules|\.DS_Store|\.git/|\.github|create-plugin-zip\.sh|[^ ]+\.sh|deploy\.yml|\.md|phpcs\.xml|\.distignore)'; then
-	echo "WARNING: Some excluded paths may still be present."
-	echo "${ZIP_LISTING}" | grep -E '(\.cursorrules|\.DS_Store|\.git/|\.github|create-plugin-zip|[^ ]+\.sh|deploy\.yml|\.md|phpcs\.xml|\.distignore)' || true
-else
-	echo "OK: Excluded patterns not found in zip."
+if echo "${ZIP_LISTING}" | grep -qF "${PLUGIN_SLUG}/docs/"; then
+	echo "✗ ERROR: docs/ must not be in the distribution zip." >&2
+	exit 1
 fi
+
+if echo "${ZIP_LISTING}" | grep -qE '(\.cursorrules|\.DS_Store|\.git/|\.github|create-plugin-zip\.sh|[^ ]+\.sh|deploy\.yml|\.md|phpcs\.xml|\.distignore)'; then
+	echo "✗ ERROR: Excluded paths still present in zip:" >&2
+	echo "${ZIP_LISTING}" | grep -E '(\.cursorrules|\.DS_Store|\.git/|\.github|create-plugin-zip|[^ ]+\.sh|deploy\.yml|\.md|phpcs\.xml|\.distignore)' >&2 || true
+	exit 1
+fi
+echo "OK: Excluded patterns not found in zip."
 
 if echo "${ZIP_LISTING}" | grep -qE '\.svn/|svn-checkout/'; then
 	echo "WARNING: SVN metadata (.svn/) or svn-checkout/ must not be in the zip (Plugin Check: vcs_present)."

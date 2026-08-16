@@ -151,7 +151,7 @@ class WGRSVP_Admin_Menu_Groups {
 		}
 
 		$plugin_file = defined( 'WGRSVP_PLUGIN_FILE' ) ? WGRSVP_PLUGIN_FILE : dirname( __DIR__ ) . '/wedding-party-rsvp.php';
-		$ver         = '8.3.7';
+		$ver         = '8.3.8';
 		if ( defined( 'WGRSVP_VERSION' ) ) {
 			$ver = WGRSVP_VERSION;
 		} elseif ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {

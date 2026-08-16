@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Development distribution zips for Wedding Party RSVP (free) and Pro.
 #
-# Same payload as create-both-plugin-zips.sh, but:
+# Same lean payload as create-both-plugin-zips.sh (no companion/docs/scripts), but:
 #   - Writes *-dev-YYYYMMDD.zip filenames (not the release zip names).
 #   - Does NOT git commit, tag, push, or publish to WordPress.org SVN.
 #   - Does NOT create a GitHub Release (so deploy.yml never runs).
@@ -19,6 +19,8 @@
 # Output:
 #   Dist/wedding-party-rsvp-{version}-dev-{date}.zip
 #   Dist/wedding-party-rsvp-pro-{version}-dev-{date}.zip
+#
+# Always upload from Dist/ — never Finder-compress the Pro repo (includes companion/).
 
 set -euo pipefail
 
@@ -39,3 +41,4 @@ echo ""
 echo "Development zips ready under Dist/."
 echo "These filenames are for testing; they are NOT published to WordPress.org."
 echo "For an org release, use create-both-plugin-zips.sh and publish a GitHub Release."
+echo "Install Pro from Dist/wedding-party-rsvp-pro-*-dev-*.zip only (never zip the Pro folder)."

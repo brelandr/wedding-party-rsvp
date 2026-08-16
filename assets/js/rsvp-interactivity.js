@@ -146,21 +146,31 @@ function mountGuestHubFromPayload( root, hub, i18n ) {
 			a.href = String( hotelUrl );
 			a.target = '_blank';
 			a.rel = 'noopener noreferrer';
-			a.textContent = i18n.hubHotelBook || 'Book lodging';
+			a.textContent =
+				( travel && travel.ctaLabel ) ||
+				i18n.hubHotelBook ||
+				'Book lodging';
 			p.appendChild( a );
 			card.appendChild( p );
 		}
 		if ( hotelCode ) {
 			const p = document.createElement( 'p' );
 			p.className = 'wgrsvp-guest-hub__hotel-code';
-			p.textContent =
-				( i18n.hubHotelCode || 'Group code:' ) + ' ' + String( hotelCode );
+			const codeLabel =
+				( travel && travel.groupCodeLabel ) ||
+				i18n.hubHotelCode ||
+				'Group code:';
+			p.textContent = String( codeLabel ) + ' ' + String( hotelCode );
 			card.appendChild( p );
 		}
 		if ( cutoff ) {
 			const p = document.createElement( 'p' );
 			p.className = 'wgrsvp-guest-hub__hotel-cutoff';
-			p.textContent = String( cutoff );
+			const byLabel =
+				( travel && travel.bookByLabel ) || '';
+			p.textContent = byLabel
+				? String( byLabel ) + ' ' + String( cutoff )
+				: String( cutoff );
 			card.appendChild( p );
 		}
 		if ( note ) {

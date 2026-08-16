@@ -36,13 +36,18 @@ class WGRSVP_Itinerary_Travel {
 	 */
 	public static function default_travel() {
 		return array(
-			'heading'    => '',
-			'hotel_name' => '',
-			'hotel_url'  => '',
-			'hotel_code' => '',
-			'cutoff'     => '',
-			'note'       => '',
-			'cta_label'  => '',
+			'heading'           => '',
+			'hotel_name'        => '',
+			'hotel_url'         => '',
+			'hotel_code'        => '',
+			'cutoff'            => '',
+			'note'              => '',
+			'cta_label'         => '',
+			'empty_message'     => '',
+			'group_code_label'  => '',
+			'book_by_label'     => '',
+			'copy_code_label'   => '',
+			'copied_label'      => '',
 		);
 	}
 
@@ -59,7 +64,7 @@ class WGRSVP_Itinerary_Travel {
 		if ( ! $post || ! has_shortcode( (string) $post->post_content, 'wgrsvp_travel' ) ) {
 			return;
 		}
-		$ver  = defined( 'WGRSVP_VERSION' ) ? WGRSVP_VERSION : '8.3.7';
+		$ver  = defined( 'WGRSVP_VERSION' ) ? WGRSVP_VERSION : '8.3.8';
 		$base = defined( 'WGRSVP_PLUGIN_FILE' ) ? WGRSVP_PLUGIN_FILE : dirname( __DIR__ ) . '/wedding-party-rsvp.php';
 		wp_enqueue_style(
 			'wgrsvp-travel',
@@ -215,6 +220,22 @@ class WGRSVP_Itinerary_Travel {
 			? (string) $t['heading']
 			: __( 'Travel & lodging', 'wedding-party-rsvp' );
 
+		$empty_message = isset( $t['empty_message'] ) && '' !== trim( (string) $t['empty_message'] )
+			? (string) $t['empty_message']
+			: __( 'Hotel and travel details will be posted here.', 'wedding-party-rsvp' );
+		$group_code_label = isset( $t['group_code_label'] ) && '' !== trim( (string) $t['group_code_label'] )
+			? (string) $t['group_code_label']
+			: __( 'Group code:', 'wedding-party-rsvp' );
+		$book_by_label = isset( $t['book_by_label'] ) && '' !== trim( (string) $t['book_by_label'] )
+			? (string) $t['book_by_label']
+			: __( 'Book by:', 'wedding-party-rsvp' );
+		$copy_code_label = isset( $t['copy_code_label'] ) && '' !== trim( (string) $t['copy_code_label'] )
+			? (string) $t['copy_code_label']
+			: __( 'Copy code', 'wedding-party-rsvp' );
+		$copied_label = isset( $t['copied_label'] ) && '' !== trim( (string) $t['copied_label'] )
+			? (string) $t['copied_label']
+			: __( 'Copied', 'wedding-party-rsvp' );
+
 		$has = '' !== trim( (string) ( $t['hotel_name'] ?? '' ) )
 			|| '' !== trim( (string) ( $t['note'] ?? '' ) )
 			|| '' !== trim( (string) ( $t['hotel_code'] ?? '' ) );
@@ -223,7 +244,7 @@ class WGRSVP_Itinerary_Travel {
 		echo '<section class="wgrsvp-travel">';
 		echo '<h2 class="wgrsvp-travel__heading">' . esc_html( $heading ) . '</h2>';
 		if ( ! $has ) {
-			echo '<p class="wgrsvp-travel__empty">' . esc_html__( 'Hotel and travel details will be posted here.', 'wedding-party-rsvp' ) . '</p>';
+			echo '<p class="wgrsvp-travel__empty">' . esc_html( $empty_message ) . '</p>';
 		} else {
 			$url = isset( $t['hotel_url'] ) ? esc_url_raw( (string) $t['hotel_url'] ) : '';
 			if ( '' !== trim( (string) $t['hotel_name'] ) ) {
@@ -239,14 +260,14 @@ class WGRSVP_Itinerary_Travel {
 			if ( '' !== trim( (string) ( $t['hotel_code'] ?? '' ) ) ) {
 				$code = (string) $t['hotel_code'];
 				echo '<div class="wgrsvp-travel__code-row">';
-				echo '<p class="wgrsvp-travel__code"><strong>' . esc_html__( 'Group code:', 'wedding-party-rsvp' ) . '</strong> ';
+				echo '<p class="wgrsvp-travel__code"><strong>' . esc_html( $group_code_label ) . '</strong> ';
 				echo '<span class="wgrsvp-travel__code-value">' . esc_html( $code ) . '</span></p>';
-				echo '<button type="button" class="wgrsvp-travel__copy" data-wgrsvp-copy="' . esc_attr( $code ) . '" data-wgrsvp-copied-label="' . esc_attr__( 'Copied', 'wedding-party-rsvp' ) . '">';
-				echo esc_html__( 'Copy code', 'wedding-party-rsvp' );
+				echo '<button type="button" class="wgrsvp-travel__copy" data-wgrsvp-copy="' . esc_attr( $code ) . '" data-wgrsvp-copied-label="' . esc_attr( $copied_label ) . '">';
+				echo esc_html( $copy_code_label );
 				echo '</button></div>';
 			}
 			if ( '' !== trim( (string) ( $t['cutoff'] ?? '' ) ) ) {
-				echo '<p class="wgrsvp-travel__cutoff"><strong>' . esc_html__( 'Book by:', 'wedding-party-rsvp' ) . '</strong> ' . esc_html( (string) $t['cutoff'] ) . '</p>';
+				echo '<p class="wgrsvp-travel__cutoff"><strong>' . esc_html( $book_by_label ) . '</strong> ' . esc_html( (string) $t['cutoff'] ) . '</p>';
 			}
 			if ( '' !== trim( (string) ( $t['note'] ?? '' ) ) ) {
 				echo '<div class="wgrsvp-travel__note">' . wp_kses_post( wpautop( (string) $t['note'] ) ) . '</div>';
@@ -288,13 +309,18 @@ class WGRSVP_Itinerary_Travel {
 	public static function sanitize_travel( $input ) {
 		$in  = is_array( $input ) ? $input : array();
 		$out = self::default_travel();
-		$out['heading']    = isset( $in['heading'] ) ? sanitize_text_field( (string) $in['heading'] ) : '';
-		$out['hotel_name'] = isset( $in['hotel_name'] ) ? sanitize_text_field( (string) $in['hotel_name'] ) : '';
-		$out['hotel_url']  = isset( $in['hotel_url'] ) ? esc_url_raw( (string) $in['hotel_url'] ) : '';
-		$out['hotel_code'] = isset( $in['hotel_code'] ) ? sanitize_text_field( (string) $in['hotel_code'] ) : '';
-		$out['cutoff']     = isset( $in['cutoff'] ) ? sanitize_text_field( (string) $in['cutoff'] ) : '';
-		$out['note']       = isset( $in['note'] ) ? sanitize_textarea_field( (string) $in['note'] ) : '';
-		$out['cta_label']  = isset( $in['cta_label'] ) ? sanitize_text_field( (string) $in['cta_label'] ) : '';
+		$out['heading']          = isset( $in['heading'] ) ? sanitize_text_field( (string) $in['heading'] ) : '';
+		$out['hotel_name']       = isset( $in['hotel_name'] ) ? sanitize_text_field( (string) $in['hotel_name'] ) : '';
+		$out['hotel_url']        = isset( $in['hotel_url'] ) ? esc_url_raw( (string) $in['hotel_url'] ) : '';
+		$out['hotel_code']       = isset( $in['hotel_code'] ) ? sanitize_text_field( (string) $in['hotel_code'] ) : '';
+		$out['cutoff']           = isset( $in['cutoff'] ) ? sanitize_text_field( (string) $in['cutoff'] ) : '';
+		$out['note']             = isset( $in['note'] ) ? sanitize_textarea_field( (string) $in['note'] ) : '';
+		$out['cta_label']        = isset( $in['cta_label'] ) ? sanitize_text_field( (string) $in['cta_label'] ) : '';
+		$out['empty_message']    = isset( $in['empty_message'] ) ? sanitize_text_field( (string) $in['empty_message'] ) : '';
+		$out['group_code_label'] = isset( $in['group_code_label'] ) ? sanitize_text_field( (string) $in['group_code_label'] ) : '';
+		$out['book_by_label']    = isset( $in['book_by_label'] ) ? sanitize_text_field( (string) $in['book_by_label'] ) : '';
+		$out['copy_code_label']  = isset( $in['copy_code_label'] ) ? sanitize_text_field( (string) $in['copy_code_label'] ) : '';
+		$out['copied_label']     = isset( $in['copied_label'] ) ? sanitize_text_field( (string) $in['copied_label'] ) : '';
 		return $out;
 	}
 
@@ -343,25 +369,68 @@ class WGRSVP_Itinerary_Travel {
 		}
 		$t = self::get_travel_settings();
 		echo '<div class="wrap"><h1>' . esc_html__( 'Public travel & lodging', 'wedding-party-rsvp' ) . '</h1>';
-		echo '<p>' . esc_html__( 'Shown by the [wgrsvp_travel] shortcode on your wedding site. Pro travel settings can override this when Pro is active.', 'wedding-party-rsvp' ) . '</p>';
+		echo '<p>' . esc_html__( 'Customize every guest-facing travel string shown by the [wgrsvp_travel] shortcode. When Wedding Party RSVP Pro is active and configured, Pro → Travel & lodging overrides these values.', 'wedding-party-rsvp' ) . '</p>';
 		echo '<form method="post">';
 		wp_nonce_field( 'wgrsvp_save_travel_public' );
 		echo '<table class="form-table" role="presentation">';
 		$fields = array(
-			'heading'    => __( 'Heading', 'wedding-party-rsvp' ),
-			'hotel_name' => __( 'Hotel name', 'wedding-party-rsvp' ),
-			'hotel_url'  => __( 'Hotel booking URL', 'wedding-party-rsvp' ),
-			'hotel_code' => __( 'Group code', 'wedding-party-rsvp' ),
-			'cutoff'     => __( 'Book-by date', 'wedding-party-rsvp' ),
-			'cta_label'  => __( 'Book button label', 'wedding-party-rsvp' ),
+			'heading'           => array(
+				'label'       => __( 'Heading', 'wedding-party-rsvp' ),
+				'placeholder' => __( 'Travel & lodging', 'wedding-party-rsvp' ),
+			),
+			'hotel_name'        => array(
+				'label'       => __( 'Hotel name', 'wedding-party-rsvp' ),
+				'placeholder' => '',
+			),
+			'hotel_url'         => array(
+				'label'       => __( 'Hotel booking URL', 'wedding-party-rsvp' ),
+				'placeholder' => '',
+			),
+			'hotel_code'        => array(
+				'label'       => __( 'Group code', 'wedding-party-rsvp' ),
+				'placeholder' => '',
+			),
+			'cutoff'            => array(
+				'label'       => __( 'Book-by date (display text)', 'wedding-party-rsvp' ),
+				'placeholder' => __( 'May 1, 2027', 'wedding-party-rsvp' ),
+			),
+			'cta_label'         => array(
+				'label'       => __( 'Book button label', 'wedding-party-rsvp' ),
+				'placeholder' => __( 'Book hotel', 'wedding-party-rsvp' ),
+			),
+			'empty_message'     => array(
+				'label'       => __( 'Empty-state message', 'wedding-party-rsvp' ),
+				'placeholder' => __( 'Hotel and travel details will be posted here.', 'wedding-party-rsvp' ),
+			),
+			'group_code_label'  => array(
+				'label'       => __( 'Group code label', 'wedding-party-rsvp' ),
+				'placeholder' => __( 'Group code:', 'wedding-party-rsvp' ),
+			),
+			'book_by_label'     => array(
+				'label'       => __( 'Book-by label', 'wedding-party-rsvp' ),
+				'placeholder' => __( 'Book by:', 'wedding-party-rsvp' ),
+			),
+			'copy_code_label'   => array(
+				'label'       => __( 'Copy button label', 'wedding-party-rsvp' ),
+				'placeholder' => __( 'Copy code', 'wedding-party-rsvp' ),
+			),
+			'copied_label'      => array(
+				'label'       => __( 'Copied confirmation label', 'wedding-party-rsvp' ),
+				'placeholder' => __( 'Copied', 'wedding-party-rsvp' ),
+			),
 		);
-		foreach ( $fields as $key => $label ) {
-			echo '<tr><th scope="row"><label for="wgrsvp-travel-' . esc_attr( $key ) . '">' . esc_html( $label ) . '</label></th><td>';
-			echo '<input class="regular-text" type="text" id="wgrsvp-travel-' . esc_attr( $key ) . '" name="wgrsvp_travel[' . esc_attr( $key ) . ']" value="' . esc_attr( (string) $t[ $key ] ) . '" />';
+		foreach ( $fields as $key => $meta ) {
+			echo '<tr><th scope="row"><label for="wgrsvp-travel-' . esc_attr( $key ) . '">' . esc_html( $meta['label'] ) . '</label></th><td>';
+			echo '<input class="regular-text" type="text" id="wgrsvp-travel-' . esc_attr( $key ) . '" name="wgrsvp_travel[' . esc_attr( $key ) . ']" value="' . esc_attr( (string) ( $t[ $key ] ?? '' ) ) . '"';
+			if ( '' !== $meta['placeholder'] ) {
+				echo ' placeholder="' . esc_attr( $meta['placeholder'] ) . '"';
+			}
+			echo ' />';
 			echo '</td></tr>';
 		}
 		echo '<tr><th scope="row"><label for="wgrsvp-travel-note">' . esc_html__( 'Notes', 'wedding-party-rsvp' ) . '</label></th><td>';
 		echo '<textarea class="large-text" rows="5" id="wgrsvp-travel-note" name="wgrsvp_travel[note]">' . esc_textarea( (string) $t['note'] ) . '</textarea>';
+		echo '<p class="description">' . esc_html__( 'Parking, shuttle, airport tips, or any other travel details.', 'wedding-party-rsvp' ) . '</p>';
 		echo '</td></tr></table>';
 		echo '<p><button type="submit" class="button button-primary" name="wgrsvp_travel_save" value="1">' . esc_html__( 'Save', 'wedding-party-rsvp' ) . '</button></p>';
 		echo '</form></div>';
