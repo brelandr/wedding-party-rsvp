@@ -64,7 +64,7 @@ class WGRSVP_Itinerary_Travel {
 		if ( ! $post || ! has_shortcode( (string) $post->post_content, 'wgrsvp_travel' ) ) {
 			return;
 		}
-		$ver  = defined( 'WGRSVP_VERSION' ) ? WGRSVP_VERSION : '8.3.8';
+		$ver  = defined( 'WGRSVP_VERSION' ) ? WGRSVP_VERSION : '8.3.9';
 		$base = defined( 'WGRSVP_PLUGIN_FILE' ) ? WGRSVP_PLUGIN_FILE : dirname( __DIR__ ) . '/wedding-party-rsvp.php';
 		wp_enqueue_style(
 			'wgrsvp-travel',

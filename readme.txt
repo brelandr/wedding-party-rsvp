@@ -4,7 +4,7 @@ Tags: wedding, rsvp, guest list, invitation, event management
 Requires at least: 6.2
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 8.3.8
+Stable tag: 8.3.9
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -211,6 +211,10 @@ This plugin does not call third-party APIs for core RSVP storage. Optional behav
 This plugin bundles **FPDF** (version 1.86, © Olivier Plathey) under `includes/lib/fpdf/` for optional **Export check-in PDF** in the guest list. FPDF is free software; see the header comment in `fpdf.php` for license terms.
 
 == Changelog ==
+= 8.3.9 =
+
+* **Fix: Redirect URL carries thank-you link parameters** — After RSVP, guests redirected to your custom thank-you page receive signed `party_id` / thank-you args so `[wgrsvp_guest_hub]` (and Pro `[wpr_pro_rsvp_status]`) can show their household status.
+
 = 8.3.8 =
 
 * **Add: Customizable travel UI labels** — Wedding RSVP → Travel (public) can set empty-state message, group-code / book-by labels, and Copy/Copied button text for `[wgrsvp_travel]`. Guest hub uses the configured book button and label strings.

@@ -72,6 +72,32 @@ if ( ! class_exists( 'WGRSVP_ICS' ) ) {
 		}
 
 		/**
+		 * Append signed thank-you query args to a base URL (custom Redirect URL or current page).
+		 *
+		 * Enables `[wgrsvp_guest_hub]` / Pro `[wpr_pro_rsvp_status]` on a custom thank-you page.
+		 *
+		 * @param string $url      Base URL.
+		 * @param string $party_id Party ID.
+		 * @return string Empty if URL or party ID is missing.
+		 */
+		public static function with_thank_you_args( $url, $party_id ) {
+			$url      = esc_url_raw( (string) $url );
+			$party_id = sanitize_text_field( (string) $party_id );
+			if ( '' === $url || '' === $party_id ) {
+				return '';
+			}
+			$nonce = wp_create_nonce( 'wgrsvp_thanks_' . $party_id );
+			return add_query_arg(
+				array(
+					self::THANKS_FLAG     => '1',
+					'party_id'            => $party_id,
+					'wgrsvp_thanks_nonce' => $nonce,
+				),
+				$url
+			);
+		}
+
+		/**
 		 * Redirect URL for thank-you state (same page + query args).
 		 *
 		 * @param string $party_id Party ID.
@@ -86,15 +112,7 @@ if ( ! class_exists( 'WGRSVP_ICS' ) ) {
 			if ( ! is_string( $url ) || '' === $url ) {
 				$url = home_url( '/' );
 			}
-			$nonce = wp_create_nonce( 'wgrsvp_thanks_' . $party_id );
-			return add_query_arg(
-				array(
-					self::THANKS_FLAG     => '1',
-					'party_id'            => $party_id,
-					'wgrsvp_thanks_nonce' => $nonce,
-				),
-				$url
-			);
+			return self::with_thank_you_args( $url, $party_id );
 		}
 
 		/**

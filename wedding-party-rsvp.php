@@ -6,7 +6,7 @@
  *
  * Plugin Name: Wedding Party RSVP – Guest List, Invitation & Event Manager
  * Description: Simple and secure RSVP system. Manage guest lists and adult meal choices.
- * Version: 8.3.8
+ * Version: 8.3.9
  * Author: Land Tech Web Designs, Corp
  * Author URI: https://landtechwebdesigns.com
  * Plugin URI: https://landtechwebdesigns.com/wedding-party-rsvp-wordpress-plugin/
@@ -24,7 +24,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 if ( ! defined( 'WGRSVP_VERSION' ) ) {
-	define( 'WGRSVP_VERSION', '8.3.8' );
+	define( 'WGRSVP_VERSION', '8.3.9' );
 }
 if ( ! defined( 'WGRSVP_PLUGIN_FILE' ) ) {
 	define( 'WGRSVP_PLUGIN_FILE', __FILE__ );
@@ -1342,6 +1342,12 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 					? wgrsvp_resolve_stored_redirect_url( (string) $settings['redirect_url'] )
 					: esc_url_raw( (string) $settings['redirect_url'] );
 				$redirect_go = esc_url_raw( (string) $redirect_go );
+				if ( '' !== $redirect_go && class_exists( 'WGRSVP_ICS', false ) ) {
+					$with_thanks = WGRSVP_ICS::with_thank_you_args( $redirect_go, $party_id );
+					if ( '' !== $with_thanks ) {
+						$redirect_go = $with_thanks;
+					}
+				}
 			}
 			if ( '' !== $redirect_go ) {
 				wp_send_json_success(
@@ -6046,6 +6052,12 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 					? wgrsvp_resolve_stored_redirect_url( $raw_redir )
 					: esc_url_raw( $raw_redir );
 				$url = esc_url_raw( (string) $url );
+				if ( '' !== $url && class_exists( 'WGRSVP_ICS', false ) ) {
+					$with_thanks = WGRSVP_ICS::with_thank_you_args( $url, $party_id );
+					if ( '' !== $with_thanks ) {
+						$url = $with_thanks;
+					}
+				}
 				if ( '' !== $url ) {
 					wp_safe_redirect( $url );
 					exit;

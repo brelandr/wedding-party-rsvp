@@ -247,7 +247,7 @@ class WGRSVP_Guestbook {
 	 * @return void
 	 */
 	public static function enqueue_assets() {
-		$ver  = defined( 'WGRSVP_VERSION' ) ? WGRSVP_VERSION : '8.3.8';
+		$ver  = defined( 'WGRSVP_VERSION' ) ? WGRSVP_VERSION : '8.3.9';
 		$base = defined( 'WGRSVP_PLUGIN_FILE' ) ? WGRSVP_PLUGIN_FILE : dirname( __DIR__ ) . '/wedding-party-rsvp.php';
 		if ( class_exists( 'WGRSVP_Guestbook_Captcha', false ) ) {
 			WGRSVP_Guestbook_Captcha::enqueue_scripts();
