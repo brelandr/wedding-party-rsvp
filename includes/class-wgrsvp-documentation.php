@@ -29,6 +29,7 @@ class WGRSVP_Documentation {
 	public static function init() {
 		// After Pro’s menu merge (priority 100) so Help survives remove_menu_page + rebuild.
 		add_action( 'admin_menu', array( __CLASS__, 'register_menu' ), 110 );
+		add_action( 'admin_enqueue_scripts', array( 'WGRSVP_Docs_Hub', 'enqueue_assets' ) );
 	}
 
 	/**
@@ -85,14 +86,22 @@ class WGRSVP_Documentation {
 
 		echo '<div class="wrap wgrsvp-help">';
 		echo '<h1>' . esc_html__( 'Help & Documentation', 'wedding-party-rsvp' ) . '</h1>';
-		echo '<p class="description">' . esc_html__( 'Guides for gift registries and related tools. Plain-language explanations — jump with the contents list.', 'wedding-party-rsvp' ) . '</p>';
+		echo '<p class="description">' . esc_html__( 'Open a documentation card for complete instructions. Gift registry guides remain below for quick reference.', 'wedding-party-rsvp' ) . '</p>';
 
 		if ( '' !== $pro_docs ) {
 			echo '<div class="notice notice-info inline" style="margin:12px 0;max-width:920px;"><p>';
-			echo esc_html__( 'Wedding Party RSVP Pro is active. For the full Pro manuals (seating, drip, Stripe, companion app, and more), open:', 'wedding-party-rsvp' );
+			echo esc_html__( 'Wedding Party RSVP Pro is active. For Pro blocks, seating, drip, Stripe, companion app, and more, open:', 'wedding-party-rsvp' );
 			echo ' <a href="' . esc_url( $pro_docs ) . '"><strong>' . esc_html__( 'Wedding RSVP → Documentation', 'wedding-party-rsvp' ) . '</strong></a>';
 			echo '</p></div>';
 		}
+
+		if ( class_exists( 'WGRSVP_Docs_Hub', false ) ) {
+			WGRSVP_Docs_Hub::render_hub();
+		}
+
+		echo '<div class="wgrsvp-help-classic">';
+		echo '<h2>' . esc_html__( 'Gift registries & setup guides', 'wedding-party-rsvp' ) . '</h2>';
+		echo '<p class="description">' . esc_html__( 'Plain-language explanations — jump with the contents list.', 'wedding-party-rsvp' ) . '</p>';
 
 		echo '<nav class="wgrsvp-help-toc" aria-label="' . esc_attr__( 'Help table of contents', 'wedding-party-rsvp' ) . '" style="max-width:920px;margin:16px 0;padding:12px 16px;background:#fff;border:1px solid #dcdcde;border-radius:4px;">';
 		echo '<h2 style="margin-top:0;">' . esc_html__( 'Contents', 'wedding-party-rsvp' ) . '</h2>';
@@ -121,7 +130,8 @@ class WGRSVP_Documentation {
 		self::render_pro_csv( $pro_url, $pro_docs );
 		self::render_pro_more( $pro_url, $pro_docs );
 
-		echo '</div>';
+		echo '</div>'; // .wgrsvp-help-classic
+		echo '</div>'; // .wrap
 	}
 
 	/**

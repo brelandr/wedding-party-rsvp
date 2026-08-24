@@ -4,7 +4,7 @@ Tags: wedding, rsvp, guest list, invitation, event management
 Requires at least: 6.2
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 8.3.9
+Stable tag: 8.5.0
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -89,7 +89,7 @@ Gift CSV Import: Record gifts bought elsewhere onto guest rows (with a dry-run p
 
 Guest Photo Gallery: Guests signed in with a Party ID in the free Wedding RSVP companion app can take or choose photos and upload them to your wedding (or other event) albums on your WordPress site. Moderators approve photos under **Wedding RSVP → Photo Gallery**; approved images can appear on the frontend with `[wpr_pro_guest_gallery]`.
 
-Companion Mobile Apps: Free iOS and Android apps connect coordinators and guests to your licensed Pro site via a short join code—no extra app subscription.
+Companion Mobile Apps: Free iOS and Android apps connect coordinators and guests to your WordPress wedding site via a short join code—no extra app subscription. Core dashboard, guest list, and Party ID RSVP work with this free plugin; Wedding Party RSVP Pro adds reminders, photo gallery, seating, AI, and other website extras.
 
 Admin Notes & Table Numbers: Organize your seating chart and keep private notes.
 
@@ -202,6 +202,8 @@ This plugin does not call third-party APIs for core RSVP storage. Optional behav
 
 * **Client summary link (optional magic link)** — **Wedding RSVP → Client summary** lets administrators generate a secret URL that shows **aggregate** RSVP and meal/dietary **counts** on your own site (no guest names). No off-site API is called; anyone with the link can view the summary until you revoke or regenerate the token.
 
+* **Wedding RSVP companion hub (optional)** — **Wedding RSVP → Mobile App** shows a join URL that points at **https://weddingrsvp.pro** (`/app/join?url=…`) so the free companion can pair with this site. The plugin does not call the hub from PHP for free-only installs; pairing is initiated from the app or by opening that URL. Guest list data stays on your WordPress host. [Land Tech Privacy Policy](https://landtechwebdesigns.com/privacy-policy/)
+
 * **Google reCAPTCHA v3 (optional guestbook)** — When reCAPTCHA v3 site and secret keys are available (Guestbook settings override, or inherited from **WSB Hub → Connection** on the same site), the public guestbook loads Google’s script from `https://www.google.com/recaptcha/api.js?render=…` and verifies submissions via `https://www.google.com/recaptcha/api/siteverify` (score + action `wgrsvp_guestbook`). Google may receive the captcha token and visitor IP at verify time. See [Google reCAPTCHA Terms](https://policies.google.com/terms) and [Google Privacy Policy](https://policies.google.com/privacy).
 
 * **Cloudflare Turnstile (optional guestbook backup)** — When Turnstile site and secret keys are configured locally or on **WSB Hub → Connection** (used if Google is not set, or if reCAPTCHA fails to run), the guestbook loads `https://challenges.cloudflare.com/turnstile/v0/api.js` and verifies via `https://challenges.cloudflare.com/turnstile/v0/siteverify`. Cloudflare may receive the token and visitor IP at verify time. See [Cloudflare Terms](https://www.cloudflare.com/website-terms/) and [Cloudflare Privacy Policy](https://www.cloudflare.com/privacypolicy/).
@@ -211,6 +213,17 @@ This plugin does not call third-party APIs for core RSVP storage. Optional behav
 This plugin bundles **FPDF** (version 1.86, © Olivier Plathey) under `includes/lib/fpdf/` for optional **Export check-in PDF** in the guest list. FPDF is free software; see the header comment in `fpdf.php` for license terms.
 
 == Changelog ==
+= 8.5.0 =
+
+* **Add: Free companion mobile API** — `wgrsvp/v1` app-config, website connect + Application Password claim, coordinator dashboard/guests, guest Party ID session/RSVP, and account deletion for the Wedding RSVP companion app. Pro sites continue to use the richer `wpr-pro/v1` surface when licensed.
+* **Add: Wedding RSVP → Mobile App** admin screen with join/connect instructions.
+
+= 8.4.0 =
+
+* **Add: SelfStorage-style Help documentation hub** — Wedding RSVP → Help opens card guides (Quick Start, Gutenberg Blocks, Shortcodes). Click a card to read full instructions; block overview links open per-block guides.
+* **Add: Per-block documentation** for all free Gutenberg blocks (RSVP form, Guest Hub, Guestbook, Itinerary, Travel, Thank-you checklist).
+* **Improve: Distribution zip** ships `admin-docs/` markdown for in-admin Help (developer `docs/` still excluded).
+
 = 8.3.9 =
 
 * **Fix: Redirect URL carries thank-you link parameters** — After RSVP, guests redirected to your custom thank-you page receive signed `party_id` / thank-you args so `[wgrsvp_guest_hub]` (and Pro `[wpr_pro_rsvp_status]`) can show their household status.

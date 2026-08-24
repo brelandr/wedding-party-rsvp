@@ -24,7 +24,8 @@ tests/
 scripts/
 *.zip
 *.sh
-*.md
+# Root/dev markdown only — keep admin-docs/*.md for the Help hub (8.4.0+).
+/*.md
 phpcs.xml
 phpcs.xml.dist
 composer.json

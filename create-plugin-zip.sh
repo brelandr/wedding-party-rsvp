@@ -67,6 +67,8 @@ rsync -a \
 	--exclude='Dist/' \
 	--exclude='.[!.]*' \
 	--exclude='.zip-temp-*' \
+	--include='admin-docs/' \
+	--include='admin-docs/***' \
 	--exclude='*.DS_Store' \
 	--exclude='node_modules/' \
 	--exclude='vendor/' \
@@ -137,9 +139,23 @@ if echo "${ZIP_LISTING}" | grep -qF "${PLUGIN_SLUG}/docs/"; then
 	exit 1
 fi
 
-if echo "${ZIP_LISTING}" | grep -qE '(\.cursorrules|\.DS_Store|\.git/|\.github|create-plugin-zip\.sh|[^ ]+\.sh|deploy\.yml|\.md|phpcs\.xml|\.distignore)'; then
+if ! echo "${ZIP_LISTING}" | grep -qF "${PLUGIN_SLUG}/admin-docs/BLOCKS.md"; then
+	echo "✗ ERROR: admin-docs/BLOCKS.md must be in the distribution zip." >&2
+	exit 1
+fi
+echo "OK: admin-docs/ present."
+
+# Fail on tooling leftovers; allow shipped admin-docs/*.md only.
+if echo "${ZIP_LISTING}" | grep -qE '(\.cursorrules|\.DS_Store|\.git/|\.github|create-plugin-zip\.sh|[^ ]+\.sh|deploy\.yml|phpcs\.xml|\.distignore)'; then
 	echo "✗ ERROR: Excluded paths still present in zip:" >&2
-	echo "${ZIP_LISTING}" | grep -E '(\.cursorrules|\.DS_Store|\.git/|\.github|create-plugin-zip|[^ ]+\.sh|deploy\.yml|\.md|phpcs\.xml|\.distignore)' >&2 || true
+	echo "${ZIP_LISTING}" | grep -E '(\.cursorrules|\.DS_Store|\.git/|\.github|create-plugin-zip|[^ ]+\.sh|deploy\.yml|phpcs\.xml|\.distignore)' >&2 || true
+	exit 1
+fi
+# Any .md outside admin-docs/ is forbidden.
+MD_OUTSIDE="$( echo "${ZIP_LISTING}" | grep '\.md$' | grep -vF "${PLUGIN_SLUG}/admin-docs/" || true )"
+if [[ -n "${MD_OUTSIDE}" ]]; then
+	echo "✗ ERROR: Unexpected .md files outside admin-docs/:" >&2
+	echo "${MD_OUTSIDE}" >&2
 	exit 1
 fi
 echo "OK: Excluded patterns not found in zip."

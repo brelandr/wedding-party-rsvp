@@ -6,7 +6,7 @@
  *
  * Plugin Name: Wedding Party RSVP – Guest List, Invitation & Event Manager
  * Description: Simple and secure RSVP system. Manage guest lists and adult meal choices.
- * Version: 8.3.9
+ * Version: 8.5.0
  * Author: Land Tech Web Designs, Corp
  * Author URI: https://landtechwebdesigns.com
  * Plugin URI: https://landtechwebdesigns.com/wedding-party-rsvp-wordpress-plugin/
@@ -24,7 +24,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 if ( ! defined( 'WGRSVP_VERSION' ) ) {
-	define( 'WGRSVP_VERSION', '8.3.9' );
+	define( 'WGRSVP_VERSION', '8.5.0' );
 }
 if ( ! defined( 'WGRSVP_PLUGIN_FILE' ) ) {
 	define( 'WGRSVP_PLUGIN_FILE', __FILE__ );
@@ -38,6 +38,35 @@ require_once WGRSVP_PLUGIN_DIR . 'includes/class-wgrsvp-gift-registries.php';
 require_once WGRSVP_PLUGIN_DIR . 'includes/class-wgrsvp-wp70-compat.php';
 require_once WGRSVP_PLUGIN_DIR . 'includes/class-wgrsvp-blocks.php';
 require_once WGRSVP_PLUGIN_DIR . 'includes/class-wgrsvp-abilities-registry.php';
+require_once WGRSVP_PLUGIN_DIR . 'includes/class-wgrsvp-app-config.php';
+require_once WGRSVP_PLUGIN_DIR . 'includes/class-wgrsvp-app-connect.php';
+require_once WGRSVP_PLUGIN_DIR . 'includes/class-wgrsvp-mobile-rest.php';
+require_once WGRSVP_PLUGIN_DIR . 'includes/class-wgrsvp-account.php';
+require_once WGRSVP_PLUGIN_DIR . 'includes/class-wgrsvp-mobile-admin.php';
+
+/**
+ * Boot companion mobile stack after all plugins are loaded (Pro class_exists accurate).
+ *
+ * @return void
+ */
+function wgrsvp_boot_companion_mobile_stack() {
+	if ( class_exists( 'WGRSVP_App_Config', false ) ) {
+		WGRSVP_App_Config::init();
+	}
+	if ( class_exists( 'WGRSVP_App_Connect', false ) ) {
+		WGRSVP_App_Connect::init();
+	}
+	if ( class_exists( 'WGRSVP_Mobile_REST', false ) ) {
+		WGRSVP_Mobile_REST::init();
+	}
+	if ( class_exists( 'WGRSVP_Account', false ) ) {
+		WGRSVP_Account::init();
+	}
+	if ( class_exists( 'WGRSVP_Mobile_Admin', false ) ) {
+		WGRSVP_Mobile_Admin::init();
+	}
+}
+add_action( 'plugins_loaded', 'wgrsvp_boot_companion_mobile_stack', 1 );
 
 if ( ! function_exists( 'wgrsvp_set_script_translations' ) ) {
 	/**
@@ -324,6 +353,7 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 			require_once plugin_dir_path( __FILE__ ) . 'includes/class-wgrsvp-vendor-packet.php';
 			require_once plugin_dir_path( __FILE__ ) . 'includes/class-wgrsvp-frontend-cache.php';
 			require_once plugin_dir_path( __FILE__ ) . 'includes/class-wgrsvp-frontend-nonce-refresh.php';
+			require_once plugin_dir_path( __FILE__ ) . 'includes/class-wgrsvp-docs-hub.php';
 			require_once plugin_dir_path( __FILE__ ) . 'includes/class-wgrsvp-documentation.php';
 			require_once plugin_dir_path( __FILE__ ) . 'includes/class-wgrsvp-admin-menu-groups.php';
 			require_once plugin_dir_path( __FILE__ ) . 'includes/class-wgrsvp-admin-menu-badges.php';

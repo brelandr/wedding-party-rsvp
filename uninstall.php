@@ -31,5 +31,12 @@ $wpdb->query( "DROP TABLE IF EXISTS `{$wgrsvp_guestbook_table}`" );
 delete_option( 'wgrsvp_guestbook_db_version' );
 delete_option( 'wgrsvp_guestbook_captcha' );
 delete_option( 'wgrsvp_travel_settings' );
+delete_option( 'wgrsvp_app_connect_rewrite_flushed' );
+delete_option( 'wgrsvp_app_primary_color' );
+delete_option( 'wgrsvp_app_secondary_color' );
+delete_option( 'wgrsvp_app_logo_url' );
+delete_option( 'wgrsvp_app_min_version' );
+delete_option( 'wgrsvp_app_min_ios_build' );
+delete_option( 'wgrsvp_app_min_android_version_code' );
 
 wp_clear_scheduled_hook( 'wgrsvp_drip_tick' );
