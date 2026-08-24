@@ -38,5 +38,12 @@ delete_option( 'wgrsvp_app_logo_url' );
 delete_option( 'wgrsvp_app_min_version' );
 delete_option( 'wgrsvp_app_min_ios_build' );
 delete_option( 'wgrsvp_app_min_android_version_code' );
+delete_option( 'wgrsvp_network_status' );
+delete_option( 'wgrsvp_wedding_party_name' );
+delete_option( 'wgrsvp_wedding_partner_1' );
+delete_option( 'wgrsvp_wedding_partner_2' );
+delete_option( 'wgrsvp_wedding_city' );
+delete_option( 'wgrsvp_wedding_state' );
+delete_option( 'wgrsvp_wedding_zip' );
 
 wp_clear_scheduled_hook( 'wgrsvp_drip_tick' );

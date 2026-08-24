@@ -132,6 +132,7 @@ class WGRSVP_App_Config {
 				'reminders'           => false,
 				'push'                => false,
 				'companionSelfSignup' => false,
+				'tier'                => 'free',
 			),
 			'deepLink'              => 'wprsvp://event?url=' . rawurlencode( $site_url ),
 			'joinUrl'               => self::get_join_url( $site_url ),
