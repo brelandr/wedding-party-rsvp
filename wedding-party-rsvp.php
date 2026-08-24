@@ -6,7 +6,7 @@
  *
  * Plugin Name: Wedding Party RSVP – Guest List, Invitation & Event Manager
  * Description: Simple and secure RSVP system. Manage guest lists and adult meal choices.
- * Version: 8.5.0
+ * Version: 8.5.1
  * Author: Land Tech Web Designs, Corp
  * Author URI: https://landtechwebdesigns.com
  * Plugin URI: https://landtechwebdesigns.com/wedding-party-rsvp-wordpress-plugin/
@@ -24,7 +24,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 if ( ! defined( 'WGRSVP_VERSION' ) ) {
-	define( 'WGRSVP_VERSION', '8.5.0' );
+	define( 'WGRSVP_VERSION', '8.5.1' );
 }
 if ( ! defined( 'WGRSVP_PLUGIN_FILE' ) ) {
 	define( 'WGRSVP_PLUGIN_FILE', __FILE__ );
@@ -2858,9 +2858,9 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 				);
 				$play_url = 'https://play.google.com/store/apps/details?id=pro.weddingrsvp.companion';
 				echo '<div class="notice notice-info"><p><strong>' . esc_html__( 'Wedding RSVP companion apps', 'wedding-party-rsvp' ) . '</strong></p>';
-				echo '<p>' . esc_html__( 'The free Wedding RSVP companion apps connect coordinators and guests to your wedding website when you use Wedding Party RSVP Pro (Premium)—at no extra app cost.', 'wedding-party-rsvp' ) . '</p>';
+				echo '<p>' . esc_html__( 'The free Wedding RSVP companion apps connect coordinators and guests to this free plugin—no Pro license required for core guest list and Party ID RSVP. Open Wedding RSVP → Mobile App for connect instructions.', 'wedding-party-rsvp' ) . '</p>';
 				echo '<p>' . esc_html__( 'Android is available now on the Google Play Store. iOS is available on TestFlight and should be available on the Apple App Store soon.', 'wedding-party-rsvp' ) . '</p>';
-				echo '<p>' . esc_html__( 'With Pro, guests can also capture photos in the app and upload them to an event photo gallery on your WordPress site (for example a wedding, bridal shower, or rehearsal dinner).', 'wedding-party-rsvp' ) . '</p><p>';
+				echo '<p>' . esc_html__( 'Optional Pro adds photo gallery uploads from the app, reminders, push alerts, seating, AI, and short App Network join codes.', 'wedding-party-rsvp' ) . '</p><p>';
 				echo '<a class="button button-primary" href="' . esc_url( $play_url ) . '" target="_blank" rel="noopener noreferrer">' . esc_html__( 'Get it on Google Play', 'wedding-party-rsvp' ) . '</a> ';
 				if ( ! wgrsvp_is_pro_plugin_active() ) {
 					echo '<a class="button" href="' . esc_url( $this->get_pro_marketing_url() ) . '" target="_blank" rel="noopener noreferrer">' . esc_html__( 'Learn about Pro', 'wedding-party-rsvp' ) . '</a> ';

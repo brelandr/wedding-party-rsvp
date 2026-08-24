@@ -4,7 +4,7 @@ Tags: wedding, rsvp, guest list, invitation, event management
 Requires at least: 6.2
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 8.5.0
+Stable tag: 8.5.1
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -23,7 +23,7 @@ Stop chasing replies across group chats and reconciling spreadsheets the week be
 * **Confidence at the venue** – One accurate count for who is attending, meals, and plus ones.
 * **Faster setup** – Getting started checklist, Next steps for pending RSVPs, straggler filters (missing email, phone, or address), plus **Live demo** (WordPress Playground) and **Try Premium** (InstaWP) links on the Plugins screen.
 
-**8.2.14** adds a Song requests report, fixes Guest list health deep links, and pairs with **Wedding Party RSVP Pro 2.4.1**. The free **Wedding RSVP** companion app is on [Google Play](https://play.google.com/store/apps/details?id=pro.weddingrsvp.companion); with **Pro**, guests can upload event photos from the app to your site gallery.
+**Companion apps (free):** The **Wedding RSVP** iOS/Android companion works with this free plugin—coordinators and guests connect from **Wedding RSVP → Mobile App** (site URL, connect link, or hub join link). No Pro license is required for core dashboard, guest list, and Party ID RSVP. **Pro** adds reminders, push alerts, photo gallery uploads, seating, AI, and App Network short join codes. Android: [Google Play](https://play.google.com/store/apps/details?id=pro.weddingrsvp.companion).
 
 Guests sign in with a **Party ID** so households RSVP together. Collect adult entrée choices and dietary notes, set **event capacity limits**, and **export** the guest list when catering or your venue needs numbers.
 
@@ -66,6 +66,8 @@ Dashboard Statistics: View real-time stats on accepted, declined, and pending RS
 
 Mobile Friendly: Fully responsive Admin Dashboard.
 
+Companion Mobile Apps: Free iOS and Android Wedding RSVP apps connect to this plugin via **Wedding RSVP → Mobile App**—no Pro license and no separate app subscription. Coordinators use Sign in on website; guests use their Party ID.
+
 Security: Built with WordPress best practices for data sanitization and escaping.
 
 **Admin menu visibility:** On **Wedding RSVP → Settings**, administrators can turn individual tools on or off (paste import, menu editor, gifts/thank-you, client summary, vendor packet, follow-up & day-of, caterer portal, audit log, and more) for a cleaner wp-admin. Pro sites use Pro’s module settings when licensed.
@@ -89,7 +91,7 @@ Gift CSV Import: Record gifts bought elsewhere onto guest rows (with a dry-run p
 
 Guest Photo Gallery: Guests signed in with a Party ID in the free Wedding RSVP companion app can take or choose photos and upload them to your wedding (or other event) albums on your WordPress site. Moderators approve photos under **Wedding RSVP → Photo Gallery**; approved images can appear on the frontend with `[wpr_pro_guest_gallery]`.
 
-Companion Mobile Apps: Free iOS and Android apps connect coordinators and guests to your WordPress wedding site via a short join code—no extra app subscription. Core dashboard, guest list, and Party ID RSVP work with this free plugin; Wedding Party RSVP Pro adds reminders, photo gallery, seating, AI, and other website extras.
+App Network short join codes & extras: With Pro, **Wedding RSVP → Mobile App → Connect to Wedding RSVP App Network** registers your site on weddingrsvp.pro for a short join code and directory listing; Pro also unlocks reminders, push, seating, and AI in the app.
 
 Admin Notes & Table Numbers: Organize your seating chart and keep private notes.
 
@@ -124,6 +126,9 @@ Yes! While tailored for weddings, it works for any event requiring basic RSVP tr
 
 = How do I reset the guest list? =
 Go to Settings and scroll to the bottom danger zone. Click **Erase all data & reset plugin** (exports first if you need a backup).
+
+= Do I need Wedding Party RSVP Pro to use the companion apps? =
+No. The free **Wedding RSVP** iOS/Android apps work with this free plugin. Open **Wedding RSVP → Mobile App** for your site URL, connect link, and hub join link (`weddingrsvp.pro/app/join?url=…`). Coordinators sign in on the website; guests use a Party ID. **Pro** is optional and adds photo gallery uploads, reminders, push alerts, seating, AI, and **Connect to Wedding RSVP App Network** (short join codes / directory listing on weddingrsvp.pro).
 
 = Is there a Pro version? =
 Yes. [Wedding Party RSVP Pro](https://landtechwebdesigns.com/wedding-party-rsvp-wordpress-plugin/) adds child guests, full menu courses (appetizers, hors d'oeuvres, desserts), customizable menu labels, seating notes, batch email and SMS, deeper styling, guest photo galleries via the free Wedding RSVP companion apps, a registry setup wizard, an on-site wish list guests can reserve, Stripe cash fund tiers, and gift CSV import. The free plugin covers unlimited guests, adult entrées, dietary options, CSV import/export, guest hub summaries, gift registry links (with optional Amazon Associates / Skimlinks), and the public RSVP form. Open **Wedding RSVP → Help** in wp-admin for free guides plus plain-English Pro gift feature notes.
@@ -202,7 +207,7 @@ This plugin does not call third-party APIs for core RSVP storage. Optional behav
 
 * **Client summary link (optional magic link)** — **Wedding RSVP → Client summary** lets administrators generate a secret URL that shows **aggregate** RSVP and meal/dietary **counts** on your own site (no guest names). No off-site API is called; anyone with the link can view the summary until you revoke or regenerate the token.
 
-* **Wedding RSVP companion hub (optional)** — **Wedding RSVP → Mobile App** shows a join URL that points at **https://weddingrsvp.pro** (`/app/join?url=…`) so the free companion can pair with this site. The plugin does not call the hub from PHP for free-only installs; pairing is initiated from the app or by opening that URL. Guest list data stays on your WordPress host. [Land Tech Privacy Policy](https://landtechwebdesigns.com/privacy-policy/)
+* **Wedding RSVP companion hub (optional)** — **Wedding RSVP → Mobile App** shows a join URL that points at **https://weddingrsvp.pro** (`/app/join?url=…`) so the free companion can open this site without typing the URL. Free installs do not POST registration metadata to the hub by themselves; guests and coordinators can still pair with the site URL or connect link. Short 6-character join codes and hub directory listings are created when a site (free or Pro) is registered with the hub—today that “Connect to Wedding RSVP App Network” control ships in **Wedding Party RSVP Pro**. The hub verifies the remote site via `wgrsvp/v1/app-config` or Pro `wpr-pro/v1/app-config`. Guest list data stays on your WordPress host. [Land Tech Privacy Policy](https://landtechwebdesigns.com/privacy-policy/)
 
 * **Google reCAPTCHA v3 (optional guestbook)** — When reCAPTCHA v3 site and secret keys are available (Guestbook settings override, or inherited from **WSB Hub → Connection** on the same site), the public guestbook loads Google’s script from `https://www.google.com/recaptcha/api.js?render=…` and verifies submissions via `https://www.google.com/recaptcha/api/siteverify` (score + action `wgrsvp_guestbook`). Google may receive the captcha token and visitor IP at verify time. See [Google reCAPTCHA Terms](https://policies.google.com/terms) and [Google Privacy Policy](https://policies.google.com/privacy).
 
@@ -213,6 +218,10 @@ This plugin does not call third-party APIs for core RSVP storage. Optional behav
 This plugin bundles **FPDF** (version 1.86, © Olivier Plathey) under `includes/lib/fpdf/` for optional **Export check-in PDF** in the guest list. FPDF is free software; see the header comment in `fpdf.php` for license terms.
 
 == Changelog ==
+= 8.5.1 =
+
+* **Clarify: Companion apps work with the free plugin** — Readme, FAQ, and admin notice no longer imply Pro is required for the Wedding RSVP mobile apps. Core dashboard, guest list, and Party ID RSVP use `wgrsvp/v1`; Pro remains optional for gallery, reminders, push, seating, AI, and App Network short codes.
+
 = 8.5.0 =
 
 * **Add: Free companion mobile API** — `wgrsvp/v1` app-config, website connect + Application Password claim, coordinator dashboard/guests, guest Party ID session/RSVP, and account deletion for the Wedding RSVP companion app. Pro sites continue to use the richer `wpr-pro/v1` surface when licensed.
