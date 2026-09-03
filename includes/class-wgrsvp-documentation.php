@@ -90,7 +90,7 @@ class WGRSVP_Documentation {
 
 		if ( '' !== $pro_docs ) {
 			echo '<div class="notice notice-info inline" style="margin:12px 0;max-width:920px;"><p>';
-			echo esc_html__( 'Wedding Party RSVP Pro is active. For Pro blocks, seating, drip, Stripe, companion app, and more, open:', 'wedding-party-rsvp' );
+			echo esc_html__( 'Wedding Party RSVP Pro is active. For Pro blocks, seating, drip, Stripe, Pro companion extras, and more, open:', 'wedding-party-rsvp' );
 			echo ' <a href="' . esc_url( $pro_docs ) . '"><strong>' . esc_html__( 'Wedding RSVP → Documentation', 'wedding-party-rsvp' ) . '</strong></a>';
 			echo '</p></div>';
 		}
@@ -327,7 +327,7 @@ class WGRSVP_Documentation {
 		echo '<ul>';
 		echo '<li>' . esc_html__( 'Registry hub planning notes — private quiz / curation notes and retailer research notes for the couple or planner.', 'wedding-party-rsvp' ) . '</li>';
 		echo '<li>' . esc_html__( 'Thank-you drafts and digital send options — help finish thank-yous after gifts arrive.', 'wedding-party-rsvp' ) . '</li>';
-		echo '<li>' . esc_html__( 'Companion mobile app — coordinators can review cash contributions and guest tools from their phone when Pro is licensed.', 'wedding-party-rsvp' ) . '</li>';
+		echo '<li>' . esc_html__( 'Pro companion extras — when Pro is licensed, coordinators can review cash contributions and other Pro tools from the free Wedding RSVP app (the app itself does not require Pro).', 'wedding-party-rsvp' ) . '</li>';
 		echo '</ul>';
 		self::render_pro_cta( $pro_url, $pro_docs, '' );
 		echo '</div>';

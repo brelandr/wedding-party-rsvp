@@ -91,7 +91,7 @@ Gift CSV Import: Record gifts bought elsewhere onto guest rows (with a dry-run p
 
 Guest Photo Gallery: Guests signed in with a Party ID in the free Wedding RSVP companion app can take or choose photos and upload them to your wedding (or other event) albums on your WordPress site. Moderators approve photos under **Wedding RSVP → Photo Gallery**; approved images can appear on the frontend with `[wpr_pro_guest_gallery]`.
 
-App Network short join codes & extras: With Pro, **Wedding RSVP → Mobile App → Connect to Wedding RSVP App Network** registers your site on weddingrsvp.pro for a short join code and directory listing; Pro also unlocks reminders, push, seating, and AI in the app.
+App Network short join codes & extras: Free and Pro sites can **Connect to Wedding RSVP App Network** from **Wedding RSVP → Mobile App**. **Pro** also unlocks reminders, push, seating, AI, and guest photo gallery uploads in the app.
 
 Admin Notes & Table Numbers: Organize your seating chart and keep private notes.
 
@@ -317,13 +317,13 @@ This plugin bundles **FPDF** (version 1.86, © Olivier Plathey) under `includes/
 
 = 8.2.10 =
 
-* **Companion apps** — Updated dismissible admin notice: the free Wedding RSVP app is live on [Google Play](https://play.google.com/store/apps/details?id=pro.weddingrsvp.companion); iOS is available via TestFlight and should reach the Apple App Store soon. Coordinators and guests use the apps with Wedding Party RSVP Pro.
+* **Companion apps** — Updated dismissible admin notice: the free Wedding RSVP app is live on [Google Play](https://play.google.com/store/apps/details?id=pro.weddingrsvp.companion); iOS is available via TestFlight and should reach the Apple App Store soon. (Later releases clarify the apps also work with the free plugin alone.)
 * **Docs** — Highlight Pro guest photo galleries: guests can capture photos in the companion app and upload them to event albums on the WordPress site for moderator review and optional frontend display.
 
 = 8.2.9 =
 
 * **Compatibility** — Confirmed tested with WordPress 7.0.x (readme `Tested up to: 7.0`).
-* **Companion apps** — Dismissible admin notice: free iPhone (App Store) and Android (Google Play) companion apps are in beta and expected generally available in a couple of weeks; coordinators and guests use them with Wedding Party RSVP Pro.
+* **Companion apps** — Dismissible admin notice: free iPhone (App Store) and Android (Google Play) companion apps are in beta and expected generally available in a couple of weeks. (Later releases clarify the apps work with the free plugin; Pro adds optional extras.)
 
 = 8.2.8 =
 
