@@ -73,7 +73,7 @@ class WGRSVP_Guestbook {
 	}
 
 	/**
-	 * dbDelta schema.
+	 * Create or upgrade the guestbook table via dbDelta.
 	 *
 	 * @return void
 	 */
@@ -258,10 +258,8 @@ class WGRSVP_Guestbook {
 			array(),
 			$ver
 		);
+		// Captcha scripts load async; guestbook JS does not hard-depend on them.
 		$deps = array();
-		if ( wp_script_is( 'wgrsvp-google-recaptcha', 'enqueued' ) || wp_script_is( 'wgrsvp-google-recaptcha', 'registered' ) ) {
-			// Captcha scripts load async; guestbook JS does not hard-depend on them.
-		}
 		wp_enqueue_script(
 			'wgrsvp-guestbook',
 			plugins_url( 'assets/js/wgrsvp-guestbook.js', $base ),
@@ -501,7 +499,14 @@ class WGRSVP_Guestbook {
 			echo '<td>' . esc_html( wp_trim_words( (string) $row->message, 40 ) ) . '</td>';
 			echo '<td>' . esc_html( (string) $row->status ) . '</td>';
 			echo '<td>';
-			foreach ( array( 'approve' => __( 'Approve', 'wedding-party-rsvp' ), 'pending' => __( 'Pending', 'wedding-party-rsvp' ), 'spam' => __( 'Spam', 'wedding-party-rsvp' ), 'delete' => __( 'Delete', 'wedding-party-rsvp' ) ) as $act => $label ) {
+			foreach (
+				array(
+					'approve' => __( 'Approve', 'wedding-party-rsvp' ),
+					'pending' => __( 'Pending', 'wedding-party-rsvp' ),
+					'spam'    => __( 'Spam', 'wedding-party-rsvp' ),
+					'delete'  => __( 'Delete', 'wedding-party-rsvp' ),
+				) as $act => $label
+			) {
 				echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '" style="display:inline;margin-right:4px;">';
 				wp_nonce_field( 'wgrsvp_guestbook_moderate' );
 				echo '<input type="hidden" name="action" value="wgrsvp_guestbook_moderate" />';

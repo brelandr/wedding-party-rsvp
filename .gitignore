@@ -78,3 +78,9 @@ Dist/
 assets/.svn/
 assets/blueprints/trunk/.svn/
 node_modules
+
+# Playwright e2e session cache and reports
+e2e/.auth/
+e2e/test-results/
+e2e/playwright-report/
+e2e/blob-report/

@@ -602,10 +602,11 @@ if ( ! class_exists( 'WGRSVP_Drip' ) ) {
 		 * @return void
 		 */
 		public static function render_settings_section() {
-			$journey = self::get_journey();
-			$steps   = isset( $journey['steps'] ) && is_array( $journey['steps'] ) ? $journey['steps'] : array();
-			while ( count( $steps ) < self::MAX_STEPS ) {
-				$n       = count( $steps ) + 1;
+			$journey    = self::get_journey();
+			$steps      = isset( $journey['steps'] ) && is_array( $journey['steps'] ) ? $journey['steps'] : array();
+			$step_count = count( $steps );
+			while ( $step_count < self::MAX_STEPS ) {
+				$n       = $step_count + 1;
 				$steps[] = array(
 					'id'                   => 's' . (string) $n,
 					'delay_days'           => 0,
@@ -614,6 +615,7 @@ if ( ! class_exists( 'WGRSVP_Drip' ) ) {
 					'subject'              => '',
 					'body'                 => '',
 				);
+				++$step_count;
 			}
 			$steps   = array_slice( $steps, 0, self::MAX_STEPS );
 			$summary = self::get_status_summary();
@@ -856,7 +858,7 @@ if ( ! class_exists( 'WGRSVP_Drip' ) ) {
 				printf(
 					/* translators: %d: number of reminder messages sent */
 					esc_html( _n( 'Sent %d due reminder.', 'Sent %d due reminders.', $sent, 'wedding-party-rsvp' ) ),
-					$sent
+					absint( $sent )
 				);
 				echo '</p></div>';
 			}

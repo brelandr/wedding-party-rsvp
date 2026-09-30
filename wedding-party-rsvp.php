@@ -6,7 +6,7 @@
  *
  * Plugin Name: Wedding Party RSVP – Guest List, Invitation & Event Manager
  * Description: Simple and secure RSVP system. Manage guest lists and adult meal choices.
- * Version: 8.5.2
+ * Version: 8.5.3
  * Author: Land Tech Web Designs, Corp
  * Author URI: https://landtechwebdesigns.com
  * Plugin URI: https://landtechwebdesigns.com/wedding-party-rsvp-wordpress-plugin/
@@ -24,7 +24,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 if ( ! defined( 'WGRSVP_VERSION' ) ) {
-	define( 'WGRSVP_VERSION', '8.5.2' );
+	define( 'WGRSVP_VERSION', '8.5.3' );
 }
 if ( ! defined( 'WGRSVP_PLUGIN_FILE' ) ) {
 	define( 'WGRSVP_PLUGIN_FILE', __FILE__ );
@@ -1234,6 +1234,12 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 		}
 
 
+		/**
+		 * Persist per-guest RSVP field updates submitted with a household form.
+		 *
+		 * @param string $party_id Household / party identifier.
+		 * @return void
+		 */
 		private function save_rsvp_guest_updates_for_party( $party_id ) {
 			global $wpdb;
 
@@ -2846,7 +2852,7 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 				echo '</ol><p>';
 				echo '<a class="button button-primary" href="' . esc_url( admin_url( 'post-new.php?post_type=page' ) ) . '">' . esc_html__( 'New page', 'wedding-party-rsvp' ) . '</a> ';
 				echo '<a class="button" href="' . esc_url( admin_url( 'admin.php?page=wedding-rsvp-settings' ) ) . '">' . esc_html__( 'Settings', 'wedding-party-rsvp' ) . '</a> ';
-				echo '<a class="button" href="' . esc_url( 'https://playground.wordpress.net/?blueprint-url=https://raw.githubusercontent.com/brelandr/wedding-party-rsvp/main/blueprint.json' ) . '" target="_blank" rel="noopener noreferrer">' . esc_html__( 'Try Playground', 'wedding-party-rsvp' ) . '</a>';
+				echo '<a class="button" href="' . esc_url( 'https://playground.wordpress.net/?blueprint-url=https://raw.githubusercontent.com/brelandr/wedding-party-rsvp/main/blueprint.json' ) . '" target="_blank" rel="noopener noreferrer">' . esc_html__( 'Try Playground', 'wedding-party-rsvp' ) . '</a>'; // phpcs:ignore PluginCheck.CodeAnalysis.Offloading.OffloadedContent -- Admin hyperlink to WordPress Playground demo, not an enqueued asset.
 				if ( ! wgrsvp_is_pro_plugin_active() ) {
 					echo ' <a class="button" href="' . esc_url( wgrsvp_get_pro_live_demo_url() ) . '" target="_blank" rel="noopener noreferrer">' . esc_html__( 'Try Premium', 'wedding-party-rsvp' ) . '</a>';
 					echo ' <a class="button" href="' . esc_url( $this->get_pro_marketing_url() ) . '" target="_blank" rel="noopener noreferrer">' . esc_html__( 'Get Pro', 'wedding-party-rsvp' ) . '</a>';
@@ -3094,7 +3100,7 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 			if ( ! is_array( $links ) ) {
 				$links = array();
 			}
-			$links['wgrsvp_playground'] = '<a href="' . esc_url( 'https://playground.wordpress.net/?blueprint-url=https://raw.githubusercontent.com/brelandr/wedding-party-rsvp/main/blueprint.json' ) . '" target="_blank" rel="noopener noreferrer">' . esc_html__( 'Live demo', 'wedding-party-rsvp' ) . '</a>';
+			$links['wgrsvp_playground'] = '<a href="' . esc_url( 'https://playground.wordpress.net/?blueprint-url=https://raw.githubusercontent.com/brelandr/wedding-party-rsvp/main/blueprint.json' ) . '" target="_blank" rel="noopener noreferrer">' . esc_html__( 'Live demo', 'wedding-party-rsvp' ) . '</a>'; // phpcs:ignore PluginCheck.CodeAnalysis.Offloading.OffloadedContent -- Plugins-list hyperlink to WordPress Playground demo, not an enqueued asset.
 			if ( ! wgrsvp_is_pro_plugin_active() ) {
 				$links['wgrsvp_try_premium'] = '<a href="' . esc_url( wgrsvp_get_pro_live_demo_url() ) . '" target="_blank" rel="noopener noreferrer">' . esc_html__( 'Try Premium', 'wedding-party-rsvp' ) . '</a>';
 				$links['wgrsvp_get_pro']     = '<a href="' . esc_url( $this->get_pro_marketing_url() ) . '" target="_blank" rel="noopener noreferrer">' . esc_html__( 'Get Pro', 'wedding-party-rsvp' ) . '</a>';
@@ -3113,7 +3119,7 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 			if ( plugin_basename( __FILE__ ) !== $file || ! is_array( $links ) ) {
 				return $links;
 			}
-			$links[] = '<a href="' . esc_url( 'https://playground.wordpress.net/?blueprint-url=https://raw.githubusercontent.com/brelandr/wedding-party-rsvp/main/blueprint.json' ) . '" target="_blank" rel="noopener noreferrer">' . esc_html__( 'Live demo', 'wedding-party-rsvp' ) . '</a>';
+			$links[] = '<a href="' . esc_url( 'https://playground.wordpress.net/?blueprint-url=https://raw.githubusercontent.com/brelandr/wedding-party-rsvp/main/blueprint.json' ) . '" target="_blank" rel="noopener noreferrer">' . esc_html__( 'Live demo', 'wedding-party-rsvp' ) . '</a>'; // phpcs:ignore PluginCheck.CodeAnalysis.Offloading.OffloadedContent -- Plugins-list hyperlink to WordPress Playground demo, not an enqueued asset.
 			if ( ! wgrsvp_is_pro_plugin_active() ) {
 				$links[] = '<a href="' . esc_url( wgrsvp_get_pro_live_demo_url() ) . '" target="_blank" rel="noopener noreferrer">' . esc_html__( 'Try Premium', 'wedding-party-rsvp' ) . '</a>';
 				$links[] = '<a href="' . esc_url( $this->get_pro_marketing_url() ) . '" target="_blank" rel="noopener noreferrer">' . esc_html__( 'Get Pro', 'wedding-party-rsvp' ) . '</a>';
@@ -3482,6 +3488,9 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 			return '
 				/* FRONTEND STYLES */
 				.wpr-wrapper { max-width: 600px; margin: 0 auto; font-size: ' . (string) (int) $font . 'px; }
+				.wgrsvp-rsvp-event-meta { text-align: center; margin: 0 0 1.15em; }
+				.wgrsvp-rsvp-event-date { margin: 0; font-size: 1.15em; font-weight: 600; letter-spacing: 0.02em; }
+				.wgrsvp-rsvp-event-location { margin: 0.3em 0 0; font-size: 1em; font-weight: 500; }
 				.wpr-guest-card { border: 1px solid #ddd; padding: 15px; margin-bottom: 15px; background: #f9f9f9; border-radius:5px; }
 				.wpr-field { margin-bottom: 12px; }
 				.wpr-field label { display: block; font-weight: bold; margin-bottom: 5px; }
@@ -6134,6 +6143,62 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 		}
 
 		/**
+		 * Carrier-required disclosure shown beside the RSVP SMS opt-in checkbox.
+		 *
+		 * Mobile carriers require the message types, frequency, rate notice and
+		 * STOP/HELP instructions to appear at the point of consent, not only in a
+		 * separate policy page. Pro appends the sending program name and its
+		 * privacy/terms links through the filter.
+		 *
+		 * @param int $guest_id Guest row the checkbox belongs to.
+		 * @return string Disclosure HTML; may contain links.
+		 */
+		private function get_sms_consent_disclosure( $guest_id = 0 ) {
+			$disclosure = __( 'By checking this box you agree to receive RSVP reminders and event updates by text message. Message frequency varies. Message and data rates may apply. Reply STOP to opt out, HELP for help. Consent is not required to RSVP.', 'wedding-party-rsvp' );
+
+			return (string) apply_filters( 'wgrsvp_sms_consent_disclosure', $disclosure, absint( $guest_id ) );
+		}
+
+		/**
+		 * Wedding date, time, and address heading for the public RSVP form.
+		 *
+		 * @param array $settings General settings.
+		 * @return string HTML.
+		 */
+		private function wgrsvp_rsvp_event_date_heading_html( $settings ) {
+			if ( ! is_array( $settings ) ) {
+				$settings = array();
+			}
+			$label = '';
+			if ( class_exists( 'WGRSVP_ICS', false ) ) {
+				$date_format = apply_filters( 'wgrsvp_rsvp_form_event_date_format', get_option( 'date_format' ) . ' ' . get_option( 'time_format' ), $settings );
+				if ( ! is_string( $date_format ) || '' === $date_format ) {
+					$date_format = get_option( 'date_format' ) . ' ' . get_option( 'time_format' );
+				}
+				$label = WGRSVP_ICS::format_event_start_for_display( $settings, $date_format );
+			}
+			$label = (string) apply_filters( 'wgrsvp_rsvp_form_event_date_label', $label, $settings );
+
+			$location = isset( $settings['event_location'] ) ? trim( (string) $settings['event_location'] ) : '';
+			$location = (string) apply_filters( 'wgrsvp_rsvp_form_event_location_label', $location, $settings );
+
+			if ( '' === trim( $label ) && '' === $location ) {
+				return '';
+			}
+
+			$html = '<div class="wgrsvp-rsvp-event-meta">';
+			if ( '' !== trim( $label ) ) {
+				$html .= '<p class="wgrsvp-rsvp-event-date">' . esc_html( $label ) . '</p>';
+			}
+			if ( '' !== $location ) {
+				$html .= '<p class="wgrsvp-rsvp-event-location">' . esc_html( $location ) . '</p>';
+			}
+			$html .= '</div>';
+
+			return $html;
+		}
+
+		/**
 		 * Shortcode output: party lookup, RSVP form, deadline / success states.
 		 *
 		 * @return string HTML.
@@ -6152,9 +6217,9 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 			if ( ! empty( $settings['deadline_date'] ) && current_time( 'Y-m-d' ) > $settings['deadline_date'] ) {
 				$closed_msg = isset( $settings['deadline_closed_message'] ) ? trim( (string) $settings['deadline_closed_message'] ) : '';
 				if ( '' !== $closed_msg ) {
-					return '<div class="wpr-wrapper"><div class="wpr-guest-card wgrsvp-rsvp-closed-message">' . wp_kses_post( wpautop( $closed_msg ) ) . '</div></div>';
+					return '<div class="wpr-wrapper">' . $this->wgrsvp_rsvp_event_date_heading_html( $settings ) . '<div class="wpr-guest-card wgrsvp-rsvp-closed-message">' . wp_kses_post( wpautop( $closed_msg ) ) . '</div></div>';
 				}
-				return '<div class="wpr-wrapper"><div class="wpr-guest-card" style="text-align:center;color:red;"><h3>' . esc_html__( 'RSVPs are now Closed', 'wedding-party-rsvp' ) . '</h3><p>' . esc_html__( 'Please contact the couple directly.', 'wedding-party-rsvp' ) . '</p></div></div>';
+				return '<div class="wpr-wrapper">' . $this->wgrsvp_rsvp_event_date_heading_html( $settings ) . '<div class="wpr-guest-card" style="text-align:center;color:red;"><h3>' . esc_html__( 'RSVPs are now Closed', 'wedding-party-rsvp' ) . '</h3><p>' . esc_html__( 'Please contact the couple directly.', 'wedding-party-rsvp' ) . '</p></div></div>';
 			}
 
 			// phpcs:disable WordPress.Security.NonceVerification.Recommended -- Public thank-you display; nonce verified below.
@@ -6164,7 +6229,7 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 				$ty_non  = sanitize_text_field( wp_unslash( (string) $_GET['wgrsvp_thanks_nonce'] ) );
 				if ( '1' === $ty_flag && WGRSVP_ICS::verify_thanks_nonce( $ty_pid, $ty_non ) ) {
 					$po_notes = class_exists( 'WPR_Pro_Frontend', false ) ? wp_kses_post( WPR_Pro_Frontend::flush_plus_one_notices_html( $ty_pid ) ) : '';
-					$out      = '<div class="wpr-wrapper">' . $po_notes . '<div class="wpr-guest-card" style="color:green;border:1px solid green;padding:15px;margin-bottom:20px;background:#eaffea;">';
+					$out      = '<div class="wpr-wrapper">' . $this->wgrsvp_rsvp_event_date_heading_html( $settings ) . $po_notes . '<div class="wpr-guest-card" style="color:green;border:1px solid green;padding:15px;margin-bottom:20px;background:#eaffea;">';
 					$out     .= esc_html__( 'Thank you! Your RSVP has been updated.', 'wedding-party-rsvp' );
 					$out     .= '</div>';
 					$out     .= $this->wgrsvp_render_guest_hub_markup( $ty_pid );
@@ -6177,10 +6242,10 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 			// Check for success message from init redirect.
 			if ( get_transient( self::TRANSIENT_RSVP_FORM_SUCCESS_FLASH ) ) {
 				delete_transient( self::TRANSIENT_RSVP_FORM_SUCCESS_FLASH );
-				return '<div class="wpr-wrapper"><div style="color:green;border:1px solid green;padding:15px;margin-bottom:20px;background:#eaffea;">' . esc_html__( 'Thank you! Your RSVP has been updated.', 'wedding-party-rsvp' ) . '</div></div>';
+				return '<div class="wpr-wrapper">' . $this->wgrsvp_rsvp_event_date_heading_html( $settings ) . '<div style="color:green;border:1px solid green;padding:15px;margin-bottom:20px;background:#eaffea;">' . esc_html__( 'Thank you! Your RSVP has been updated.', 'wedding-party-rsvp' ) . '</div></div>';
 			}
 
-			$output = '<div class="wpr-wrapper">';
+			$output = '<div class="wpr-wrapper">' . $this->wgrsvp_rsvp_event_date_heading_html( $settings );
 
 			// --- LOGIN FORM CHECK ---
 			$party_id = '';
@@ -6382,9 +6447,15 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 						$output .= '<div class="wpr-field"><label>' . esc_html__( 'Email', 'wedding-party-rsvp' ) . '</label><input type="email" name="guest[' . absint( $g->id ) . '][email]" value="' . esc_attr( $g->email ) . '"></div>';
 					}
 					if ( empty( $settings['hide_phone'] ) ) {
-						$output .= '<div class="wpr-field"><label>' . esc_html__( 'Phone', 'wedding-party-rsvp' ) . '</label><input type="text" name="guest[' . absint( $g->id ) . '][phone]" value="' . esc_attr( $g->phone ) . '"></div>';
-						$sms_in  = isset( $g->sms_opt_in ) ? ! empty( $g->sms_opt_in ) : false;
-						$output .= '<div class="wpr-field wgrsvp-sms-opt-in"><label><input type="checkbox" name="guest[' . absint( $g->id ) . '][sms_opt_in]" value="1" ' . checked( $sms_in, true, false ) . '> ' . esc_html__( 'Text me reminders about this event (optional)', 'wedding-party-rsvp' ) . '</label></div>';
+						$output    .= '<div class="wpr-field"><label>' . esc_html__( 'Mobile number (optional — not required to RSVP)', 'wedding-party-rsvp' ) . '</label><input type="text" name="guest[' . absint( $g->id ) . '][phone]" value="' . esc_attr( $g->phone ) . '"></div>';
+						$sms_in     = isset( $g->sms_opt_in ) ? ! empty( $g->sms_opt_in ) : false;
+						$sms_label  = (string) apply_filters( 'wgrsvp_sms_consent_label', __( 'I agree to receive SMS text messages about RSVP reminders and event updates. Message frequency varies. Message and data rates may apply. Reply STOP to opt out or HELP for help. Consent is not required to RSVP.', 'wedding-party-rsvp' ), absint( $g->id ) );
+						$sms_notice = $this->get_sms_consent_disclosure( absint( $g->id ) );
+						$output    .= '<div class="wpr-field wgrsvp-sms-opt-in"><label><input type="checkbox" name="guest[' . absint( $g->id ) . '][sms_opt_in]" value="1" ' . checked( $sms_in, true, false ) . '> ' . esc_html( $sms_label ) . '</label>';
+						if ( '' !== trim( $sms_notice ) ) {
+							$output .= '<p class="wgrsvp-sms-consent-disclosure description">' . wp_kses_post( $sms_notice ) . '</p>';
+						}
+						$output .= '</div>';
 					}
 					$output .= '<div class="wpr-field"><label>' . esc_html__( 'Mailing Address', 'wedding-party-rsvp' ) . '</label><textarea class="wgrsvp-mailing-address" name="guest[' . absint( $g->id ) . '][address]">' . esc_textarea( $g->address ) . '</textarea></div>';
 

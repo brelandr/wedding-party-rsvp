@@ -574,11 +574,11 @@ class WGRSVP_Mobile_REST {
 		$sql_where = implode( ' AND ', $where );
 
 		$count_args = array_merge( array( $table ), $params );
-		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- WHERE is built from literal fragments with placeholders; every value is bound through prepare().
+		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, PluginCheck.Security.DirectDB.UnescapedDBParameter -- WHERE is built from literal fragments with placeholders; every value is bound through prepare().
 		$total = (int) $wpdb->get_var( $wpdb->prepare( 'SELECT COUNT(*) FROM %i WHERE ' . $sql_where, ...$count_args ) );
 
 		$list_args = array_merge( array( $table ), $params, array( $per_page, $offset ) );
-		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- See above; placeholder count is dynamic because the filter set is.
+		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, PluginCheck.Security.DirectDB.UnescapedDBParameter -- See above; placeholder count is dynamic because the filter set is.
 		$rows = $wpdb->get_results( $wpdb->prepare( 'SELECT * FROM %i WHERE ' . $sql_where . ' ORDER BY guest_name ASC LIMIT %d OFFSET %d', ...$list_args ) );
 
 		$items = array();

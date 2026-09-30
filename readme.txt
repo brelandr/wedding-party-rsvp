@@ -4,7 +4,7 @@ Tags: wedding, rsvp, guest list, invitation, event management
 Requires at least: 6.2
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 8.5.2
+Stable tag: 8.5.3
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -218,6 +218,11 @@ This plugin does not call third-party APIs for core RSVP storage. Optional behav
 This plugin bundles **FPDF** (version 1.86, © Olivier Plathey) under `includes/lib/fpdf/` for optional **Export check-in PDF** in the guest list. FPDF is free software; see the header comment in `fpdf.php` for license terms.
 
 == Changelog ==
+= 8.5.3 =
+
+* **Fix: SMS consent checkbox** — Label now explicitly asks the guest to agree to receive SMS text messages, with frequency, rates, STOP, HELP, and that consent is not required to RSVP.
+* **Fix: Phone field label** — Public RSVP form labels the number as optional and not required to RSVP.
+
 = 8.5.2 =
 
 * **Add: Connect to Wedding RSVP App Network** — Free sites can register on weddingrsvp.pro from **Wedding RSVP → Mobile App** for short join codes; the hub stores a verified Free tier from `wgrsvp/v1/app-config`.

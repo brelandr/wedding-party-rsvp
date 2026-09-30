@@ -284,7 +284,7 @@ class WGRSVP_Itinerary_Travel {
 	}
 
 	/**
-	 * register_setting for travel.
+	 * Register settings for travel.
 	 *
 	 * @return void
 	 */

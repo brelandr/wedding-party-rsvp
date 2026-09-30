@@ -153,16 +153,17 @@ class WGRSVP_Mobile_Admin {
 						</a>
 					</p>
 				</div>
-			<?php else :
-				$status     = class_exists( 'WGRSVP_Event_Network', false ) ? WGRSVP_Event_Network::get_local_status() : array();
-				$state      = is_array( $status ) && isset( $status['state'] ) ? (string) $status['state'] : 'disconnected';
-				$msg        = is_array( $status ) && isset( $status['message'] ) ? (string) $status['message'] : '';
-				$party_name = (string) get_option( 'wgrsvp_wedding_party_name', '' );
-				$partner_1  = (string) get_option( 'wgrsvp_wedding_partner_1', '' );
-				$partner_2  = (string) get_option( 'wgrsvp_wedding_partner_2', '' );
-				$city_saved = (string) get_option( 'wgrsvp_wedding_city', '' );
+			<?php else : ?>
+				<?php
+				$status      = class_exists( 'WGRSVP_Event_Network', false ) ? WGRSVP_Event_Network::get_local_status() : array();
+				$state       = is_array( $status ) && isset( $status['state'] ) ? (string) $status['state'] : 'disconnected';
+				$msg         = is_array( $status ) && isset( $status['message'] ) ? (string) $status['message'] : '';
+				$party_name  = (string) get_option( 'wgrsvp_wedding_party_name', '' );
+				$partner_1   = (string) get_option( 'wgrsvp_wedding_partner_1', '' );
+				$partner_2   = (string) get_option( 'wgrsvp_wedding_partner_2', '' );
+				$city_saved  = (string) get_option( 'wgrsvp_wedding_city', '' );
 				$state_saved = (string) get_option( 'wgrsvp_wedding_state', '' );
-				$zip_saved  = (string) get_option( 'wgrsvp_wedding_zip', '' );
+				$zip_saved   = (string) get_option( 'wgrsvp_wedding_zip', '' );
 				?>
 				<p>
 					<?php esc_html_e( 'Connect this free plugin site to weddingrsvp.pro so the companion can find it with a short join code. The hub stores directory metadata only (no guest list) and labels the listing as Free.', 'wedding-party-rsvp' ); ?>

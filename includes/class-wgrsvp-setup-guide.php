@@ -851,25 +851,13 @@ class WGRSVP_Setup_Guide {
 	public function has_real_guests() {
 		global $wpdb;
 		$table = $wpdb->prefix . 'wedding_rsvps';
-		$wp_version = isset( $GLOBALS['wp_version'] ) ? $GLOBALS['wp_version'] : '0';
-		if ( version_compare( $wp_version, '6.2', '>=' ) ) {
-			$sql = $wpdb->prepare(
-				"SELECT COUNT(*) FROM %i WHERE party_id <> %s",
-				$table,
-				'WIZARD-TEST'
-			);
-			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.NotPrepared
-			$count = (int) $wpdb->get_var( $sql );
-		} else {
-			$table_safe = '`' . str_replace( '`', '``', $table ) . '`';
-			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
-			$count = (int) $wpdb->get_var(
-				$wpdb->prepare(
-					'SELECT COUNT(*) FROM ' . $table_safe . ' WHERE party_id <> %s',
-					'WIZARD-TEST'
-				)
-			);
-		}
+		$sql   = $wpdb->prepare(
+			'SELECT COUNT(*) FROM %i WHERE party_id <> %s',
+			$table,
+			'WIZARD-TEST'
+		);
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.NotPrepared
+		$count = (int) $wpdb->get_var( $sql );
 		return $count > 0;
 	}
 
@@ -986,6 +974,8 @@ class WGRSVP_Setup_Guide {
 	}
 
 	/**
+	 * Whether a step was marked complete by the coordinator.
+	 *
 	 * @param string $step_id Step id.
 	 * @return bool
 	 */
@@ -995,6 +985,8 @@ class WGRSVP_Setup_Guide {
 	}
 
 	/**
+	 * Store a coordinator-marked completion flag for a step.
+	 *
 	 * @param string $step_id Step id.
 	 * @param bool   $done    Done flag.
 	 * @return void

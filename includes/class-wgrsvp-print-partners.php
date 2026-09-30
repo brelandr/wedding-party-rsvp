@@ -174,6 +174,8 @@ class WGRSVP_Print_Partners {
 	}
 
 	/**
+	 * Sanitize a print-partner URL to http(s) only.
+	 *
 	 * @param string $url Raw URL.
 	 * @return string
 	 */

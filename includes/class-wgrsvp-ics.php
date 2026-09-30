@@ -302,10 +302,11 @@ if ( ! class_exists( 'WGRSVP_ICS' ) ) {
 		/**
 		 * Human-readable event start for Guest Hub (site timezone).
 		 *
-		 * @param array $s wgrsvp_general_settings.
+		 * @param array       $s      wgrsvp_general_settings.
+		 * @param string|null $format Optional PHP date format; site date + time when omitted.
 		 * @return string Empty when missing or not parseable; caller may fall back to raw settings text.
 		 */
-		public static function format_event_start_for_display( array $s ) {
+		public static function format_event_start_for_display( array $s, $format = null ) {
 			$tz  = wp_timezone();
 			$raw = isset( $s['event_start'] ) ? trim( (string) $s['event_start'] ) : '';
 			if ( '' === $raw ) {
@@ -324,14 +325,16 @@ if ( ! class_exists( 'WGRSVP_ICS' ) ) {
 				return '';
 			}
 
-			/**
-			 * PHP date()-style format for wp_date() on the Guest Hub “When” line.
-			 *
-			 * @since 7.3.25
-			 * @param string $format Default: site date + time format options.
-			 * @param array  $s      General settings.
-			 */
-			$format = apply_filters( 'wgrsvp_guest_hub_event_start_format', get_option( 'date_format' ) . ' ' . get_option( 'time_format' ), $s );
+			if ( ! is_string( $format ) || '' === $format ) {
+				/**
+				 * PHP date()-style format for wp_date() on the Guest Hub “When” line.
+				 *
+				 * @since 7.3.25
+				 * @param string $format Default: site date + time format options.
+				 * @param array  $s      General settings.
+				 */
+				$format = apply_filters( 'wgrsvp_guest_hub_event_start_format', get_option( 'date_format' ) . ' ' . get_option( 'time_format' ), $s );
+			}
 			if ( ! is_string( $format ) || '' === $format ) {
 				$format = get_option( 'date_format' ) . ' ' . get_option( 'time_format' );
 			}

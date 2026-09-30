@@ -18,6 +18,8 @@ class WGRSVP_Docs_Hub {
 	const SCRIPT_HANDLE = 'wgrsvp-docs-hub';
 
 	/**
+	 * Absolute path to bundled admin-docs.
+	 *
 	 * @return string
 	 */
 	public static function docs_dir() {
@@ -25,6 +27,8 @@ class WGRSVP_Docs_Hub {
 	}
 
 	/**
+	 * Public URL to bundled admin-docs.
+	 *
 	 * @return string
 	 */
 	public static function docs_url() {
@@ -32,6 +36,8 @@ class WGRSVP_Docs_Hub {
 	}
 
 	/**
+	 * Help hub card definitions.
+	 *
 	 * @return array<int,array<string,string>>
 	 */
 	public static function get_cards() {
@@ -113,7 +119,7 @@ class WGRSVP_Docs_Hub {
 		}
 
 		$auto_doc = '';
-		if ( isset( $_GET['wgrsvp_doc'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		if ( isset( $_GET['wgrsvp_doc'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only admin help deep-link; value is sanitized with sanitize_file_name() and never writes data.
 			$auto_doc = sanitize_file_name( wp_unslash( (string) $_GET['wgrsvp_doc'] ) );
 		}
 
@@ -138,6 +144,8 @@ class WGRSVP_Docs_Hub {
 	}
 
 	/**
+	 * Read a markdown file from admin-docs.
+	 *
 	 * @param string $basename File under admin-docs/.
 	 * @return string
 	 */

@@ -1432,3 +1432,12 @@ Add these items to every `@PreSubmit` run:
 27. No `if ( ! function_exists( 'plugin_own_function' ) )` / `if ( ! class_exists( 'Plugin_Own_Class' ) )`
     wrapping around the plugin's OWN declarations — reserved for genuine third-party dependency checks and
     shared libraries only.
+
+
+---
+
+## Companion iOS App Store rules
+
+If editing the **mobile companion** (Expo/React Native), follow the collective Land Tech iOS rejection rules in:
+`/Users/randy/Phone-Apps/LANDTECH_IOS_REJECTION_RULES.md`
+and the companion folder `.cursorrules` (e.g. `companion/.cursorrules`). Do not ignore HealthKit, EULA/`stdeula`, Dark Mode, or Google Play-in-iOS rules when shipping store binaries.

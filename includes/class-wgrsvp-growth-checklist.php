@@ -88,12 +88,9 @@ if ( ! class_exists( 'WGRSVP_Growth_Checklist' ) ) {
 			$guests_ok = $total_guests > 0;
 
 			// Prefer the full Setup guide banner when that surface is still active.
-			if (
-				class_exists( 'WGRSVP_Setup_Guide', false )
-				&& ! get_option( WGRSVP_Setup_Guide::OPT_GUIDE_DISMISSED, false )
-			) {
-				// Still show pending “next steps” below; skip the short Getting started panel.
-			} elseif ( ! get_option( self::OPT_PANEL_DISMISSED, false ) ) {
+			$setup_guide_active = class_exists( 'WGRSVP_Setup_Guide', false )
+				&& ! get_option( WGRSVP_Setup_Guide::OPT_GUIDE_DISMISSED, false );
+			if ( ! $setup_guide_active && ! get_option( self::OPT_PANEL_DISMISSED, false ) ) {
 				$wizard_url = admin_url( 'admin.php?page=wgrsvp-setup-wizard&step=1' );
 				$dismiss    = wp_nonce_url(
 					add_query_arg( 'wgrsvp_dismiss_notice', 'getting_started_panel' ),
@@ -149,7 +146,7 @@ if ( ! class_exists( 'WGRSVP_Growth_Checklist' ) ) {
 						<a class="button button-primary" href="<?php echo esc_url( WGRSVP_Setup_Guide::url() ); ?>"><?php esc_html_e( 'Open wedding setup guide', 'wedding-party-rsvp' ); ?></a>
 						<?php endif; ?>
 						<a class="button button-secondary" href="<?php echo esc_url( $wizard_url ); ?>"><?php esc_html_e( 'Quick start wizard', 'wedding-party-rsvp' ); ?></a>
-						<a class="button" href="<?php echo esc_url( 'https://playground.wordpress.net/?blueprint-url=https://raw.githubusercontent.com/brelandr/wedding-party-rsvp/main/blueprint.json' ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'Try live demo (Playground)', 'wedding-party-rsvp' ); ?></a>
+						<a class="button" href="<?php echo esc_url( 'https://playground.wordpress.net/?blueprint-url=https://raw.githubusercontent.com/brelandr/wedding-party-rsvp/main/blueprint.json' ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'Try live demo (Playground)', 'wedding-party-rsvp' ); ?></a><?php // phpcs:ignore PluginCheck.CodeAnalysis.Offloading.OffloadedContent -- Admin hyperlink to WordPress Playground demo, not an enqueued asset. ?>
 						<?php if ( function_exists( 'wgrsvp_is_pro_plugin_active' ) && ! wgrsvp_is_pro_plugin_active() && function_exists( 'wgrsvp_get_pro_live_demo_url' ) ) : ?>
 						<a class="button button-secondary" href="<?php echo esc_url( wgrsvp_get_pro_live_demo_url() ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'Try Premium', 'wedding-party-rsvp' ); ?></a>
 						<?php endif; ?>

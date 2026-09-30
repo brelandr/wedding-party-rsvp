@@ -163,7 +163,7 @@ if ( ! class_exists( 'WGRSVP_Song_Requests' ) ) {
 			}
 			wgrsvp_require_admin_module_or_die( 'song_requests' );
 
-			$search = isset( $_GET['s'] ) ? sanitize_text_field( wp_unslash( $_GET['s'] ) ) : '';
+			$search = isset( $_GET['s'] ) ? sanitize_text_field( wp_unslash( $_GET['s'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only admin search after capability check; GET filter does not write data.
 			$rows   = self::get_rows( $search );
 			$url    = admin_url( 'admin.php?page=' . self::PAGE_SLUG );
 			?>

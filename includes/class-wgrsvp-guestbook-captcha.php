@@ -137,6 +137,8 @@ class WGRSVP_Guestbook_Captcha {
 	}
 
 	/**
+	 * Captcha keys only (legacy shape).
+	 *
 	 * @deprecated Use get_effective_settings().
 	 * @return array<string,string>
 	 */
@@ -215,7 +217,7 @@ class WGRSVP_Guestbook_Captcha {
 			$key = rawurlencode( (string) $opt['recaptcha_site_key'] );
 			wp_enqueue_script(
 				'wgrsvp-google-recaptcha',
-				'https://www.google.com/recaptcha/api.js?render=' . $key,
+				'https://www.google.com/recaptcha/api.js?render=' . $key, // phpcs:ignore PluginCheck.CodeAnalysis.EnqueuedResourceOffloading.OffloadedContent -- Google reCAPTCHA client API cannot be self-hosted; documented in readme External Services.
 				array(),
 				null, // phpcs:ignore WordPress.WP.EnqueuedResourceParameters.MissingVersion -- remote API script; versioned by Google.
 				true
@@ -224,7 +226,7 @@ class WGRSVP_Guestbook_Captcha {
 		if ( self::has_turnstile_keys( $opt ) ) {
 			wp_enqueue_script(
 				'wgrsvp-cloudflare-turnstile',
-				'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit',
+				'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit', // phpcs:ignore PluginCheck.CodeAnalysis.EnqueuedResourceOffloading.OffloadedContent -- Cloudflare Turnstile client API cannot be self-hosted; documented in readme External Services.
 				array(),
 				null, // phpcs:ignore WordPress.WP.EnqueuedResourceParameters.MissingVersion -- remote API script; versioned by Cloudflare.
 				true
@@ -325,7 +327,7 @@ class WGRSVP_Guestbook_Captcha {
 	 */
 	private static function remote_verify_turnstile( $token, $secret ) {
 		$response = wp_safe_remote_post(
-			'https://challenges.cloudflare.com/turnstile/v0/siteverify',
+			'https://challenges.cloudflare.com/turnstile/v0/siteverify', // phpcs:ignore PluginCheck.CodeAnalysis.Offloading.OffloadedContent -- Turnstile siteverify API (not an asset CDN); documented in readme External Services.
 			array(
 				'timeout' => 15,
 				'body'    => array(
@@ -472,7 +474,7 @@ class WGRSVP_Guestbook_Captcha {
 			</p>
 			<p>
 				<strong><?php esc_html_e( 'Cloudflare Turnstile backup (override)', 'wedding-party-rsvp' ); ?></strong>
-				— <a href="https://dash.cloudflare.com/?to=/:account/turnstile" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'Get keys', 'wedding-party-rsvp' ); ?></a>
+				— <a href="https://dash.cloudflare.com/?to=/:account/turnstile" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'Get keys', 'wedding-party-rsvp' ); ?></a><?php // phpcs:ignore PluginCheck.CodeAnalysis.Offloading.OffloadedContent -- Admin hyperlink to Cloudflare Turnstile dashboard, not an enqueued asset. ?>
 			</p>
 			<p>
 				<label for="wgrsvp_gb_turnstile_site_key"><strong><?php esc_html_e( 'Turnstile site key', 'wedding-party-rsvp' ); ?></strong></label><br>
