@@ -4,7 +4,7 @@ Tags: wedding, rsvp, guest list, invitation, event management
 Requires at least: 6.2
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 8.5.3
+Stable tag: 8.5.4
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -23,7 +23,7 @@ Stop chasing replies across group chats and reconciling spreadsheets the week be
 * **Confidence at the venue** – One accurate count for who is attending, meals, and plus ones.
 * **Faster setup** – Getting started checklist, Next steps for pending RSVPs, straggler filters (missing email, phone, or address), plus **Live demo** (WordPress Playground) and **Try Premium** (InstaWP) links on the Plugins screen.
 
-**Companion apps (free):** The **Wedding RSVP** iOS/Android companion works with this free plugin—coordinators and guests connect from **Wedding RSVP → Mobile App** (site URL, connect link, hub join link, or **Connect to Wedding RSVP App Network** for a short join code). No Pro license is required for core dashboard, guest list, and Party ID RSVP. **Pro** adds reminders, push alerts, photo gallery uploads, seating, and AI. Android: [Google Play](https://play.google.com/store/apps/details?id=pro.weddingrsvp.companion). **iOS is pending Apple App Store approval** (available on TestFlight until then).
+**Companion apps (free):** The **Wedding RSVP** iOS and Android companion works with this free plugin—coordinators and guests connect from **Wedding RSVP → Mobile App** (site URL, connect link, hub join link, or **Connect to Wedding RSVP App Network** for a short join code). No Pro license is required for core dashboard, guest list, and Party ID RSVP. [Apple App Store](https://apps.apple.com/us/app/wedding-rsvp-companion/id6797964225) and [Google Play](https://play.google.com/store/apps/details?id=pro.weddingrsvp.companion). With **Pro**, guests can upload photos they took during the event. Pro also adds reminders, push alerts, seating, and AI.
 
 Guests sign in with a **Party ID** so households RSVP together. Collect adult entrée choices and dietary notes, set **event capacity limits**, and **export** the guest list when catering or your venue needs numbers.
 
@@ -66,7 +66,7 @@ Dashboard Statistics: View real-time stats on accepted, declined, and pending RS
 
 Mobile Friendly: Fully responsive Admin Dashboard.
 
-Companion Mobile Apps: Free iOS and Android Wedding RSVP apps connect to this plugin via **Wedding RSVP → Mobile App**—no Pro license and no separate app subscription. Coordinators use Sign in on website; guests use their Party ID. Android is on Google Play; **iOS is pending Apple App Store approval**.
+Companion Mobile Apps: Free iOS and Android Wedding RSVP apps connect to this plugin via **Wedding RSVP → Mobile App**—no Pro license and no separate app subscription. Coordinators use Sign in on website; guests use their Party ID. The app is on the [Apple App Store](https://apps.apple.com/us/app/wedding-rsvp-companion/id6797964225) and [Google Play](https://play.google.com/store/apps/details?id=pro.weddingrsvp.companion). With Pro, guests can upload photos they took during the event.
 
 Security: Built with WordPress best practices for data sanitization and escaping.
 
@@ -128,7 +128,7 @@ Yes! While tailored for weddings, it works for any event requiring basic RSVP tr
 Go to Settings and scroll to the bottom danger zone. Click **Erase all data & reset plugin** (exports first if you need a backup).
 
 = Do I need Wedding Party RSVP Pro to use the companion apps? =
-No. The free **Wedding RSVP** iOS/Android apps work with this free plugin. Open **Wedding RSVP → Mobile App** for your site URL, connect link, hub join link, or **Connect to Wedding RSVP App Network** (short join code; hub labels the listing Free). Coordinators sign in on the website; guests use a Party ID. Android is on [Google Play](https://play.google.com/store/apps/details?id=pro.weddingrsvp.companion); **iOS is pending Apple App Store approval** (TestFlight until then). **Pro** is optional and adds photo gallery uploads, reminders, push alerts, seating, and AI.
+No. The free **Wedding RSVP** iOS and Android apps work with this free plugin. Open **Wedding RSVP → Mobile App** for your site URL, connect link, hub join link, or **Connect to Wedding RSVP App Network** (short join code; hub labels the listing Free). Coordinators sign in on the website; guests use a Party ID. The app is on the [Apple App Store](https://apps.apple.com/us/app/wedding-rsvp-companion/id6797964225) and [Google Play](https://play.google.com/store/apps/details?id=pro.weddingrsvp.companion). **Pro** is optional and adds event photo uploads from the app, reminders, push alerts, seating, and AI.
 
 = Is there a Pro version? =
 Yes. [Wedding Party RSVP Pro](https://landtechwebdesigns.com/wedding-party-rsvp-wordpress-plugin/) adds child guests, full menu courses (appetizers, hors d'oeuvres, desserts), customizable menu labels, seating notes, batch email and SMS, deeper styling, guest photo galleries via the free Wedding RSVP companion apps, a registry setup wizard, an on-site wish list guests can reserve, Stripe cash fund tiers, and gift CSV import. The free plugin covers unlimited guests, adult entrées, dietary options, CSV import/export, guest hub summaries, gift registry links (with optional Amazon Associates / Skimlinks), and the public RSVP form. Open **Wedding RSVP → Help** in wp-admin for free guides plus plain-English Pro gift feature notes.
@@ -218,6 +218,12 @@ This plugin does not call third-party APIs for core RSVP storage. Optional behav
 This plugin bundles **FPDF** (version 1.86, © Olivier Plathey) under `includes/lib/fpdf/` for optional **Export check-in PDF** in the guest list. FPDF is free software; see the header comment in `fpdf.php` for license terms.
 
 == Changelog ==
+= 8.5.4 =
+
+* The Wedding RSVP companion app is on the Apple App Store, alongside Google Play.
+* With Pro, guests can upload photos they took during the event from the app.
+* Free companion app-config reports AI, cash gifts, and SMS as off.
+
 = 8.5.3 =
 
 * **Fix: SMS consent checkbox** — Label now explicitly asks the guest to agree to receive SMS text messages, with frequency, rates, STOP, HELP, and that consent is not required to RSVP.

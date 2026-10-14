@@ -34,7 +34,7 @@ if ( ! function_exists( 'wgrsvp_wp70_ai_available' ) ) {
 				$text_supported = (bool) $builder->is_supported_for_text_generation();
 			}
 		} catch ( \Throwable $e ) { // phpcs:ignore Generic.CodeAnalysis.EmptyStatement.DetectedCatch -- Probe only.
-			$text_supported = true;
+			$text_supported = false;
 		}
 		return $text_supported;
 	}
