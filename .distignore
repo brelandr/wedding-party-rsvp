@@ -1,5 +1,12 @@
 # Paths excluded from distribution archives (wp dist-archive, deploy scripts).
 # Also useful to omit from local Plugin Check scans when tooling respects this file.
+#
+# Plugin Check hidden_files: dotfiles are not permitted in a WordPress.org build.
+# .[!.]* matches .wp-env.json, .distignore, .gitkeep, and other dotfiles at any depth.
+.[!.]*
+*.local
+.env
+.env.*
 
 # Never copy SVN metadata from local trees (e.g. assets/ checkouts) into deploy targets.
 .svn/
@@ -21,6 +28,7 @@ node_modules/
 vendor/
 src/
 tests/
+e2e/
 scripts/
 *.zip
 *.sh
@@ -28,6 +36,8 @@ scripts/
 /*.md
 phpcs.xml
 phpcs.xml.dist
+phpunit.xml
+phpunit.xml.dist
 composer.json
 composer.lock
 package.json

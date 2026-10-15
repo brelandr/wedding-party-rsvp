@@ -35,7 +35,7 @@ class WGRSVP_Mobile_REST {
 	/**
 	 * Accepted RSVP statuses.
 	 */
-	const STATUSES = array( 'Pending', 'Accepted', 'Declined' );
+	const STATUSES = array( 'Pending', 'Accepted', 'Declined', 'Waitlist' );
 
 	/**
 	 * Boot hooks unless Pro already serves the companion mobile API.
@@ -1334,6 +1334,28 @@ class WGRSVP_Mobile_REST {
 		$table   = self::guests_table();
 		$updated = 0;
 
+		$capacity_items = array();
+		foreach ( $guests as $guest ) {
+			if ( ! is_array( $guest ) || empty( $guest['id'] ) || ! isset( $guest['status'] ) ) {
+				continue;
+			}
+			$cap_id = absint( $guest['id'] );
+			if ( $cap_id < 1 ) {
+				continue;
+			}
+			$status = sanitize_text_field( (string) $guest['status'] );
+			if ( ! in_array( $status, self::STATUSES, true ) ) {
+				continue;
+			}
+			$capacity_items[] = array(
+				'id'        => $cap_id,
+				'requested' => $status,
+			);
+		}
+		$resolved_status = class_exists( 'WGRSVP_Capacity', false )
+			? WGRSVP_Capacity::resolve_batch( $capacity_items, WGRSVP_Capacity::CONTEXT_GUEST )
+			: array();
+
 		foreach ( $guests as $guest ) {
 			if ( ! is_array( $guest ) || empty( $guest['id'] ) ) {
 				continue;
@@ -1356,7 +1378,7 @@ class WGRSVP_Mobile_REST {
 			if ( isset( $guest['status'] ) ) {
 				$status = sanitize_text_field( (string) $guest['status'] );
 				if ( in_array( $status, self::STATUSES, true ) ) {
-					$data['rsvp_status'] = $status;
+					$data['rsvp_status'] = isset( $resolved_status[ $id ] ) ? $resolved_status[ $id ] : $status;
 				}
 			}
 			if ( isset( $guest['menuChoice'] ) ) {

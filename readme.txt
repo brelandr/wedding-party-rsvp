@@ -1,14 +1,14 @@
-=== Wedding Party RSVP – Guest List, Invitation & Event Manager ===
+=== Wedding RSVP – Wedding Guest List, Meal Choices & RSVP Tracker ===
 Contributors: brelandr
-Tags: wedding, rsvp, guest list, invitation, event management
+Tags: wedding, rsvp, guest list, wedding rsvp, meal choices
 Requires at least: 6.2
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 8.5.4
+Stable tag: 8.5.5
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
-RSVP guest list for WordPress: Party ID sign-in, meals, guest hub summary, CSV export, capacity caps, dashboard filters—track replies in one place.
+RSVP guest list for WordPress: Party ID sign-in, meals, guest hub summary, CSV export, event capacity with a waitlist, dashboard filters—track replies in one place.
 
 == Description ==
 
@@ -23,9 +23,11 @@ Stop chasing replies across group chats and reconciling spreadsheets the week be
 * **Confidence at the venue** – One accurate count for who is attending, meals, and plus ones.
 * **Faster setup** – Getting started checklist, Next steps for pending RSVPs, straggler filters (missing email, phone, or address), plus **Live demo** (WordPress Playground) and **Try Premium** (InstaWP) links on the Plugins screen.
 
-**Companion apps (free):** The **Wedding RSVP** iOS and Android companion works with this free plugin—coordinators and guests connect from **Wedding RSVP → Mobile App** (site URL, connect link, hub join link, or **Connect to Wedding RSVP App Network** for a short join code). No Pro license is required for core dashboard, guest list, and Party ID RSVP. [Apple App Store](https://apps.apple.com/us/app/wedding-rsvp-companion/id6797964225) and [Google Play](https://play.google.com/store/apps/details?id=pro.weddingrsvp.companion). With **Pro**, guests can upload photos they took during the event. Pro also adds reminders, push alerts, seating, and AI.
+**Companion apps (free):** **Wedding RSVP Companion** for iOS and Android works with this free plugin—coordinators and guests connect from **Wedding RSVP → Mobile App** (site URL, connect link, hub join link, or **Connect to Wedding RSVP App Network** for a short join code). No Pro license is required for core dashboard, guest list, and Party ID RSVP. [Apple App Store](https://apps.apple.com/us/app/wedding-rsvp-companion/id6797964225) and [Google Play](https://play.google.com/store/apps/details?id=pro.weddingrsvp.companion). With **Pro**, guests can upload photos they took during the event. Pro also adds reminders, push alerts, seating, and AI.
 
-Guests sign in with a **Party ID** so households RSVP together. Collect adult entrée choices and dietary notes, set **event capacity limits**, and **export** the guest list when catering or your venue needs numbers.
+**Wedding Guest Bingo (included with Pro):** People who purchase Wedding Party RSVP Pro also receive Wedding Guest Bingo. It prints a QR code for each household. Guests scan it with their phone camera and tick a 5×5 card of other guests in the browser. It is a separate WordPress plugin, not a screen in the App Store or Google Play apps.
+
+Guests sign in with a **Party ID** so households RSVP together. Collect adult entrée choices and dietary notes, set an **event capacity** so extra yes replies go on a waitlist, and **export** the guest list when catering or your venue needs numbers.
 
 **Gift registry links:** Under **Wedding RSVP → Settings → Frontend Display**, add registry URLs (Amazon, Zola, etc.). Guests see them on the public RSVP page after entering their Party ID.
 
@@ -62,11 +64,13 @@ Adult Menu Choices: Create and manage entrée options for your reception.
 
 Dietary Restrictions: Guests can note allergies (Gluten Free, Vegan, etc.).
 
-Dashboard Statistics: View real-time stats on accepted, declined, and pending RSVPs.
+Dashboard Statistics: View real-time stats on accepted, declined, pending, and waitlisted RSVPs.
+
+Event Capacity & Waitlist: Set a guest cap so extra yes replies go on a waitlist instead of overbooking your venue. Declines always get through, and you can offer a seat to a waitlisted guest in one click.
 
 Mobile Friendly: Fully responsive Admin Dashboard.
 
-Companion Mobile Apps: Free iOS and Android Wedding RSVP apps connect to this plugin via **Wedding RSVP → Mobile App**—no Pro license and no separate app subscription. Coordinators use Sign in on website; guests use their Party ID. The app is on the [Apple App Store](https://apps.apple.com/us/app/wedding-rsvp-companion/id6797964225) and [Google Play](https://play.google.com/store/apps/details?id=pro.weddingrsvp.companion). With Pro, guests can upload photos they took during the event.
+Companion Mobile Apps: **Wedding RSVP Companion** for iOS and Android connects to this plugin via **Wedding RSVP → Mobile App**—no Pro license and no separate app subscription. Coordinators use Sign in on website; guests use their Party ID. [Apple App Store](https://apps.apple.com/us/app/wedding-rsvp-companion/id6797964225) and [Google Play](https://play.google.com/store/apps/details?id=pro.weddingrsvp.companion). With Pro, guests can upload photos they took during the event.
 
 Security: Built with WordPress best practices for data sanitization and escaping.
 
@@ -89,7 +93,9 @@ Stripe Cash Fund: Suggested cash tiers with optional Contribute buttons via the 
 
 Gift CSV Import: Record gifts bought elsewhere onto guest rows (with a dry-run preview).
 
-Guest Photo Gallery: Guests signed in with a Party ID in the free Wedding RSVP companion app can take or choose photos and upload them to your wedding (or other event) albums on your WordPress site. Moderators approve photos under **Wedding RSVP → Photo Gallery**; approved images can appear on the frontend with `[wpr_pro_guest_gallery]`.
+Guest Photo Gallery: Guests signed in with a Party ID in Wedding RSVP Companion can take or choose photos and upload them to your wedding (or other event) albums on your WordPress site. Moderators approve photos under **Wedding RSVP → Photo Gallery**; approved images can appear on the frontend with `[wpr_pro_guest_gallery]`.
+
+Wedding Guest Bingo: Included with the purchase of Wedding Party RSVP Pro. Print one QR code per household from **Wedding RSVP → Guest Bingo**. Guests open a 5×5 card on their phone and tick off other guests. First names only.
 
 App Network short join codes & extras: Free and Pro sites can **Connect to Wedding RSVP App Network** from **Wedding RSVP → Mobile App**. **Pro** also unlocks reminders, push, seating, AI, and guest photo gallery uploads in the app.
 
@@ -128,10 +134,10 @@ Yes! While tailored for weddings, it works for any event requiring basic RSVP tr
 Go to Settings and scroll to the bottom danger zone. Click **Erase all data & reset plugin** (exports first if you need a backup).
 
 = Do I need Wedding Party RSVP Pro to use the companion apps? =
-No. The free **Wedding RSVP** iOS and Android apps work with this free plugin. Open **Wedding RSVP → Mobile App** for your site URL, connect link, hub join link, or **Connect to Wedding RSVP App Network** (short join code; hub labels the listing Free). Coordinators sign in on the website; guests use a Party ID. The app is on the [Apple App Store](https://apps.apple.com/us/app/wedding-rsvp-companion/id6797964225) and [Google Play](https://play.google.com/store/apps/details?id=pro.weddingrsvp.companion). **Pro** is optional and adds event photo uploads from the app, reminders, push alerts, seating, and AI.
+No. **Wedding RSVP Companion** for iOS and Android works with this free plugin. Open **Wedding RSVP → Mobile App** for your site URL, connect link, hub join link, or **Connect to Wedding RSVP App Network** (short join code; hub labels the listing Free). Coordinators sign in on the website; guests use a Party ID. [Apple App Store](https://apps.apple.com/us/app/wedding-rsvp-companion/id6797964225) and [Google Play](https://play.google.com/store/apps/details?id=pro.weddingrsvp.companion). **Pro** is optional and adds event photo uploads from the app, reminders, push alerts, seating, and AI.
 
 = Is there a Pro version? =
-Yes. [Wedding Party RSVP Pro](https://landtechwebdesigns.com/wedding-party-rsvp-wordpress-plugin/) adds child guests, full menu courses (appetizers, hors d'oeuvres, desserts), customizable menu labels, seating notes, batch email and SMS, deeper styling, guest photo galleries via the free Wedding RSVP companion apps, a registry setup wizard, an on-site wish list guests can reserve, Stripe cash fund tiers, and gift CSV import. The free plugin covers unlimited guests, adult entrées, dietary options, CSV import/export, guest hub summaries, gift registry links (with optional Amazon Associates / Skimlinks), and the public RSVP form. Open **Wedding RSVP → Help** in wp-admin for free guides plus plain-English Pro gift feature notes.
+Yes. [Wedding Party RSVP Pro](https://landtechwebdesigns.com/wedding-party-rsvp-wordpress-plugin/) adds child guests, full menu courses (appetizers, hors d'oeuvres, desserts), customizable menu labels, seating notes, batch email and SMS, deeper styling, guest photo galleries via Wedding RSVP Companion, Wedding Guest Bingo (a phone QR card included with the Pro purchase), a registry setup wizard, an on-site wish list guests can reserve, Stripe cash fund tiers, and gift CSV import. The free plugin covers unlimited guests, adult entrées, dietary options, CSV import/export, guest hub summaries, gift registry links (with optional Amazon Associates / Skimlinks), and the public RSVP form. Open **Wedding RSVP → Help** in wp-admin for free guides plus plain-English Pro gift feature notes.
 
 = Do guests need a WordPress account to RSVP? =
 No. Guests use a Party ID (invite code) you assign—no user registration required.
@@ -218,6 +224,12 @@ This plugin does not call third-party APIs for core RSVP storage. Optional behav
 This plugin bundles **FPDF** (version 1.86, © Olivier Plathey) under `includes/lib/fpdf/` for optional **Export check-in PDF** in the guest list. FPDF is free software; see the header comment in `fpdf.php` for license terms.
 
 == Changelog ==
+= 8.5.5 =
+
+* New: event capacity with a waitlist. Set a guest cap and extra yes replies go on the waitlist instead of overbooking. Declines always get through, administrators are never blocked, and coordinators can offer a seat in one click from the guest list.
+* New: a Waitlist stat box on the dashboard, with a one-click filter to the waitlisted guests.
+* The companion app can report and write the Waitlist status, so a cap set on the site applies to guest RSVPs made in the app too.
+
 = 8.5.4 =
 
 * The Wedding RSVP companion app is on the Apple App Store, alongside Google Play.

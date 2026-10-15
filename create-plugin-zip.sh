@@ -77,6 +77,9 @@ rsync -a \
 	--exclude='src/' \
 	--exclude='svn-checkout/' \
 	--exclude='assets/blueprints/trunk/' \
+	--exclude='e2e/' \
+	--exclude='tests/' \
+	--exclude='scripts/' \
 	--exclude='wedding-party-assets/' \
 	--exclude='*.log' \
 	--exclude='*.tmp' \
@@ -89,6 +92,8 @@ rsync -a \
 	--exclude='deploy.yml' \
 	--exclude='phpcs.xml' \
 	--exclude='phpcs.xml.dist' \
+	--exclude='phpunit.xml' \
+	--exclude='phpunit.xml.dist' \
 	--exclude='*.md' \
 	--exclude='docs/' \
 	--exclude='composer.json' \
@@ -173,12 +178,19 @@ if command -v zipinfo >/dev/null 2>&1; then
 		exit 1
 	fi
 	echo "OK: No Dist/ in zip."
-	if zipinfo -1 "${ZIP_PATH}" 2>/dev/null | grep -qE '(^|/)\.[^/]+'; then
-		echo "WARNING: Hidden (dot-prefixed) paths in zip — Plugin Check: hidden_files."
-		zipinfo -1 "${ZIP_PATH}" 2>/dev/null | grep -E '(^|/)\.[^/]+' || true
-	else
-		echo "OK: No hidden dotfile paths in zip."
+	HIDDEN_PATHS="$( zipinfo -1 "${ZIP_PATH}" 2>/dev/null | grep -E '(^|/)\.[^/]+' || true )"
+	if [[ -n "${HIDDEN_PATHS}" ]]; then
+		echo "✗ ERROR: Hidden (dot-prefixed) paths in zip — Plugin Check: hidden_files." >&2
+		echo "${HIDDEN_PATHS}" >&2
+		exit 1
 	fi
+	echo "OK: No hidden dotfile paths in zip."
 else
-	echo " (Install zipinfo for hidden-file verification, or check unzip listing manually.)"
+	HIDDEN_PATHS="$( echo "${ZIP_LISTING}" | grep -E '(^|/)\.[^/]+' || true )"
+	if [[ -n "${HIDDEN_PATHS}" ]]; then
+		echo "✗ ERROR: Hidden (dot-prefixed) paths in zip — Plugin Check: hidden_files." >&2
+		echo "${HIDDEN_PATHS}" >&2
+		exit 1
+	fi
+	echo "OK: No hidden dotfile paths in zip."
 fi

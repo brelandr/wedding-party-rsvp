@@ -4,9 +4,9 @@
  *
  * @package Wedding_Party_RSVP
  *
- * Plugin Name: Wedding Party RSVP – Guest List, Invitation & Event Manager
+ * Plugin Name: Wedding RSVP – Wedding Guest List, Meal Choices & RSVP Tracker
  * Description: Simple and secure RSVP system. Manage guest lists and adult meal choices.
- * Version: 8.5.4
+ * Version: 8.5.5
  * Author: Land Tech Web Designs, Corp
  * Author URI: https://landtechwebdesigns.com
  * Plugin URI: https://landtechwebdesigns.com/wedding-party-rsvp-wordpress-plugin/
@@ -24,7 +24,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 if ( ! defined( 'WGRSVP_VERSION' ) ) {
-	define( 'WGRSVP_VERSION', '8.5.4' );
+	define( 'WGRSVP_VERSION', '8.5.5' );
 }
 if ( ! defined( 'WGRSVP_PLUGIN_FILE' ) ) {
 	define( 'WGRSVP_PLUGIN_FILE', __FILE__ );
@@ -333,6 +333,7 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 		 */
 		public function __construct() {
 			global $wpdb;
+			require_once plugin_dir_path( __FILE__ ) . 'includes/class-wgrsvp-capacity.php';
 			require_once plugin_dir_path( __FILE__ ) . 'includes/class-wgrsvp-coordinator-role.php';
 			require_once plugin_dir_path( __FILE__ ) . 'includes/class-wgrsvp-setup-wizard.php';
 			require_once plugin_dir_path( __FILE__ ) . 'includes/class-wgrsvp-setup-guide.php';
@@ -676,7 +677,7 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 							'type'              => 'string',
 							'sanitize_callback' => static function ( $v ) {
 								$v = sanitize_text_field( (string) $v );
-								$allowed = array( 'Pending', 'Accepted', 'Declined' );
+								$allowed = array( 'Pending', 'Accepted', 'Declined', 'Waitlist' );
 								return in_array( $v, $allowed, true ) ? $v : '';
 							},
 						),
@@ -1267,7 +1268,26 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 			}
 			$audit_batch_req = class_exists( 'WGRSVP_Audit_Trail', false ) ? strtolower( wp_generate_password( 8, false, false ) ) : '';
 
-			$allowed_rsvp = array( 'Pending', 'Accepted', 'Declined' );
+			$allowed_rsvp    = array( 'Pending', 'Accepted', 'Declined', 'Waitlist' );
+			$capacity_items  = array();
+			foreach ( $guest_post as $id_raw => $data ) {
+				if ( ! is_array( $data ) ) {
+					continue;
+				}
+				$cap_id = absint( $id_raw );
+				if ( $cap_id < 1 ) {
+					continue;
+				}
+				$cap_raw = sanitize_text_field( wp_unslash( $data['rsvp'] ?? 'Pending' ) );
+				$capacity_items[] = array(
+					'id'        => $cap_id,
+					'requested' => in_array( $cap_raw, $allowed_rsvp, true ) ? $cap_raw : 'Pending',
+				);
+			}
+			$resolved_status = class_exists( 'WGRSVP_Capacity', false )
+				? WGRSVP_Capacity::resolve_batch( $capacity_items, WGRSVP_Capacity::CONTEXT_GUEST )
+				: array();
+
 			foreach ( $guest_post as $id_raw => $data ) {
 				if ( ! is_array( $data ) ) {
 					continue;
@@ -1291,6 +1311,9 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 
 				$rsvp_raw = sanitize_text_field( wp_unslash( $data['rsvp'] ?? 'Pending' ) );
 				$rsvp     = in_array( $rsvp_raw, $allowed_rsvp, true ) ? $rsvp_raw : 'Pending';
+				if ( isset( $resolved_status[ $gid ] ) ) {
+					$rsvp = $resolved_status[ $gid ];
+				}
 
 				$update_data = array(
 					'guest_name'           => $name,
@@ -1374,9 +1397,10 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 
 			$this->save_rsvp_guest_updates_for_party( $party_id );
 
-			$settings    = get_option( $this->opt_settings, array() );
-			$hub_payload = $this->wgrsvp_build_guest_hub_payload( $party_id );
-			$redirect_go = '';
+			$waitlisted_names = class_exists( 'WGRSVP_Capacity', false ) ? WGRSVP_Capacity::consume_waitlisted_names() : array();
+			$settings         = get_option( $this->opt_settings, array() );
+			$hub_payload      = $this->wgrsvp_build_guest_hub_payload( $party_id );
+			$redirect_go      = '';
 			if ( is_array( $settings ) && ! empty( $settings['redirect_url'] ) ) {
 				$redirect_go = function_exists( 'wgrsvp_resolve_stored_redirect_url' )
 					? wgrsvp_resolve_stored_redirect_url( (string) $settings['redirect_url'] )
@@ -1389,7 +1413,7 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 					}
 				}
 			}
-			if ( '' !== $redirect_go ) {
+			if ( '' !== $redirect_go && array() === $waitlisted_names ) {
 				wp_send_json_success(
 					array(
 						'message'  => '',
@@ -1398,8 +1422,17 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 				);
 			}
 
+			if ( array() !== $waitlisted_names ) {
+				$payload_message = sprintf(
+					/* translators: %s: guest names placed on the waitlist. */
+					__( 'Thank you. Added to the waitlist: %s. You can still update a decline anytime.', 'wedding-party-rsvp' ),
+					implode( ', ', $waitlisted_names )
+				);
+			} else {
+				$payload_message = __( 'Thank you! Your RSVP has been updated.', 'wedding-party-rsvp' );
+			}
 			$payload = array(
-				'message' => __( 'Thank you! Your RSVP has been updated.', 'wedding-party-rsvp' ),
+				'message' => $payload_message,
 			);
 			if ( is_array( $hub_payload ) ) {
 				$payload['guest_hub'] = $hub_payload;
@@ -2191,7 +2224,7 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 		public function get_aggregated_rsvp_stats() {
 			$cached = get_transient( self::TRANSIENT_AGGREGATED_STATS );
 			if ( is_array( $cached )
-				&& isset( $cached['total_accepted'], $cached['total_declined'], $cached['total_pending'], $cached['total_guests'], $cached['menu_stats_adult'], $cached['households_total'], $cached['households_fully_replied'] ) ) {
+				&& isset( $cached['total_accepted'], $cached['total_declined'], $cached['total_pending'], $cached['total_waitlist'], $cached['total_guests'], $cached['menu_stats_adult'], $cached['households_total'], $cached['households_fully_replied'] ) ) {
 				return $cached;
 			}
 
@@ -2227,6 +2260,16 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.PreparedSQL.NotPrepared
 				$total_pending = (int) $wpdb->get_var( $wpdb->prepare( 'SELECT COUNT(*) FROM %i WHERE rsvp_status = %s', $table, 'Pending' ) );
 				wp_cache_set( $key_pen, $total_pending, 'wgrsvp_queries', HOUR_IN_SECONDS );
+			}
+
+			$key_wait = 'wgrsvp_' . md5( (string) $gen . '|stat_waitlist|' . $table );
+			$cached   = wp_cache_get( $key_wait, 'wgrsvp_queries' );
+			if ( false !== $cached ) {
+				$total_waitlist = (int) $cached;
+			} else {
+				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.PreparedSQL.NotPrepared
+				$total_waitlist = (int) $wpdb->get_var( $wpdb->prepare( 'SELECT COUNT(*) FROM %i WHERE rsvp_status = %s', $table, 'Waitlist' ) );
+				wp_cache_set( $key_wait, $total_waitlist, 'wgrsvp_queries', HOUR_IN_SECONDS );
 			}
 
 			$key_all = 'wgrsvp_' . md5( (string) $gen . '|stat_total_guests|' . $table );
@@ -2282,6 +2325,7 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 				'total_accepted'           => $total_accepted,
 				'total_declined'           => $total_declined,
 				'total_pending'            => $total_pending,
+				'total_waitlist'           => $total_waitlist,
 				'total_guests'             => $total_guests,
 				'menu_stats_adult'         => $menu_stats_adult,
 				'households_total'         => $households_total,
@@ -4325,7 +4369,8 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 			wp_enqueue_script( 'wgrsvp-admin-dashboard' );
 			wgrsvp_set_script_translations( 'wgrsvp-admin-dashboard' );
 
-			// Actions (full editors only).
+			// Actions (full editors only). Coordinators may only offer a waitlist seat.
+			$this->handle_capacity_offer_seat();
 			$this->handle_admin_actions();
 
 			if ( $can_manage_rsvp && isset( $_POST['wgrsvp_import_guests_nonce'] ) ) {
@@ -4347,6 +4392,8 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 			$total_accepted   = (int) $agg['total_accepted'];
 			$total_declined   = (int) $agg['total_declined'];
 			$total_pending    = (int) $agg['total_pending'];
+			$total_waitlist   = isset( $agg['total_waitlist'] ) ? (int) $agg['total_waitlist'] : 0;
+			$event_capacity   = class_exists( 'WGRSVP_Capacity', false ) ? WGRSVP_Capacity::limit() : 0;
 			$total_guests     = (int) $agg['total_guests'];
 			$menu_stats_adult = $agg['menu_stats_adult'];
 
@@ -4403,7 +4450,7 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 				</h1>
 
 				<?php if ( ! $can_manage_rsvp ) : ?>
-					<div class="notice notice-info"><p><?php esc_html_e( 'Coordinator mode: you can review the guest list and meal counts. Only administrators can edit guests, import or export data, or change plugin settings.', 'wedding-party-rsvp' ); ?></p></div>
+					<div class="notice notice-info"><p><?php esc_html_e( 'Coordinator mode: you can review the guest list and meal counts, and offer a seat to someone on the waitlist. Only administrators can edit guests, import or export data, or change plugin settings.', 'wedding-party-rsvp' ); ?></p></div>
 				<?php endif; ?>
 
 				<?php do_action( 'wgrsvp_guest_list_after_title', $can_manage_rsvp, $this ); ?>
@@ -4424,7 +4471,23 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 				<div class="wpr-dashboard-grid">
 					<a href="<?php echo esc_url( admin_url( 'admin.php?page=wedding-rsvp-main&filter_status=Accepted' ) ); ?>" class="wpr-stat-box" style="background:#46b450; color:#fff;">
 						<h2><?php echo esc_html( (string) $total_accepted ); ?></h2>
-						<small><?php esc_html_e( 'Attending', 'wedding-party-rsvp' ); ?></small>
+						<small>
+							<?php
+							esc_html_e( 'Attending', 'wedding-party-rsvp' );
+							if ( $event_capacity > 0 ) {
+								echo ' ';
+								printf(
+									/* translators: %d: event capacity. */
+									esc_html__( 'of %d', 'wedding-party-rsvp' ),
+									(int) $event_capacity
+								);
+							}
+							?>
+						</small>
+					</a>
+					<a href="<?php echo esc_url( admin_url( 'admin.php?page=wedding-rsvp-main&filter_status=Waitlist' ) ); ?>" class="wpr-stat-box" style="background:#2271b1; color:#fff;">
+						<h2><?php echo esc_html( (string) $total_waitlist ); ?></h2>
+						<small><?php esc_html_e( 'Waitlist', 'wedding-party-rsvp' ); ?></small>
 					</a>
 					<a href="<?php echo esc_url( admin_url( 'admin.php?page=wedding-rsvp-main&filter_status=Declined' ) ); ?>" class="wpr-stat-box" style="background:#dc3232; color:#fff;">
 						<h2><?php echo esc_html( (string) $total_declined ); ?></h2>
@@ -4740,7 +4803,7 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 										<?php endif; ?>
 									</td>
 
-									<td class="wgrsvp-col-rsvp"><select name="rsvp_status" class="wgrsvp-rsvp-select"><option value="Pending" <?php selected( $guest->rsvp_status, 'Pending' ); ?>><?php esc_html_e( '?', 'wedding-party-rsvp' ); ?></option><option value="Accepted" <?php selected( $guest->rsvp_status, 'Accepted' ); ?>><?php esc_html_e( 'Yes', 'wedding-party-rsvp' ); ?></option><option value="Declined" <?php selected( $guest->rsvp_status, 'Declined' ); ?>><?php esc_html_e( 'No', 'wedding-party-rsvp' ); ?></option></select></td>
+									<td class="wgrsvp-col-rsvp"><select name="rsvp_status" class="wgrsvp-rsvp-select"><option value="Pending" <?php selected( $guest->rsvp_status, 'Pending' ); ?>><?php esc_html_e( '?', 'wedding-party-rsvp' ); ?></option><option value="Accepted" <?php selected( $guest->rsvp_status, 'Accepted' ); ?>><?php esc_html_e( 'Yes', 'wedding-party-rsvp' ); ?></option><option value="Declined" <?php selected( $guest->rsvp_status, 'Declined' ); ?>><?php esc_html_e( 'No', 'wedding-party-rsvp' ); ?></option><option value="Waitlist" <?php selected( $guest->rsvp_status, 'Waitlist' ); ?>><?php esc_html_e( 'Waitlist', 'wedding-party-rsvp' ); ?></option></select></td>
 
 									<td>
 										<select name="menu_choice" style="width:100%; margin-bottom:2px; font-size:11px;">
@@ -4880,6 +4943,13 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 										?>
 										<a class="button button-small" href="<?php echo esc_url( $party_rsvp_url ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'Open RSVP', 'wedding-party-rsvp' ); ?></a>
 										<button type="button" class="button button-small wgrsvp-copy-rsvp" data-url="<?php echo esc_attr( $party_rsvp_url ); ?>" data-label="<?php echo esc_attr__( 'Copy link', 'wedding-party-rsvp' ); ?>" data-copied="<?php echo esc_attr__( 'Copied!', 'wedding-party-rsvp' ); ?>"><?php esc_html_e( 'Copy link', 'wedding-party-rsvp' ); ?></button>
+										<?php if ( 'Waitlist' === (string) $guest->rsvp_status ) : ?>
+											<form method="post" style="display:inline;">
+												<?php wp_nonce_field( 'wgrsvp_offer_seat', 'wgrsvp_offer_seat_nonce' ); ?>
+												<input type="hidden" name="id" value="<?php echo esc_attr( (string) absint( $guest->id ) ); ?>">
+												<button type="submit" name="wgrsvp_offer_seat" class="button button-small button-primary"><?php esc_html_e( 'Offer a seat', 'wedding-party-rsvp' ); ?></button>
+											</form>
+										<?php endif; ?>
 										<?php if ( $this->wgrsvp_may_use_pro_guest_list_comm_links() && is_email( $guest->email ) ) : ?>
 											<a class="button button-small" href="<?php echo esc_url( $this->wgrsvp_pro_single_guest_email_send_url( (int) $guest->id ) ); ?>" title="<?php echo esc_attr__( 'Send invitation email to this guest (uses Email & SMS template)', 'wedding-party-rsvp' ); ?>"><span class="dashicons dashicons-email" aria-hidden="true"></span><span class="screen-reader-text"><?php esc_html_e( 'Email invite', 'wedding-party-rsvp' ); ?></span></a>
 										<?php endif; ?>
@@ -5021,6 +5091,8 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 								isset( $_POST['event_end_time'] ) ? sanitize_text_field( wp_unslash( $_POST['event_end_time'] ) ) : ''
 							),
 							'event_location'          => isset( $_POST['event_location'] ) ? sanitize_text_field( wp_unslash( $_POST['event_location'] ) ) : '',
+							'event_capacity'          => isset( $_POST['event_capacity'] ) ? absint( wp_unslash( $_POST['event_capacity'] ) ) : 0,
+							'event_capacity_message'  => isset( $_POST['event_capacity_message'] ) ? sanitize_textarea_field( wp_unslash( $_POST['event_capacity_message'] ) ) : '',
 							// Calendar description and reminder body: plain multiline (HTML stripped); ICS and email consumers treat as text.
 							'event_description'       => isset( $_POST['event_description'] ) ? sanitize_textarea_field( wp_unslash( $_POST['event_description'] ) ) : '',
 							'deadline_nudges_enabled' => isset( $_POST['deadline_nudges_enabled'] ) ? 1 : 0,
@@ -5155,6 +5227,16 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 
 					<div style="background:#fff; padding:20px; border:1px solid #ddd; margin-bottom:20px;">
 						<h3><?php esc_html_e( 'Frontend Display', 'wedding-party-rsvp' ); ?></h3>
+						<p>
+							<label for="wgrsvp_event_capacity"><strong><?php esc_html_e( 'Event capacity', 'wedding-party-rsvp' ); ?></strong></label><br>
+							<input type="number" min="0" step="1" id="wgrsvp_event_capacity" name="event_capacity" value="<?php echo esc_attr( (string) absint( $s['event_capacity'] ?? 0 ) ); ?>" class="small-text">
+							<br><small class="description"><?php esc_html_e( 'Maximum number of accepted guests. Use 0 for no limit. A decline is always saved. A new yes after the list is full is stored as Waitlist.', 'wedding-party-rsvp' ); ?></small>
+						</p>
+						<p>
+							<label for="wgrsvp_event_capacity_message"><strong><?php esc_html_e( 'Waitlist message', 'wedding-party-rsvp' ); ?></strong></label><br>
+							<textarea id="wgrsvp_event_capacity_message" name="event_capacity_message" rows="3" style="width:100%;max-width:520px;"><?php echo esc_textarea( isset( $s['event_capacity_message'] ) ? (string) $s['event_capacity_message'] : '' ); ?></textarea>
+							<br><small class="description"><?php esc_html_e( 'Shown on the RSVP form when accepted guests have reached the capacity. Leave blank for the default message.', 'wedding-party-rsvp' ); ?></small>
+						</p>
 						<p><label for="wgrsvp_welcome_title"><strong><?php esc_html_e( 'Custom Welcome Title:', 'wedding-party-rsvp' ); ?></strong></label><br>
 						<input type="text" id="wgrsvp_welcome_title" name="welcome_title" value="<?php echo esc_attr( $s['welcome_title'] ?? '' ); ?>" style="width:100%;max-width:520px;" placeholder="<?php esc_attr_e( 'e.g. Welcome to Sarah & John\'s Wedding!', 'wedding-party-rsvp' ); ?>">
 						<button type="button" class="button wgrsvp-ai-wording-btn" data-wgrsvp-ai-context="welcome_title" data-wgrsvp-ai-target="#wgrsvp_welcome_title"><?php esc_html_e( 'AI wording…', 'wedding-party-rsvp' ); ?></button><br>
@@ -5496,6 +5578,45 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 		}
 
 		/**
+		 * Promote one waitlisted guest to Accepted.
+		 *
+		 * Coordinators may use this without the rest of guest editing.
+		 *
+		 * @return void
+		 */
+		private function handle_capacity_offer_seat() {
+			if ( ! isset( $_POST['wgrsvp_offer_seat'] ) ) {
+				return;
+			}
+			if ( ! isset( $_POST['wgrsvp_offer_seat_nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['wgrsvp_offer_seat_nonce'] ) ), 'wgrsvp_offer_seat' ) ) {
+				wp_die( esc_html__( 'Security check failed.', 'wedding-party-rsvp' ) );
+			}
+			if ( ! current_user_can( WGRSVP_Coordinator_Role::CAP_VIEW_GUEST_DASHBOARD ) ) {
+				wp_die( esc_html__( 'You do not have sufficient permissions to access this page.', 'wedding-party-rsvp' ) );
+			}
+
+			global $wpdb;
+			$id = isset( $_POST['id'] ) ? absint( wp_unslash( $_POST['id'] ) ) : 0;
+			if ( $id < 1 ) {
+				return;
+			}
+
+			wp_cache_delete( 'wgrsvp_query_writes', 'wgrsvp_queries' );
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.NotPrepared
+			$updated = $wpdb->query( $wpdb->prepare( 'UPDATE %i SET rsvp_status = %s WHERE id = %d AND rsvp_status = %s', $this->table_name, 'Accepted', $id, 'Waitlist' ) );
+			$this->clear_stats_cache();
+
+			if ( $updated ) {
+				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.NotPrepared
+				$party_id = (string) $wpdb->get_var( $wpdb->prepare( 'SELECT party_id FROM %i WHERE id = %d', $this->table_name, $id ) );
+				do_action( 'wgrsvp_after_rsvp_save', $party_id );
+				echo '<div class="notice notice-success is-dismissible"><p>' . esc_html__( 'Seat offered. This guest is now attending.', 'wedding-party-rsvp' ) . '</p></div>';
+			} else {
+				echo '<div class="notice notice-warning is-dismissible"><p>' . esc_html__( 'That guest is not on the waitlist.', 'wedding-party-rsvp' ) . '</p></div>';
+			}
+		}
+
+		/**
 		 * POST handlers on the guest list screen: add/update/delete guest, demo seed, demo dismiss.
 		 *
 		 * Verifies `check_admin_referer` for each action, then `manage_options`, before reading POST fields.
@@ -5547,7 +5668,7 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 				if ( isset( $_POST['wgrsvp_update_guest'] ) ) {
 					$id = isset( $_POST['id'] ) ? absint( wp_unslash( $_POST['id'] ) ) : 0;
 
-					$allowed_rsvp = array( 'Pending', 'Accepted', 'Declined' );
+					$allowed_rsvp = array( 'Pending', 'Accepted', 'Declined', 'Waitlist' );
 					$rsvp_raw     = isset( $_POST['rsvp_status'] ) ? sanitize_text_field( wp_unslash( $_POST['rsvp_status'] ) ) : 'Pending';
 					$rsvp_status  = in_array( $rsvp_raw, $allowed_rsvp, true ) ? $rsvp_raw : 'Pending';
 
@@ -6091,7 +6212,8 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 
 			$this->save_rsvp_guest_updates_for_party( $party_id );
 
-			$settings  = get_option( $this->opt_settings, array() );
+			$waitlisted_names = class_exists( 'WGRSVP_Capacity', false ) ? WGRSVP_Capacity::consume_waitlisted_names() : array();
+			$settings         = get_option( $this->opt_settings, array() );
 			$raw_redir = is_array( $settings ) && isset( $settings['redirect_url'] ) ? trim( (string) $settings['redirect_url'] ) : '';
 			if ( '' !== $raw_redir ) {
 				$url = function_exists( 'wgrsvp_resolve_stored_redirect_url' )
@@ -6104,13 +6226,13 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 						$url = $with_thanks;
 					}
 				}
-				if ( '' !== $url ) {
+				if ( '' !== $url && array() === $waitlisted_names ) {
 					wp_safe_redirect( $url );
 					exit;
 				}
 			}
 
-			if ( class_exists( 'WGRSVP_ICS' ) ) {
+			if ( class_exists( 'WGRSVP_ICS' ) && array() === $waitlisted_names ) {
 				$thanks_url = WGRSVP_ICS::get_thank_you_redirect_url( $party_id );
 				if ( '' !== $thanks_url ) {
 					wp_safe_redirect( $thanks_url );
@@ -6118,6 +6240,9 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 				}
 			}
 
+			if ( array() !== $waitlisted_names ) {
+				set_transient( 'wgrsvp_waitlist_flash', $waitlisted_names, 60 );
+			}
 			set_transient( self::TRANSIENT_RSVP_FORM_SUCCESS_FLASH, '1', 60 );
 			wp_safe_redirect( remove_query_arg( 'wpr_submit_rsvp' ) );
 			exit;
@@ -6245,7 +6370,17 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 			// Check for success message from init redirect.
 			if ( get_transient( self::TRANSIENT_RSVP_FORM_SUCCESS_FLASH ) ) {
 				delete_transient( self::TRANSIENT_RSVP_FORM_SUCCESS_FLASH );
-				return '<div class="wpr-wrapper">' . $this->wgrsvp_rsvp_event_date_heading_html( $settings ) . '<div style="color:green;border:1px solid green;padding:15px;margin-bottom:20px;background:#eaffea;">' . esc_html__( 'Thank you! Your RSVP has been updated.', 'wedding-party-rsvp' ) . '</div></div>';
+				$flash_wait = get_transient( 'wgrsvp_waitlist_flash' );
+				delete_transient( 'wgrsvp_waitlist_flash' );
+				$flash_text = __( 'Thank you! Your RSVP has been updated.', 'wedding-party-rsvp' );
+				if ( is_array( $flash_wait ) && array() !== $flash_wait ) {
+					$flash_text = sprintf(
+						/* translators: %s: guest names placed on the waitlist. */
+						__( 'Thank you. Added to the waitlist: %s. You can still update a decline anytime.', 'wedding-party-rsvp' ),
+						implode( ', ', array_map( 'strval', $flash_wait ) )
+					);
+				}
+				return '<div class="wpr-wrapper">' . $this->wgrsvp_rsvp_event_date_heading_html( $settings ) . '<div style="color:green;border:1px solid green;padding:15px;margin-bottom:20px;background:#eaffea;">' . esc_html( $flash_text ) . '</div></div>';
 			}
 
 			$output = '<div class="wpr-wrapper">' . $this->wgrsvp_rsvp_event_date_heading_html( $settings );
@@ -6331,6 +6466,9 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 
 				$output .= $form_open . wp_nonce_field( 'wgrsvp_front_rsvp_submit', '_wpnonce', true, false ) . '<input type="hidden" name="party_id" value="' . esc_attr( $party_id ) . '">';
 				$output .= '<h2>' . esc_html( $welcome_title ) . '</h2>';
+				if ( class_exists( 'WGRSVP_Capacity', false ) && WGRSVP_Capacity::is_full() ) {
+					$output .= '<p class="wgrsvp-capacity-full">' . esc_html( WGRSVP_Capacity::message() ) . '</p>';
+				}
 				$output .= '<input type="text" name="wpr_honey" class="wpr-honey" autocomplete="off" tabindex="-1">';
 				if ( class_exists( 'WGRSVP_Gift_Registries', false ) ) {
 					// render() already late-escapes via kses_gift_area_html().
@@ -6365,7 +6503,11 @@ if ( ! class_exists( 'WGRSVP_Wedding_RSVP' ) ) :
 					$output .= '<div class="wpr-field"><label>' . esc_html__( 'Attending?', 'wedding-party-rsvp' ) . '</label><select name="guest[' . absint( $g->id ) . '][rsvp]" required>';
 					$output .= '<option value="Pending" ' . selected( $g->rsvp_status, 'Pending', false ) . '>' . esc_html__( 'Select...', 'wedding-party-rsvp' ) . '</option>';
 					$output .= '<option value="Accepted" ' . selected( $g->rsvp_status, 'Accepted', false ) . '>' . esc_html__( 'Delighted to attend', 'wedding-party-rsvp' ) . '</option>';
-					$output .= '<option value="Declined" ' . selected( $g->rsvp_status, 'Declined', false ) . '>' . esc_html__( 'Unable to attend', 'wedding-party-rsvp' ) . '</option></select></div>';
+					$output .= '<option value="Declined" ' . selected( $g->rsvp_status, 'Declined', false ) . '>' . esc_html__( 'Unable to attend', 'wedding-party-rsvp' ) . '</option>';
+					if ( 'Waitlist' === (string) $g->rsvp_status ) {
+						$output .= '<option value="Waitlist" ' . selected( $g->rsvp_status, 'Waitlist', false ) . '>' . esc_html__( 'On the waitlist', 'wedding-party-rsvp' ) . '</option>';
+					}
+					$output .= '</select></div>';
 
 					// Only render adult menu in Free version.
 					$menu_sel  = '<div class="wpr-field"><label>' . esc_html__( 'Entrée', 'wedding-party-rsvp' ) . '</label><select name="guest[' . absint( $g->id ) . '][menu]"';
