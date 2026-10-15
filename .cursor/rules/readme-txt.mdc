@@ -1,0 +1,30 @@
+---
+description: WordPress.org readme.txt limits for wedding-party-rsvp. Check these before every directory release.
+alwaysApply: true
+---
+
+# WordPress.org readme.txt
+
+Before editing `readme.txt` or cutting a WordPress.org release, check every item. A failing check blocks the release.
+
+## Limits
+
+- **Short description** (the single line under the header, before `== Description ==`): **150 characters maximum**. Count the characters. Plain text only: no HTML and no Markdown. If it is 151 or longer, shorten it before release. WordPress.org truncates the public plugin card and warns the author.
+- **Upgrade Notice**: each `== Upgrade Notice ==` version note is **300 characters maximum**.
+- **File size**: keep `readme.txt` at or under **10KB**. A larger file can make the WordPress.org parser time out. The `== Description ==` section has no character limit and may use Markdown, but the whole file still counts. When the file is already over 10KB, do not add more changelog history to it: keep the current release in `== Changelog ==`, move older entries to `changelog.txt`, and leave a one-line pointer. Do not delete Description or External Services text just to hit 10KB unless Randy asks; report the byte size instead.
+
+## Header
+
+```
+=== Plugin Name ===
+== Description ==
+= 1.0.0 =
+```
+
+- Title uses `=== ===`. Tabs use `== ==`. Changelog and FAQ subsections use `= =`.
+- `Contributors:` comma-separated, case-sensitive WordPress.org usernames. Include `brelandr`.
+- `Tags:` **5 maximum**, comma-separated. No competitor plugin names. No tags nobody would search for.
+- `Tested up to`, `Requires at least`, and `Requires PHP` are numbers only (`7.1`, `7.4`), never `WP 7.1` or `PHP 7.4`. `Tested up to` is the major version (`7.1`).
+- `Stable tag` is numbers and periods only (`8.5.6`). It must match the `Version:` header and `WGRSVP_VERSION`. Never `trunk` and never a `v` prefix.
+- `License:` `GPLv2 or later`.
+- Plugin name in `=== ===` must match the main plugin file `Plugin Name:` header.

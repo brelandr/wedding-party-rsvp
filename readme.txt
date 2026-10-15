@@ -4,11 +4,11 @@ Tags: wedding, rsvp, guest list, wedding rsvp, meal choices
 Requires at least: 6.2
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 8.5.5
+Stable tag: 8.5.6
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
-RSVP guest list for WordPress: Party ID sign-in, meals, guest hub summary, CSV export, event capacity with a waitlist, dashboard filters—track replies in one place.
+RSVP guest list for WordPress: Party ID sign-in, meals, guest hub, CSV export, event capacity with a waitlist, and dashboard filters.
 
 == Description ==
 
@@ -224,6 +224,10 @@ This plugin does not call third-party APIs for core RSVP storage. Optional behav
 This plugin bundles **FPDF** (version 1.86, © Olivier Plathey) under `includes/lib/fpdf/` for optional **Export check-in PDF** in the guest list. FPDF is free software; see the header comment in `fpdf.php` for license terms.
 
 == Changelog ==
+= 8.5.6 =
+
+* The WordPress.org short description stays within 150 characters, so the plugin directory no longer cuts it off.
+
 = 8.5.5 =
 
 * New: event capacity with a waitlist. Set a guest cap and extra yes replies go on the waitlist instead of overbooking. Declines always get through, administrators are never blocked, and coordinators can offer a seat in one click from the guest list.
